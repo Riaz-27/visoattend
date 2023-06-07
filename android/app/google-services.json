@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "506391506267",
+    "project_id": "visoattend",
+    "storage_bucket": "visoattend.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506391506267:android:09b3b75d48d0301ca57e7e",
+        "android_client_info": {
+          "package_name": "com.example.visoattend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "506391506267-qq5vg6eqoukdccf21tqp8as1084bds3g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAu2oP7SVmY66KeQY5KXfizwSxMthCR4-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "506391506267-qq5vg6eqoukdccf21tqp8as1084bds3g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
