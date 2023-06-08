@@ -115,7 +115,7 @@ class AttendanceRecordPage extends StatelessWidget {
                     final faces = faceDetectorController.faces;
                     final camDirection =
                         cameraServiceController.cameraLensDirection;
-                    final users = await userDatabaseController.getAllUsers();
+                    final users = await userDatabaseController.getAllIsarUsers();
                     recognitionResults =
                         await recognitionController.performRecognitionOnIsolate(
                       cameraImage: cameraImage,

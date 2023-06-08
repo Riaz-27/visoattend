@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:visoattend/controller/auth_controller.dart';
 
 import 'attendance_record_page.dart';
 
@@ -8,9 +9,18 @@ class ClassroomPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Classroom'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              authController.signOut();
+            },
+            icon: const Icon(Icons.logout_rounded),
+          )
+        ],
       ),
       body: Column(
         children: [

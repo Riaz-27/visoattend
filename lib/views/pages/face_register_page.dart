@@ -2,13 +2,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../models/entities/user.dart';
+import '../../models/entities/isar_user.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/user_database_controller.dart';
 
 class FaceRegisterPage extends StatelessWidget {
   const FaceRegisterPage({Key? key, required this.user}) : super(key: key);
-  final User user;
+  final IsarUser user;
 
   @override
   Widget build(BuildContext context) {

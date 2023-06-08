@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 
 import '../services/isar_service.dart';
-import '../models/entities/user.dart';
+import '../models/entities/isar_user.dart';
 import 'camera_service_controller.dart';
 import 'face_detector_controller.dart';
 import 'recognition_controller.dart';
@@ -21,28 +21,28 @@ class UserDatabaseController extends GetxController {
 
   bool get isLeft => _isLeft.value;
 
-  Future<bool> saveUser(User newUser) async {
+  Future<bool> saveUser(IsarUser newUser) async {
     final isar = await isarService.db;
     final alreadyExist = await checkUser(newUser.userId);
     if (alreadyExist) {
       print('User Already Exists.');
       return false;
     } else {
-      await isar.writeTxn<int>(() => isar.users.put(newUser));
+      await isar.writeTxn<int>(() => isar.isarUsers.put(newUser));
       return true;
     }
   }
 
   Future<bool> checkUser(String userId) async {
     final isar = await isarService.db;
-    return await isar.users.filter().userIdEqualTo(userId).count() > 0
+    return await isar.isarUsers.filter().userIdEqualTo(userId).count() > 0
         ? true
         : false;
   }
 
-  Future<User?> verifyUser(String userId, String password) async {
+  Future<IsarUser?> verifyUser(String userId, String password) async {
     final isar = await isarService.db;
-    final user = await isar.users
+    final user = await isar.isarUsers
         .filter()
         .userIdEqualTo(userId)
         .and()
@@ -51,12 +51,12 @@ class UserDatabaseController extends GetxController {
     return user;
   }
 
-  Future<List<User>> getAllUsers() async {
+  Future<List<IsarUser>> getAllIsarUsers() async {
     final isar = await isarService.db;
-    return isar.users.where().findAll();
+    return isar.isarUsers.where().findAll();
   }
 
-  Future<void> registerNewUserToDatabase(User user) async {
+  Future<void> registerNewUserToDatabase(IsarUser user) async {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();

@@ -9,7 +9,7 @@ import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper_plus/tflite_flutter_helper_plus.dart';
 import 'package:tflite_flutter_plus/src/bindings/types.dart';
 
-import '../models/entities/user.dart';
+import '../models/entities/isar_user.dart';
 import 'image_converter.dart';
 import 'isar_service.dart';
 
@@ -177,10 +177,10 @@ class RecognitionService {
 
   //
   ///  looks for the nearest embeeding in the dataset
-  dynamic findNearest(List<double> emb, List<User> users) {
-    dynamic recognitionResult = [User(), -5.0, Rect.zero];
+  dynamic findNearest(List<double> emb, List<IsarUser> users) {
+    dynamic recognitionResult = [IsarUser(), -5.0, Rect.zero];
 
-    for (User user in users) {
+    for (IsarUser user in users) {
       final userEmbeddings = [
         user.faceDataFront,
         user.faceDataRight,

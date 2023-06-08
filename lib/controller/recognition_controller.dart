@@ -7,7 +7,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '../services/recognition_service.dart';
 import '../services/recognition_isolate.dart';
-import '../models/entities/user.dart';
+import '../models/entities/isar_user.dart';
 import '../services/image_converter.dart';
 
 class RecognitionController extends GetxController {
@@ -37,7 +37,7 @@ class RecognitionController extends GetxController {
     required List<Face> faces,
     required CameraLensDirection cameraLensDirection,
     bool isRegistration = false,
-    List<User>? users,
+    List<IsarUser>? users,
   }) async {
     _performedRecognition(false);
     img.Image image;
@@ -88,7 +88,7 @@ class RecognitionController extends GetxController {
     required List<Face> faces,
     required CameraLensDirection cameraLensDirection,
     bool isRegistration = false,
-    List<User>? users,
+    List<IsarUser>? users,
   }) async {
     _performedRecognition(false);
     final interpreterAddress = recognitionService.interpreterAddress;

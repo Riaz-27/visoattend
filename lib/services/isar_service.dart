@@ -1,7 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../models/entities/user.dart';
+import '../models/entities/isar_user.dart';
 
 class IsarService {
   late Future<Isar> _db;
@@ -16,7 +16,7 @@ class IsarService {
       final dir = await getApplicationDocumentsDirectory();
       print('The Path : ${dir.path}');
       return await Isar.open(
-        [UserSchema],
+        [IsarUserSchema],
         inspector: true,
         directory: dir.path,
       );

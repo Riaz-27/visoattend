@@ -10,7 +10,7 @@ import 'package:tflite_flutter_helper_plus/tflite_flutter_helper_plus.dart';
 import 'package:tflite_flutter_plus/src/bindings/types.dart';
 import 'package:image/image.dart' as img;
 
-import '../models/entities/user.dart';
+import '../models/entities/isar_user.dart';
 import 'image_converter.dart';
 
 Future<dynamic> recognitionIsolate(
@@ -18,7 +18,7 @@ Future<dynamic> recognitionIsolate(
     required CameraImage cameraImage,
     required List<Face> faces,
     required isRegistration,
-    List<User>? users,
+    List<IsarUser>? users,
     required CameraLensDirection cameraLensDirection}) async {
 
   final receivePort = ReceivePort();
@@ -124,10 +124,10 @@ Future<void> _recognitionIsolate(List<dynamic> data) async {
 }
 
 ///  looks for the nearest embedding in the dataset
-dynamic findNearest(List<double> emb, List<User> users) {
-  dynamic recognitionResult = [User(), -5.0, Rect.zero];
+dynamic findNearest(List<double> emb, List<IsarUser> users) {
+  dynamic recognitionResult = [IsarUser(), -5.0, Rect.zero];
 
-  for (User user in users) {
+  for (IsarUser user in users) {
     final userEmbeddings = [
       user.faceDataFront,
       user.faceDataRight,
