@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class AuthController extends GetxController {
@@ -28,20 +29,28 @@ class AuthController extends GetxController {
     _isLoading(false);
   }
 
-  Future<void> createUserWithEmailAndPassword({
+  Future<UserCredential?> createUserWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
     _isLoading(true);
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
+      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      _isLoading(false);
+      return userCredential;
     } on FirebaseAuthException catch (e) {
-      print(e.toString());
+      Get.snackbar(
+        'Something Went Wrong',
+        e.toString(),
+        colorText: Colors.red,
+        animationDuration: const Duration(milliseconds: 200),
+      );
     }
     _isLoading(false);
+    return null;
   }
 
   Future<void> signOut() async {

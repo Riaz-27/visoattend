@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
+import 'package:visoattend/models/user_model.dart';
 
+import '../../controller/cloud_firestore_controller.dart';
 import '../../models/entities/isar_user.dart';
 import '../../controller/user_database_controller.dart';
 import '../widgets/custom_text_form_field.dart';
@@ -22,46 +24,48 @@ class LoginRegisterPage extends StatelessWidget {
 
     final userDatabaseController = Get.find<UserDatabaseController>();
     final authController = Get.find<AuthController>();
+    // final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
-    void signUpUser() {
-      final name = nameController.text.trim();
-      final email = emailController.text.trim();
-      final userId = userIdController.text.trim();
-      final password = passwordController.text.trim();
-      if (name.isNotEmpty &&
-          userId.isNotEmpty &&
-          email.isNotEmpty &&
-          password.isNotEmpty) {
-        final newUser = IsarUser()
-          ..name = name
-          ..userId = userId
-          ..password = password;
-        userDatabaseController.checkUser(userId).then(
-          (userFound) {
-            nameController.text = '';
-            userIdController.text = '';
-            passwordController.text = '';
-            if (!userFound) {
-              Get.offAll(
-                () => FaceRegisterPage(user: newUser),
-              );
-            }
-          },
-        );
-      }
-    }
+    // void signUpUser() {
+    //   final name = nameController.text.trim();
+    //   final email = emailController.text.trim();
+    //   final userId = userIdController.text.trim();
+    //   final password = passwordController.text.trim();
+    //   if (name.isNotEmpty &&
+    //       userId.isNotEmpty &&
+    //       email.isNotEmpty &&
+    //       password.isNotEmpty) {
+    //     final newUser = IsarUser()
+    //       ..name = name
+    //       ..userId = userId
+    //       ..password = password;
+    //     userDatabaseController.checkUser(userId).then(
+    //       (userFound) {
+    //         nameController.text = '';
+    //         userIdController.text = '';
+    //         passwordController.text = '';
+    //         if (!userFound) {
+    //           Get.offAll(
+    //             () => FaceRegisterPage(user: newUser),
+    //           );
+    //         }
+    //       },
+    //     );
+    //   }
+    // }
 
-    void loginUser() {
-      final userId = userIdController.text.trim();
-      final password = passwordController.text.trim();
-      userDatabaseController.verifyUser(userId, password).then((userFound) {
-        if (userFound != null) {
-          Get.offAll(
-            () => const ClassroomPage(),
-          );
-        }
-      });
-    }
+    // void loginUser() {
+    //   final userId = userIdController.text.trim();
+    //   final password = passwordController.text.trim();
+    //   // cloudFirestoreController.getUserData(userId);
+    //   userDatabaseController.verifyUser(userId, password).then((userFound) {
+    //     if (userFound != null) {
+    //       Get.offAll(
+    //         () => const ClassroomPage(),
+    //       );
+    //     }
+    //   });
+    // }
 
     void handleSignInOrSignUp() async {
       final name = nameController.text.trim();
@@ -69,10 +73,21 @@ class LoginRegisterPage extends StatelessWidget {
       final userId = userIdController.text.trim();
       final password = passwordController.text.trim();
 
-      if(isSignUp){
-        await authController.createUserWithEmailAndPassword(email: email, password: password);
+      if (isSignUp) {
+        final userCredential = await authController
+            .createUserWithEmailAndPassword(email: email, password: password);
+        if (userCredential != null) {
+          final user = UserModel(
+            authUid: userCredential.user!.uid,
+            userId: userId,
+            name: name,
+            email: email,
+          );
+          Get.to(() => FaceRegisterPage(user: user));
+        }
       } else {
-        await authController.signInWithEmailAndPassword(email: email, password: password);
+        await authController.signInWithEmailAndPassword(
+            email: email, password: password);
       }
     }
 
@@ -104,7 +119,7 @@ class LoginRegisterPage extends StatelessWidget {
             ],
             CustomTextFormField(
               hintText: isSignUp ? 'UserID' : 'UserID or Email',
-              controller: emailController,
+              controller: userIdController,
             ),
             const SizedBox(height: 10.0),
             CustomTextFormField(
@@ -125,6 +140,12 @@ class LoginRegisterPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   handleSignInOrSignUp();
+                  // if(isSignUp){
+                  //   signUpUser();
+                  // } else {
+                  //   loginUser();
+                  //
+                  // }
                 },
                 child: Obx(
                   () => authController.isLoading

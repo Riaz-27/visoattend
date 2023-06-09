@@ -5,10 +5,11 @@ import 'package:get/get.dart';
 import '../../models/entities/isar_user.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/user_database_controller.dart';
+import '../../models/user_model.dart';
 
 class FaceRegisterPage extends StatelessWidget {
   const FaceRegisterPage({Key? key, required this.user}) : super(key: key);
-  final IsarUser user;
+  final UserModel user;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +87,7 @@ class FaceRegisterPage extends StatelessWidget {
                   ),
                   onPressed: () async {
                     await userDatabaseController
-                        .registerNewUserToDatabase(user);
+                        .registerNewUserToFirestore(user);
                   },
                   child: const Text('Take Picture'),
                 ),

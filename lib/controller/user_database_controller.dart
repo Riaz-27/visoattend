@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:visoattend/controller/cloud_firestore_controller.dart';
+import 'package:visoattend/models/user_model.dart';
 
 import '../services/isar_service.dart';
 import '../models/entities/isar_user.dart';
@@ -85,6 +87,40 @@ class UserDatabaseController extends GetxController {
 
     if (_isFront.value && _isLeft.value && _isRight.value) {
       saveUser(user);
+    }
+  }
+
+  Future<void> registerNewUserToFirestore(UserModel user) async {
+    final cameraServiceController = Get.find<CameraServiceController>();
+    final faceDetectorController = Get.find<FaceDetectorController>();
+    final recognitionController = Get.find<RecognitionController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    await faceDetectorController.doFaceDetectionOnFrame(
+      cameraServiceController.cameraImage,
+      cameraServiceController.cameraRotation!,
+    );
+    final faceAngle = faceDetectorController.faces[0].headEulerAngleY!;
+    final emb = await recognitionController.performRecognitionOnIsolate(
+      cameraImage: cameraServiceController.cameraImage,
+      faces: faceDetectorController.faces,
+      cameraLensDirection: cameraServiceController.cameraLensDirection,
+      isRegistration: true,
+    );
+
+    if (faceAngle > -10 && faceAngle < 10) {
+      user.faceDataFront = emb;
+      _isFront(true);
+    } else if (faceAngle < -15 && faceAngle > -35) {
+      user.faceDataLeft = emb;
+      _isLeft(true);
+    } else if (faceAngle > 15 && faceAngle < 35) {
+      user.faceDataRight = emb;
+      _isRight(true);
+    }
+
+    if (_isFront.value && _isLeft.value && _isRight.value) {
+      cloudFirestoreController.addUserDataToFirestore(user);
     }
   }
 }
