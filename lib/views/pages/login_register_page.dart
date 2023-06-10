@@ -17,13 +17,17 @@ class LoginRegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final emailValidator = RegExp(
+        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController userIdController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
 
-    final userDatabaseController = Get.find<UserDatabaseController>();
+    // final userDatabaseController = Get.find<UserDatabaseController>();
     final authController = Get.find<AuthController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
     // final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     // void signUpUser() {
@@ -69,9 +73,9 @@ class LoginRegisterPage extends StatelessWidget {
 
     void handleSignInOrSignUp() async {
       final name = nameController.text.trim();
-      final email = emailController.text.trim();
-      final userId = userIdController.text.trim();
       final password = passwordController.text.trim();
+      final userId = userIdController.text.trim();
+      String email = emailController.text.trim();
 
       if (isSignUp) {
         final userCredential = await authController
@@ -86,8 +90,31 @@ class LoginRegisterPage extends StatelessWidget {
           Get.to(() => FaceRegisterPage(user: user));
         }
       } else {
-        await authController.signInWithEmailAndPassword(
-            email: email, password: password);
+        final bool emailValid = emailValidator.hasMatch(userId);
+        if (emailValid) {
+          email = userId;
+        } else {
+          final userData =
+              await cloudFirestoreController.getUserDataFromFirestore(userId);
+          if(userData == null){
+            email = '';
+          }else {
+            email = userData['email'];
+          }
+        }
+        if (email != '') {
+          await authController.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+        } else {
+          Get.snackbar(
+            'Invalid user',
+            'User not found with this credentials',
+            colorText: Colors.red,
+            animationDuration: const Duration(milliseconds: 200),
+          );
+        }
       }
     }
 
@@ -118,7 +145,7 @@ class LoginRegisterPage extends StatelessWidget {
               const SizedBox(height: 10.0),
             ],
             CustomTextFormField(
-              hintText: isSignUp ? 'UserID' : 'UserID or Email',
+              hintText: isSignUp ? 'UserID' : 'UserID',
               controller: userIdController,
             ),
             const SizedBox(height: 10.0),

@@ -24,7 +24,12 @@ class AuthController extends GetxController {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      print(e.toString());
+      Get.snackbar(
+        'Something Went Wrong',
+        e.toString(),
+        colorText: Colors.red,
+        animationDuration: const Duration(milliseconds: 200),
+      );
     }
     _isLoading(false);
   }

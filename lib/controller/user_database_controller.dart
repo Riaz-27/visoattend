@@ -90,7 +90,7 @@ class UserDatabaseController extends GetxController {
     }
   }
 
-  Future<void> registerNewUserToFirestore(UserModel user) async {
+  Future<bool> registerNewUserToFirestore(UserModel user) async {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();
@@ -121,6 +121,8 @@ class UserDatabaseController extends GetxController {
 
     if (_isFront.value && _isLeft.value && _isRight.value) {
       cloudFirestoreController.addUserDataToFirestore(user);
+      return true;
     }
+    return false;
   }
 }

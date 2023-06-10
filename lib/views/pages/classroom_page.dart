@@ -48,7 +48,6 @@ class ClassroomPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(10.0),
               child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
                 itemCount: 10, // Replace with the actual number of items
                 itemBuilder: (context, index) {
                   return const CustomCard();

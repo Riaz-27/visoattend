@@ -11,13 +11,20 @@ class CloudFirestoreController extends GetxController {
 
   final userCollection = 'UserData';
 
-  Future<Map<String,dynamic>?> getUserDataFromFirestore(String userId) async {
+
+  Future<Map<String, dynamic>?> getUserDataFromFirestore(String userId) async {
     final userDocument =
         await firestoreInstance.collection(userCollection).doc(userId).get();
     return userDocument.data();
   }
 
   void addUserDataToFirestore(UserModel user) async {
-    await firestoreInstance.collection(userCollection).doc(user.userId).set(user.toJson());
+    final userData = await getUserDataFromFirestore(user.userId);
+    if (userData == null) {
+      await firestoreInstance
+          .collection(userCollection)
+          .doc(user.userId)
+          .set(user.toJson());
+    }
   }
 }
