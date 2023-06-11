@@ -1,45 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/controller/classroom_database_controller.dart';
 
-class CreateClassroomPage extends StatefulWidget {
+class CreateClassroomPage extends StatelessWidget {
   const CreateClassroomPage({super.key});
 
   @override
-  _CreateClassroomPageState createState() => _CreateClassroomPageState();
-}
-
-class _CreateClassroomPageState extends State<CreateClassroomPage> {
-  final TextEditingController _courseCodeController = TextEditingController();
-  final TextEditingController _courseTitleController = TextEditingController();
-  final TextEditingController _sectionController = TextEditingController();
-
-  final List<TimeOfDay> _weekTimes = List.generate(7, (index) => TimeOfDay.now());
-  final List<String> _weekDays = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  final List<bool> _selectedWeeks = List.generate(7, (index) => false);
-
-  @override
-  void dispose() {
-    _courseCodeController.dispose();
-    _courseTitleController.dispose();
-    _sectionController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectTime(int index) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _weekTimes[index],
-    );
-
-    if (picked != null && picked != _weekTimes[index]) {
-      setState(() {
-        _weekTimes[index] = picked;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final courseCodeController = TextEditingController();
+    final courseTitleController = TextEditingController();
+    final sectionController = TextEditingController();
+
+    final classroomDatabaseController = Get.find<ClassroomDatabaseController>();
+
+    Future<void> selectTime(int index) async {
+      final TimeOfDay? picked = await showTimePicker(
+        context: context,
+        initialTime: classroomDatabaseController.weekTimes[index],
+      );
+
+      if (picked != null &&
+          picked != classroomDatabaseController.weekTimes[index]) {
+        classroomDatabaseController.weekTimes[index] = picked;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Classroom'),
@@ -50,21 +36,21 @@ class _CreateClassroomPageState extends State<CreateClassroomPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-              controller: _courseCodeController,
+              controller: courseCodeController,
               decoration: const InputDecoration(
                 hintText: 'Course Code',
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
-              controller: _courseTitleController,
+              controller: courseTitleController,
               decoration: const InputDecoration(
                 hintText: 'Course Title',
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
-              controller: _sectionController,
+              controller: sectionController,
               decoration: const InputDecoration(
                 hintText: 'Section',
               ),
@@ -82,41 +68,63 @@ class _CreateClassroomPageState extends State<CreateClassroomPage> {
               child: ListView.builder(
                 itemCount: 7,
                 itemBuilder: (context, index) {
-                  final weekName = _weekDays[index];
-                  final selectedTime = DateFormat.jm().format(
-                    DateTime(2023, 1, 6 + index, _weekTimes[index].hour, _weekTimes[index].minute),
-                  );
+                  final weekName = classroomDatabaseController.weekDays[index];
 
                   return Row(
                     children: [
-                      Checkbox(
-                        value: _selectedWeeks[index],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedWeeks[index] = value ?? false;
-                          });
-                        },
-                      ),
+                      Obx(() {
+                        return Checkbox(
+                          value:
+                              classroomDatabaseController.selectedWeeks[index],
+                          onChanged: (value) {
+                            classroomDatabaseController.selectedWeeks[index] =
+                                value ?? false;
+                          },
+                        );
+                      }),
                       Expanded(
                         child: Text(weekName),
                       ),
                       const SizedBox(width: 8.0),
                       Expanded(
-                        flex: 2,
-                        child: TextField(
-                          readOnly: !_selectedWeeks[index],
-                          onTap: _selectedWeeks[index] ? () => _selectTime(index) : null,
-                          controller: TextEditingController(text: selectedTime),
-                          decoration: const InputDecoration(
-                            hintText: 'Select Time',
-                          ),
-                        ),
+                        flex: 1,
+                        child: Obx(() {
+                          final selectedTime = DateFormat.jm().format(
+                            DateTime(
+                                2023,
+                                1,
+                                6 + index,
+                                classroomDatabaseController
+                                    .weekTimes[index].hour,
+                                classroomDatabaseController
+                                    .weekTimes[index].minute),
+                          );
+                          final isSelected = classroomDatabaseController
+                              .selectedWeeks[index];
+                          return TextField(
+                            readOnly: !isSelected,
+                            onTap:
+                            isSelected
+                                    ? () => selectTime(index)
+                                    : null,
+                            controller:
+                                TextEditingController(text: isSelected? selectedTime : 'Off Day'),
+                            decoration: const InputDecoration(
+                              hintText: 'Select Time',
+                            ),
+                          );
+                        }),
                       ),
                       const SizedBox(width: 8.0),
-                      ElevatedButton(
-                        onPressed: _selectedWeeks[index] ? () => _selectTime(index) : null,
-                        child: const Icon(Icons.access_time),
-                      ),
+                      Obx(() {
+                        return ElevatedButton(
+                          onPressed:
+                              classroomDatabaseController.selectedWeeks[index]
+                                  ? () => selectTime(index)
+                                  : null,
+                          child: const Icon(Icons.access_time),
+                        );
+                      }),
                     ],
                   );
                 },
