@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
-import 'classroom_page.dart';
 import 'login_register_page.dart';
 
 class AuthPage extends StatelessWidget {
@@ -18,7 +17,7 @@ class AuthPage extends StatelessWidget {
       stream: authController.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return const HomePage(userName: 'username');
+          return const HomePage();
         } else {
           return const LoginRegisterPage();
         }

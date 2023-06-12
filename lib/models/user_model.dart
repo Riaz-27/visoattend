@@ -4,29 +4,29 @@ class UserModel {
   String userId;
   String name;
   String email;
-  List<double>? faceDataFront;
-  List<double>? faceDataLeft;
-  List<double>? faceDataRight;
+  List<dynamic> faceDataFront; // List<double>
+  List<dynamic> faceDataLeft; // List<double>
+  List<dynamic> faceDataRight; // List<double>
 
   UserModel({
     required this.authUid,
     required this.userId,
     required this.name,
     required this.email,
-    this.faceDataFront,
-    this.faceDataLeft,
-    this.faceDataRight,
+    required this.faceDataFront,
+    required this.faceDataLeft,
+    required this.faceDataRight,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      authUid: json['authUid'] as String,
-      userId: json['userId'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      faceDataFront: json['faceDataFront'] as List<double>,
-      faceDataLeft: json['faceDataLeft'] as List<double>,
-      faceDataRight: json['faceDataRight'] as List<double>,
+      authUid: json['authUid'],
+      userId: json['userId'],
+      name: json['name'],
+      email: json['email'],
+      faceDataFront: json['faceDataFront'],
+      faceDataLeft: json['faceDataLeft'],
+      faceDataRight: json['faceDataRight'],
     );
   }
 

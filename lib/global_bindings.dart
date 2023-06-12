@@ -18,7 +18,6 @@ class GlobalBinding implements Bindings {
     Get.lazyPut(() => UserDatabaseController());
     Get.lazyPut(() => AuthController());
     Get.lazyPut(() => CloudFirestoreController());
-    Get.lazyPut(() => ClassroomDatabaseController());
   }
 
 }

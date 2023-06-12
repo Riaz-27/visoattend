@@ -73,33 +73,42 @@ class LoginRegisterPage extends StatelessWidget {
 
     void handleSignInOrSignUp() async {
       final name = nameController.text.trim();
-      final password = passwordController.text.trim();
+      final password = passwordController.text;
       final userId = userIdController.text.trim();
+
       String email = emailController.text.trim();
+      UserModel? userData;
 
       if (isSignUp) {
-        final userCredential = await authController
-            .createUserWithEmailAndPassword(email: email, password: password);
-        if (userCredential != null) {
-          final user = UserModel(
-            authUid: userCredential.user!.uid,
-            userId: userId,
-            name: name,
-            email: email,
-          );
-          Get.to(() => FaceRegisterPage(user: user));
+        userData =
+            await cloudFirestoreController.getUserDataFromFirestore(userId);
+        if (userData == null) {
+          final userCredential = await authController
+              .createUserWithEmailAndPassword(email: email, password: password);
+          if (userCredential != null) {
+            final user = UserModel(
+              authUid: userCredential.user!.uid,
+              userId: userId,
+              name: name,
+              email: email,
+              faceDataFront: [],
+              faceDataLeft: [],
+              faceDataRight: [],
+            );
+            Get.to(() => FaceRegisterPage(user: user));
+          }
         }
       } else {
         final bool emailValid = emailValidator.hasMatch(userId);
         if (emailValid) {
           email = userId;
         } else {
-          final userData =
+          userData =
               await cloudFirestoreController.getUserDataFromFirestore(userId);
-          if(userData == null){
+          if (userData == null) {
             email = '';
-          }else {
-            email = userData['email'];
+          } else {
+            email = userData.email;
           }
         }
         if (email != '') {
@@ -107,6 +116,8 @@ class LoginRegisterPage extends StatelessWidget {
             email: email,
             password: password,
           );
+          cloudFirestoreController.currentUser = userData;
+          cloudFirestoreController.currentUsername = userData!.name;
         } else {
           Get.snackbar(
             'Invalid user',

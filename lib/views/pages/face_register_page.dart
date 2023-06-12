@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:visoattend/views/pages/auth_page.dart';
 import 'package:visoattend/views/pages/classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
@@ -91,7 +92,7 @@ class FaceRegisterPage extends StatelessWidget {
                     final registerSuccess = await userDatabaseController
                         .registerNewUserToFirestore(user);
                     if(registerSuccess){
-                      Get.to(() => HomePage(userName: user.name));
+                      Get.to(() => const AuthPage());
                     }
                   },
                   child: const Text('Take Picture'),

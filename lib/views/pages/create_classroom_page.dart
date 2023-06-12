@@ -11,18 +11,26 @@ class CreateClassroomPage extends StatelessWidget {
     final courseCodeController = TextEditingController();
     final courseTitleController = TextEditingController();
     final sectionController = TextEditingController();
+    final sessionController = TextEditingController();
 
+    Get.lazyPut(() => ClassroomDatabaseController());
     final classroomDatabaseController = Get.find<ClassroomDatabaseController>();
+
+    final weekTimes = List.generate(7, (index) => TimeOfDay.now());
 
     Future<void> selectTime(int index) async {
       final TimeOfDay? picked = await showTimePicker(
         context: context,
-        initialTime: classroomDatabaseController.weekTimes[index],
+        initialTime: weekTimes[index],
       );
 
-      if (picked != null &&
-          picked != classroomDatabaseController.weekTimes[index]) {
-        classroomDatabaseController.weekTimes[index] = picked;
+      if (picked != null) {
+        weekTimes[index] = picked;
+        classroomDatabaseController.selectedWeekTimes[index] =
+            DateFormat.jm().format(
+          DateTime(2023, 1, 6 + index, weekTimes[index].hour,
+              weekTimes[index].minute),
+        );
       }
     }
 
@@ -38,21 +46,28 @@ class CreateClassroomPage extends StatelessWidget {
             TextField(
               controller: courseCodeController,
               decoration: const InputDecoration(
-                hintText: 'Course Code',
+                hintText: 'Course Code (e.g. CSE-4800)',
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: courseTitleController,
               decoration: const InputDecoration(
-                hintText: 'Course Title',
+                hintText: 'Course Title (e.g. Project / Thesis)',
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: sectionController,
               decoration: const InputDecoration(
-                hintText: 'Section',
+                hintText: 'Section (e.g. 8BM)',
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            TextField(
+              controller: sessionController,
+              decoration: const InputDecoration(
+                hintText: 'Session (e.g. Spring-2022)',
               ),
             ),
             const SizedBox(height: 24.0),
@@ -79,6 +94,11 @@ class CreateClassroomPage extends StatelessWidget {
                           onChanged: (value) {
                             classroomDatabaseController.selectedWeeks[index] =
                                 value ?? false;
+                            classroomDatabaseController
+                                .selectedWeekTimes[index] = 'Off Day';
+                            if (value != null && value) {
+                              selectTime(index);
+                            }
                           },
                         );
                       }),
@@ -89,26 +109,15 @@ class CreateClassroomPage extends StatelessWidget {
                       Expanded(
                         flex: 1,
                         child: Obx(() {
-                          final selectedTime = DateFormat.jm().format(
-                            DateTime(
-                                2023,
-                                1,
-                                6 + index,
-                                classroomDatabaseController
-                                    .weekTimes[index].hour,
-                                classroomDatabaseController
-                                    .weekTimes[index].minute),
-                          );
-                          final isSelected = classroomDatabaseController
-                              .selectedWeeks[index];
+                          final isSelected =
+                              classroomDatabaseController.selectedWeeks[index];
+                          final selectedTime = classroomDatabaseController
+                              .selectedWeekTimes[index];
                           return TextField(
                             readOnly: !isSelected,
-                            onTap:
-                            isSelected
-                                    ? () => selectTime(index)
-                                    : null,
+                            onTap: isSelected ? () => selectTime(index) : null,
                             controller:
-                                TextEditingController(text: isSelected? selectedTime : 'Off Day'),
+                                TextEditingController(text: selectedTime),
                             decoration: const InputDecoration(
                               hintText: 'Select Time',
                             ),
@@ -132,8 +141,14 @@ class CreateClassroomPage extends StatelessWidget {
             ),
             const SizedBox(height: 16.0),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Handle confirm button press
+              onPressed: () async {
+                await classroomDatabaseController.createNewClassroom(
+                  courseCode: courseCodeController.text.trim(),
+                  courseTitle: courseTitleController.text.trim(),
+                  section: sectionController.text.trim(),
+                  session: sessionController.text.trim(),
+                );
+                Get.back();
               },
               child: const Text('Confirm'),
             ),

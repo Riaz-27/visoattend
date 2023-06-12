@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/views/pages/create_classroom_page.dart';
 
+import '../../controller/cloud_firestore_controller.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
 
 class HomePage extends StatelessWidget {
-  final String userName;
-
-  const HomePage({super.key, required this.userName});
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +26,17 @@ class HomePage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Welcome, $userName',
-                        style: const TextStyle(
-                          fontSize: 22.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Obx(
+                        () {
+                          final userName = Get.find<CloudFirestoreController>().currentUsername;
+                          return Text(
+                            'Welcome, $userName',
+                            style: const TextStyle(
+                              fontSize: 22.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        }
                       ),
                       Text(
                         '${DateTime.now().day} ${_getMonthInLetter(DateTime.now().month)} ${DateTime.now().year}',
