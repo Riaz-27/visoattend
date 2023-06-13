@@ -42,6 +42,29 @@ class ClassroomDatabaseController extends GetxController {
       students: [],
     );
 
-    await cloudFirestoreController.createClassroom(classroom);
+    final classroomId =
+        await cloudFirestoreController.createClassroom(classroom);
+    if (classroomId != null) {
+      cloudFirestoreController.updateUserClassroom(
+        {
+          'id': classroomId,
+          'role': 'teacher',
+        },
+      );
+    }
+  }
+
+  Future<void> joinClassroom(String classroomId) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    if (cloudFirestoreController.isUserAlreadyInThisClassroom(classroomId)) {
+      print('User Already in this class');
+    }
+    await cloudFirestoreController.joinClassroom(classroomId);
+    cloudFirestoreController.updateUserClassroom(
+      {
+        'id': classroomId,
+        'role': 'student',
+      },
+    );
   }
 }

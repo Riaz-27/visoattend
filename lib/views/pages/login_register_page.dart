@@ -91,6 +91,7 @@ class LoginRegisterPage extends StatelessWidget {
               userId: userId,
               name: name,
               email: email,
+              classrooms: [],
               faceDataFront: [],
               faceDataLeft: [],
               faceDataRight: [],

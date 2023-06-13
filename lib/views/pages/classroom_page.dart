@@ -17,6 +17,7 @@ class ClassroomPage extends StatelessWidget {
           IconButton(
             onPressed: () {
               authController.signOut();
+
             },
             icon: const Icon(Icons.logout_rounded),
           )

@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/views/pages/create_classroom_page.dart';
 
+import '../../controller/cloud_firestore_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
@@ -11,6 +14,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -26,18 +30,17 @@ class HomePage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Obx(
-                        () {
-                          final userName = Get.find<CloudFirestoreController>().currentUsername;
-                          return Text(
-                            'Welcome, $userName',
-                            style: const TextStyle(
-                              fontSize: 22.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          );
-                        }
-                      ),
+                      Obx(() {
+                        final userName =
+                            cloudFirestoreController.currentUsername;
+                        return Text(
+                          'Welcome, $userName',
+                          style: const TextStyle(
+                            fontSize: 22.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }),
                       Text(
                         '${DateTime.now().day} ${_getMonthInLetter(DateTime.now().month)} ${DateTime.now().year}',
                         style: const TextStyle(fontSize: 14.0),
@@ -59,15 +62,30 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 16.0),
               Expanded(
-                child: ListView.builder(
-                  itemCount: 3, // Replace with your desired number of classes
-                  itemBuilder: (BuildContext context, int index) {
-                    return GestureDetector(
-                      onTap: () => Get.to(() => const ClassroomPage()),
-                      child: _buildCustomCard(),
-                    );
-                  },
-                ),
+                child: StreamBuilder<List<ClassroomModel>>(
+                    stream: cloudFirestoreController.getUserClassrooms,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Text('Loading...');
+                      }
+                      if (snapshot.hasData) {
+                        print('UPDATING STREAM: ${snapshot.data!.length}');
+                        return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final classroom = snapshot.data![index];
+                            return GestureDetector(
+                              onTap: () => Get.to(() => const ClassroomPage()),
+                              child: _buildCustomCard(
+                                classname:
+                                    '${classroom.courseCode} - ${classroom.courseTitle}',
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const Text('No Classroom data found.');
+                    }),
               ),
             ],
           ),
@@ -118,7 +136,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomCard() {
+  Widget _buildCustomCard({
+    required String classname,
+  }) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -126,28 +146,28 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.0),
         color: Colors.grey[200], // Replace with your desired color
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Classname',
-                  style: TextStyle(
+                  classname,
+                  style: const TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
+                const Text(
                   'Date',
                   style: TextStyle(fontSize: 14.0),
                 ),
               ],
             ),
-            Spacer(),
-            Column(
+            const Spacer(),
+            const Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
