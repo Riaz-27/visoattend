@@ -20,6 +20,19 @@ class UserModel {
     required this.faceDataRight,
   });
 
+  factory UserModel.empty() {
+    return UserModel(
+      authUid: '',
+      userId: '',
+      name: '',
+      email: '',
+      classrooms: [],
+      faceDataFront: [],
+      faceDataLeft: [],
+      faceDataRight: [],
+    );
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       authUid: json['authUid'],

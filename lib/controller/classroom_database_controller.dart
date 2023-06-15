@@ -31,13 +31,20 @@ class ClassroomDatabaseController extends GetxController {
     required session,
   }) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final currentUser = cloudFirestoreController.currentUser;
+    final teacher = {
+      'name': currentUser.name,
+      'userId': currentUser.userId,
+      'authUid': currentUser.authUid,
+    };
     final classroom = ClassroomModel(
+      classroomId: 'null',
       courseCode: courseCode,
       courseTitle: courseTitle,
       section: section,
       session: session,
       weekTimes: _selectedWeekTimes,
-      teachers: [cloudFirestoreController.currentUser!.userId],
+      teachers: [teacher],
       cRs: [],
       students: [],
     );
@@ -51,6 +58,7 @@ class ClassroomDatabaseController extends GetxController {
           'role': 'teacher',
         },
       );
+      cloudFirestoreController.classrooms.add(classroom);
     }
   }
 
@@ -58,9 +66,10 @@ class ClassroomDatabaseController extends GetxController {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     if (cloudFirestoreController.isUserAlreadyInThisClassroom(classroomId)) {
       print('User Already in this class');
+      return;
     }
     await cloudFirestoreController.joinClassroom(classroomId);
-    cloudFirestoreController.updateUserClassroom(
+    await cloudFirestoreController.updateUserClassroom(
       {
         'id': classroomId,
         'role': 'student',

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 
+import '../../controller/cloud_firestore_controller.dart';
 import 'attendance_record_page.dart';
 
 class ClassroomPage extends StatelessWidget {
-  const ClassroomPage({super.key});
+  const ClassroomPage({super.key, required this.classIndex});
+  final int classIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +17,8 @@ class ClassroomPage extends StatelessWidget {
         title: const Text('Classroom'),
         actions: [
           IconButton(
-            onPressed: () {
-              authController.signOut();
-
+            onPressed: () async {
+              await authController.signOut();
             },
             icon: const Icon(Icons.logout_rounded),
           )
@@ -26,7 +27,7 @@ class ClassroomPage extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            flex: 3,
+            flex: 2,
             child: Container(
               padding: const EdgeInsets.all(10.0),
               child: Card(
@@ -45,7 +46,7 @@ class ClassroomPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 8,
             child: Padding(
               padding: const EdgeInsets.all(10.0),
               child: ListView.builder(

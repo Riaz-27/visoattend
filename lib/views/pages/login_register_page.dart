@@ -117,8 +117,8 @@ class LoginRegisterPage extends StatelessWidget {
             email: email,
             password: password,
           );
-          cloudFirestoreController.currentUser = userData;
-          cloudFirestoreController.currentUsername = userData!.name;
+          cloudFirestoreController.currentUser = userData!;
+          cloudFirestoreController.getUserClassrooms();
         } else {
           Get.snackbar(
             'Invalid user',
@@ -179,12 +179,6 @@ class LoginRegisterPage extends StatelessWidget {
                 ),
                 onPressed: () {
                   handleSignInOrSignUp();
-                  // if(isSignUp){
-                  //   signUpUser();
-                  // } else {
-                  //   loginUser();
-                  //
-                  // }
                 },
                 child: Obx(
                   () => authController.isLoading

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/views/pages/create_classroom_page.dart';
 
-import '../../controller/cloud_firestore_controller.dart';
+import '../../controller/classroom_database_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
@@ -15,6 +15,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -32,7 +33,7 @@ class HomePage extends StatelessWidget {
                     children: [
                       Obx(() {
                         final userName =
-                            cloudFirestoreController.currentUsername;
+                            cloudFirestoreController.currentUser.name;
                         return Text(
                           'Welcome, $userName',
                           style: const TextStyle(
@@ -62,30 +63,24 @@ class HomePage extends StatelessWidget {
               ),
               const SizedBox(height: 16.0),
               Expanded(
-                child: StreamBuilder<List<ClassroomModel>>(
-                    stream: cloudFirestoreController.getUserClassrooms,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Loading...');
-                      }
-                      if (snapshot.hasData) {
-                        print('UPDATING STREAM: ${snapshot.data!.length}');
-                        return ListView.builder(
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final classroom = snapshot.data![index];
-                            return GestureDetector(
-                              onTap: () => Get.to(() => const ClassroomPage()),
-                              child: _buildCustomCard(
-                                classname:
-                                    '${classroom.courseCode} - ${classroom.courseTitle}',
-                              ),
-                            );
-                          },
+                child: Obx(
+                  () {
+                    final classroomList = cloudFirestoreController.classrooms;
+                    if(classroomList.isEmpty){
+                      return const Text('No Classroom Found');
+                    }
+                    print('Found Classrooms: ${classroomList.length}');
+                    return ListView.builder(
+                      itemCount: classroomList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return GestureDetector(
+                          onTap: () => Get.to(() => ClassroomPage(classIndex: index)),
+                          child: _buildCustomCard(index: index),
                         );
-                      }
-                      return const Text('No Classroom data found.');
-                    }),
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -137,15 +132,11 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildCustomCard({
-    required String classname,
+    required int index,
   }) {
-    return Container(
-      width: double.infinity,
+    final classData = Get.find<CloudFirestoreController>().classrooms[index];
+    return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.0),
-        color: Colors.grey[200], // Replace with your desired color
-      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -154,15 +145,15 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  classname,
+                  classData!.courseTitle,
                   style: const TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  'Date',
-                  style: TextStyle(fontSize: 14.0),
+                Text(
+                  classData.courseCode,
+                  style: const TextStyle(fontSize: 14.0),
                 ),
               ],
             ),
@@ -231,8 +222,12 @@ class HomePage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  //TODO
+                onPressed: () async {
+                  Get.put(ClassroomDatabaseController());
+                  final classroomDatabaseController =
+                      Get.find<ClassroomDatabaseController>();
+                  await classroomDatabaseController
+                      .joinClassroom(classroomIdController.text);
                 },
                 child: const Text('Join'),
               ),

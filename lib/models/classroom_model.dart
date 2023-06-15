@@ -1,14 +1,16 @@
 class ClassroomModel {
+  String classroomId;
   String courseCode;
   String courseTitle;
   String section;
   String session;
   List<String> weekTimes;
-  List<String> teachers;
-  List<String> cRs;
-  List<String> students;
+  List<Map<String, dynamic>> teachers;
+  List<Map<String, dynamic>> cRs;
+  List<Map<String, dynamic>> students;
 
   ClassroomModel({
+    required this.classroomId,
     required this.courseCode,
     required this.courseTitle,
     required this.section,
@@ -21,19 +23,21 @@ class ClassroomModel {
 
   factory ClassroomModel.fromJson(Map<String, dynamic> json) {
     return ClassroomModel(
+      classroomId: json['classroomId'],
       courseCode: json['courseCode'],
       courseTitle: json['courseTitle'],
       section: json['section'],
       session: json['session'],
       weekTimes: List<String>.from(json['weekTimes']),
-      teachers: List<String>.from(json['teachers']),
-      cRs: List<String>.from(json['cRs']),
-      students: List<String>.from(json['students']),
+      teachers: List<Map<String,dynamic>>.from(json['teachers']),
+      cRs: List<Map<String,dynamic>>.from(json['cRs']),
+      students: List<Map<String,dynamic>>.from(json['students']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'classroomId': classroomId,
       'courseCode': courseCode,
       'courseTitle': courseTitle,
       'section': section,

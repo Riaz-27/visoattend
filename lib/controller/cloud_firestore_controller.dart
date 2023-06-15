@@ -1,61 +1,65 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/controller/auth_controller.dart';
 
+import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
 class CloudFirestoreController extends GetxController {
-  final _isLoading = false.obs;
-
-  bool get isLoading => _isLoading.value;
-
   final _firestoreInstance = FirebaseFirestore.instance;
-
   FirebaseFirestore get firestoreInstance => _firestoreInstance;
 
-  UserModel? currentUser;
-  final _currentUsername = ''.obs;
-  String get currentUsername => _currentUsername.value;
-  set currentUsername(String value) => _currentUsername(value);
+  final _isLoading = false.obs;
+  bool get isLoading => _isLoading.value;
 
+  final _currentUser = UserModel.empty().obs;
+  UserModel get currentUser => _currentUser.value;
+  set currentUser(UserModel user) => _currentUser.value = user;
 
   final _classrooms = <ClassroomModel>[].obs;
   List<ClassroomModel?> get classrooms => _classrooms;
 
-
-  Stream<List<ClassroomModel>> get getUserClassrooms => _getUserClassrooms();
-
   @override
   void onInit() {
-    setCurrentUser();
+    initialize();
     super.onInit();
+  }
+
+  void initialize() async {
+    await setCurrentUser();
+    await getUserClassrooms();
+  }
+
+  void resetValues() async {
+    _isLoading(false);
+    _currentUser(UserModel.empty());
+    _classrooms([]);
   }
 
   /// User data control
   final userCollection = 'UserData';
 
   Future<UserModel?> getUserDataFromFirestore(String userId) async {
-    final userDocument =
-        await _firestoreInstance.collection(userCollection).doc(userId).get();
-    final userData = userDocument.data();
-    if (userData != null) {
-      return UserModel.fromJson(userData);
+    final userDocument = await _firestoreInstance
+        .collection(userCollection)
+        .where('userId', isEqualTo: userId)
+        .get();
+    final userDoc = userDocument.docs;
+    if (userDoc.isNotEmpty) {
+      return UserModel.fromJson(userDoc.first.data());
     }
     return null;
   }
 
-  void setCurrentUser() async {
+  Future<void> setCurrentUser() async {
     final currentAuthUser = Get.find<AuthController>().currentUser;
     if (currentAuthUser != null) {
       final userDoc = await _firestoreInstance
           .collection(userCollection)
-          .where('authUid', isEqualTo: currentAuthUser.uid)
+          .doc(currentAuthUser.uid)
           .get();
-      if (userDoc.docs.isNotEmpty) {
-        currentUser = UserModel.fromJson(userDoc.docs.first.data());
-        _currentUsername(currentUser!.name);
+      if (userDoc.data() != null) {
+        _currentUser(UserModel.fromJson(userDoc.data()!));
       }
     }
   }
@@ -66,7 +70,7 @@ class CloudFirestoreController extends GetxController {
       try {
         await _firestoreInstance
             .collection(userCollection)
-            .doc(user.userId)
+            .doc(user.authUid)
             .set(user.toJson());
       } catch (e) {
         print(e.toString());
@@ -74,40 +78,43 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
-  Future<void> updateUserClassroom(Map<String,String> classroomInfo) async {
-    try{
-      if(currentUser == null){
+  Future<void> updateUserClassroom(Map<String, String> classroomInfo) async {
+    try {
+      if (_currentUser.value.authUid == '') {
         print('User Not Found');
         return;
       }
-      currentUser!.classrooms.add(classroomInfo);
-      await _firestoreInstance.collection(userCollection).doc(currentUser!.userId).update(
-          {'classrooms': currentUser!.classrooms});
-    } catch(e) {
+      _currentUser.value.classrooms.add(classroomInfo);
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(_currentUser.value.authUid)
+          .update({'classrooms': _currentUser.value.classrooms});
+    } catch (e) {
       print(e.toString());
     }
   }
 
-  bool isUserAlreadyInThisClassroom(String classroomId){
-    currentUser!.classrooms.map((value){
-      if(value['id'] == classroomId){
+  bool isUserAlreadyInThisClassroom(String classroomId) {
+    if (_currentUser.value.authUid == '') {
+      print('User not found');
+      return true;
+    }
+    for (var value in _currentUser.value.classrooms) {
+      if (value['id'] == classroomId) {
         return true;
       }
-    });
+    }
     return false;
   }
-
-
 
   /// Classroom database control
   final classroomsCollection = 'Classrooms';
 
   Future<String?> createClassroom(ClassroomModel classroom) async {
     try {
-      final docRef = _firestoreInstance
-          .collection(classroomsCollection)
-          .doc()
-          ..set(classroom.toJson());
+      final docRef = _firestoreInstance.collection(classroomsCollection).doc();
+      classroom.classroomId = docRef.id;
+      docRef.set(classroom.toJson());
       return docRef.id;
     } catch (e) {
       print(e.toString());
@@ -119,15 +126,23 @@ class CloudFirestoreController extends GetxController {
     try {
       final docRef = await _firestoreInstance
           .collection(classroomsCollection)
-          .doc(classroomId).get();
+          .doc(classroomId)
+          .get();
       final docData = docRef.data();
-      if(docData == null || docData.isEmpty){
+      if (docData == null || docData.isEmpty) {
         return false;
       }
-      docData['students'].add(currentUser!.userId);
+      docData['students'].add({
+        'name': currentUser.name,
+        'userId': currentUser.userId,
+        'authUid': currentUser.authUid,
+      });
+      print('The Doc Data : $docData');
       await _firestoreInstance
           .collection(classroomsCollection)
-          .doc(classroomId).update(docData['students']);
+          .doc(classroomId)
+          .update({'students': docData['students']});
+      _classrooms.add(ClassroomModel.fromJson(docData));
       return true;
     } catch (e) {
       print(e.toString());
@@ -135,31 +150,42 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
-  Stream<List<ClassroomModel>> _getUserClassrooms() {
-    try {
-      if (currentUser == null) {
-        print('No User Found!');
-        return const Stream.empty();
+  Future<void> getUserClassrooms() async {
+    if (_currentUser.value.authUid == '') {
+      print('No User Found!');
+      return;
+    }
+    final classroomList = _currentUser.value.classrooms
+        .map((val) => val['id'].toString())
+        .toList();
+    if (classroomList.isEmpty) {
+      print('ClassroomList is empty');
+      return;
+    }
+    print('ClassroomList: $classroomList');
+    _classrooms.value = [];
+    for (int i = 0; i < classroomList.length; i += 10) {
+      try {
+        final collectionRef = await _firestoreInstance
+            .collection(classroomsCollection)
+            .where(FieldPath.documentId,
+                whereIn: classroomList.sublist(
+                    i,
+                    i + 10 > classroomList.length
+                        ? classroomList.length
+                        : i + 10))
+            .get();
+        for (var docRef in collectionRef.docs) {
+          _classrooms.add(ClassroomModel.fromJson(docRef.data()));
+        }
+      } catch (e) {
+        print(e.toString());
       }
-      print('User Found : ${currentUser!.userId}');
-      final classrooms = currentUser!.classrooms.map((val) => val['id'].toString()).toList();
-      if(classrooms.isEmpty){
-        return const Stream.empty();
-      }
-      final result = _firestoreInstance
-          .collection(classroomsCollection)
-          .where(FieldPath.documentId, whereIn: classrooms)
-          .snapshots()
-          .map((querySnap) => querySnap.docs
-              .map((docSnap) => ClassroomModel.fromJson(docSnap.data()))
-              .toList());
-      return result;
-    } catch (e) {
-      print(e.toString());
-      return const Stream.empty();
     }
   }
 
   /// Attendance Control
   final attendanceCollection = 'Attendances';
+
+
 }

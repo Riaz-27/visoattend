@@ -122,7 +122,6 @@ class UserDatabaseController extends GetxController {
     if (_isFront.value && _isLeft.value && _isRight.value) {
       cloudFirestoreController.addUserDataToFirestore(user);
       cloudFirestoreController.currentUser = user;
-      cloudFirestoreController.currentUsername = user.name;
       return true;
     }
     return false;
