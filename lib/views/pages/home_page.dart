@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/views/pages/create_classroom_page.dart';
 
-import '../../controller/classroom_database_controller.dart';
+import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
@@ -74,7 +74,7 @@ class HomePage extends StatelessWidget {
                       itemCount: classroomList.length,
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
-                          onTap: () => Get.to(() => ClassroomPage(classIndex: index)),
+                          onTap: () => Get.to(() => ClassroomPage(classroomData: classroomList[index])),
                           child: _buildCustomCard(index: index),
                         );
                       },
@@ -145,7 +145,7 @@ class HomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  classData!.courseTitle,
+                  classData.courseTitle,
                   style: const TextStyle(
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
@@ -223,9 +223,9 @@ class HomePage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  Get.put(ClassroomDatabaseController());
+                  Get.put(ClassroomController());
                   final classroomDatabaseController =
-                      Get.find<ClassroomDatabaseController>();
+                      Get.find<ClassroomController>();
                   await classroomDatabaseController
                       .joinClassroom(classroomIdController.text);
                 },

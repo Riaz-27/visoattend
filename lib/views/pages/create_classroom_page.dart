@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/classroom_database_controller.dart';
+import 'package:visoattend/controller/classroom_controller.dart';
 
 class CreateClassroomPage extends StatelessWidget {
   const CreateClassroomPage({super.key});
@@ -13,8 +13,8 @@ class CreateClassroomPage extends StatelessWidget {
     final sectionController = TextEditingController();
     final sessionController = TextEditingController();
 
-    Get.lazyPut(() => ClassroomDatabaseController());
-    final classroomDatabaseController = Get.find<ClassroomDatabaseController>();
+    Get.lazyPut(() => ClassroomController());
+    final classroomDatabaseController = Get.find<ClassroomController>();
 
     final weekTimes = List.generate(7, (index) => TimeOfDay.now());
 

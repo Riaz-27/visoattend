@@ -5,19 +5,26 @@ import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
+import '../models/attendance_model.dart';
+
 class CloudFirestoreController extends GetxController {
   final _firestoreInstance = FirebaseFirestore.instance;
+
   FirebaseFirestore get firestoreInstance => _firestoreInstance;
 
   final _isLoading = false.obs;
+
   bool get isLoading => _isLoading.value;
 
   final _currentUser = UserModel.empty().obs;
+
   UserModel get currentUser => _currentUser.value;
+
   set currentUser(UserModel user) => _currentUser.value = user;
 
   final _classrooms = <ClassroomModel>[].obs;
-  List<ClassroomModel?> get classrooms => _classrooms;
+
+  List<ClassroomModel> get classrooms => _classrooms;
 
   @override
   void onInit() {
@@ -94,19 +101,6 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
-  bool isUserAlreadyInThisClassroom(String classroomId) {
-    if (_currentUser.value.authUid == '') {
-      print('User not found');
-      return true;
-    }
-    for (var value in _currentUser.value.classrooms) {
-      if (value['id'] == classroomId) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /// Classroom database control
   final classroomsCollection = 'Classrooms';
 
@@ -120,6 +114,19 @@ class CloudFirestoreController extends GetxController {
       print(e.toString());
       return null;
     }
+  }
+
+  bool isUserAlreadyInThisClassroom(String classroomId) {
+    if (_currentUser.value.authUid == '') {
+      print('User not found');
+      return true;
+    }
+    for (var value in _currentUser.value.classrooms) {
+      if (value['id'] == classroomId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<bool> joinClassroom(String classroomId) async {
@@ -184,8 +191,40 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
+  Future<List<UserModel>> getStudentsOfClassroom(
+      List<String> studentsUid) async {
+    List<UserModel> finalList = [];
+    for (int i = 0; i < studentsUid.length; i += 10) {
+      try {
+        final collectionsRef = await _firestoreInstance
+            .collection(userCollection)
+            .where(FieldPath.documentId,
+                whereIn: studentsUid.sublist(
+                    i, i + 10 > studentsUid.length ? studentsUid.length : i + 10))
+            .get();
+        for(var docRef in collectionsRef.docs){
+          finalList.add(UserModel.fromJson(docRef.data()));
+        }
+      } catch (e) {
+        print(e.toString());
+        return [];
+      }
+    }
+    return finalList;
+  }
+
   /// Attendance Control
   final attendanceCollection = 'Attendances';
 
-
+  Future<List<AttendanceModel>> getClassroomAttendances(
+      String classroomId) async {
+    final collectionRef = await _firestoreInstance
+        .collection(classroomsCollection)
+        .doc(classroomId)
+        .collection(attendanceCollection)
+        .get();
+    return collectionRef.docs
+        .map((docRef) => AttendanceModel.fromJson(docRef.data()))
+        .toList();
+  }
 }

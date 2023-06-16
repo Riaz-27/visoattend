@@ -39,7 +39,7 @@ class FaceDetectorController extends GetxController {
 
     //Faces Detection
     _faces = await _faceDetector.processImage(frameImg);
-
+    print('Total Face found: ${_faces.length}');
     if(_faces.length>1){
       _faceDetected(true);
     }
@@ -47,6 +47,8 @@ class FaceDetectorController extends GetxController {
 
   //converting image to InputImage
   InputImage _getInputImage(CameraImage image, InputImageRotation rotation) {
+    print('The Rotation of Image : $rotation');
+
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
       allBytes.putUint8List(plane.bytes);

@@ -1,27 +1,29 @@
 import 'dart:ui';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:visoattend/views/pages/home_page.dart';
 
 import './firebase_options.dart';
-import './views/pages/login_register_page.dart';
 import './global_bindings.dart';
 import './views/pages/auth_page.dart';
-import './views/pages/classroom_page.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // GlobalBinding().dependencies();
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(
     GetMaterialApp(
       debugShowCheckedModeBanner: false,
-
       initialBinding: GlobalBinding(),
       theme: ThemeData(
         useMaterial3: true,

@@ -21,6 +21,20 @@ class ClassroomModel {
     required this.students,
   });
 
+  factory ClassroomModel.empty() {
+    return ClassroomModel(
+      classroomId: '',
+      courseCode: '',
+      courseTitle: '',
+      section: '',
+      session: '',
+      weekTimes: [],
+      teachers: [],
+      cRs: [],
+      students: [],
+    );
+  }
+
   factory ClassroomModel.fromJson(Map<String, dynamic> json) {
     return ClassroomModel(
       classroomId: json['classroomId'],

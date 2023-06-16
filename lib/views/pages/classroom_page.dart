@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
+import 'package:visoattend/models/attendance_model.dart';
 
+import '../../controller/attendance_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
+import '../../models/classroom_model.dart';
 import 'attendance_record_page.dart';
 
-class ClassroomPage extends StatelessWidget {
-  const ClassroomPage({super.key, required this.classIndex});
-  final int classIndex;
+class ClassroomPage extends GetView<AttendanceController> {
+  const ClassroomPage({super.key, required this.classroomData});
+
+  final ClassroomModel classroomData;
 
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    controller.updateValues(classroomData);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Classroom'),
@@ -49,12 +54,15 @@ class ClassroomPage extends StatelessWidget {
             flex: 8,
             child: Padding(
               padding: const EdgeInsets.all(10.0),
-              child: ListView.builder(
-                itemCount: 10, // Replace with the actual number of items
-                itemBuilder: (context, index) {
-                  return const CustomCard();
-                },
-              ),
+              child: Obx(() {
+                return ListView.builder(
+                  itemCount: controller.attendances.length,
+                  itemBuilder: (context, index) {
+                    return _buildAttendanceListView(
+                        data: controller.attendances[index]);
+                  },
+                );
+              }),
             ),
           ),
         ],
@@ -75,19 +83,14 @@ class ClassroomPage extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-}
 
-class CustomCard extends StatelessWidget {
-  const CustomCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildAttendanceListView({required AttendanceModel data}) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: const ListTile(
-        title: Text('Item'),
+        title: Text('attendance'),
       ),
     );
   }

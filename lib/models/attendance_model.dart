@@ -1,21 +1,21 @@
 class AttendanceModel {
   String dateTime;
-  List<String> presentStudents;
-  Map<String, String> takenByUser;
+  List<Map<String,dynamic>> studentsData;
+  Map<String, String> takenBy;
   int counts;
 
   AttendanceModel({
     required this.dateTime,
-    required this.presentStudents,
-    required this.takenByUser,
+    required this.studentsData,
+    required this.takenBy,
     required this.counts,
   });
 
   factory AttendanceModel.fromJson(Map<String, dynamic> json) {
     return AttendanceModel(
       dateTime: json['dateTime'],
-      presentStudents: List<String>.from(json['presentStudents']),
-      takenByUser: Map<String, String>.from(json['takenByUser']),
+      studentsData: List<Map<String,dynamic>>.from(json['studentsData']),
+      takenBy: Map<String, String>.from(json['takenBy']),
       counts: json['counts'],
     );
   }
@@ -23,8 +23,8 @@ class AttendanceModel {
   Map<String, dynamic> toJson() {
     return {
       'dateTime': dateTime,
-      'presentStudents': presentStudents,
-      'takenByUser': takenByUser,
+      'studentsData': studentsData,
+      'takenBy': takenBy,
       'counts': counts,
     };
   }

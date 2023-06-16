@@ -24,18 +24,29 @@ class AttendanceRecordPage extends StatelessWidget {
     List<Widget> stackChildren = [];
     var recognitionResults = recognitionController.recognitionResults;
 
-
     stackChildren.add(
       Positioned(
         height: size.height,
         width: size.width,
         child: Obx(() {
           return (cameraServiceController.isInitialized)
-              ? AspectRatio(
-                  aspectRatio: cameraServiceController
-                      .cameraController.value.aspectRatio,
-                  child:
-                      CameraPreview(cameraServiceController.cameraController),
+              ? ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.center,
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        height: 1,
+                        child: AspectRatio(
+                          aspectRatio: 1 /
+                              cameraServiceController
+                                  .cameraController.value.aspectRatio,
+                          child: CameraPreview(
+                              cameraServiceController.cameraController),
+                        ),
+                      ),
+                    ),
+                  ),
                 )
               : Container(
                   color: Colors.black,
@@ -52,7 +63,7 @@ class AttendanceRecordPage extends StatelessWidget {
         height: size.height,
         child: Obx(() {
           return cameraServiceController.isInitialized &&
-              recognitionController.performedRecognition
+                  recognitionController.performedRecognition
               ? CustomPaint(
                   painter: FaceDetectorPainter(
                     imageSize: cameraServiceController.getImageSize(),
@@ -115,7 +126,8 @@ class AttendanceRecordPage extends StatelessWidget {
                     final faces = faceDetectorController.faces;
                     final camDirection =
                         cameraServiceController.cameraLensDirection;
-                    final users = await userDatabaseController.getAllIsarUsers();
+                    final users =
+                        await userDatabaseController.getAllIsarUsers();
                     recognitionResults =
                         await recognitionController.performRecognitionOnIsolate(
                       cameraImage: cameraImage,
@@ -125,7 +137,6 @@ class AttendanceRecordPage extends StatelessWidget {
                     );
                     final pre = DateTime.now().millisecondsSinceEpoch - pres;
                     print('Time total: $pre ms');
-                    // print(recognitionResults);
                   },
                   child: const Text('Record'),
                 ),

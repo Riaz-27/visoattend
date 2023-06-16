@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
 
-class ClassroomDatabaseController extends GetxController {
+class ClassroomController extends GetxController {
   final List<String> _weekDays = [
     'Saturday',
     'Sunday',
