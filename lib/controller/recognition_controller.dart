@@ -5,6 +5,8 @@ import 'package:image/image.dart' as img;
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
+import '../models/recognition_model.dart';
+import '../models/user_model.dart';
 import '../services/recognition_service.dart';
 import '../services/recognition_isolate.dart';
 import '../models/entities/isar_user.dart';
@@ -18,7 +20,8 @@ class RecognitionController extends GetxController {
   final threshold = 1;
   final recognitionService = RecognitionService();
 
-  var recognitionResults = [];
+  var _recognitionResults = <int, RecognitionModel>{}.obs;
+  Map<int, RecognitionModel> get recognitionResults => _recognitionResults;
 
   @override
   void onInit() {
@@ -102,7 +105,30 @@ class RecognitionController extends GetxController {
         cameraLensDirection: cameraLensDirection
     );
     _performedRecognition(true);
-    recognitionResults = result;
+    _recognitionResults = result;
+    return result;
+  }
+
+  Future<dynamic> performRecognitionOnIsolateFirestore({
+    required CameraImage cameraImage,
+    required List<Face> faces,
+    required CameraLensDirection cameraLensDirection,
+    bool isRegistration = false,
+    List<UserModel>? users,
+  }) async {
+    final interpreterAddress = recognitionService.interpreterAddress;
+
+    final result = await recognitionIsolateForFirestore(
+        interpreterAddress: interpreterAddress,
+        cameraImage: cameraImage,
+        faces: faces,
+        isRegistration: isRegistration,
+        users: users,
+        cameraLensDirection: cameraLensDirection
+    );
+    _performedRecognition(true);
+    _recognitionResults.value = result;
+    print(_recognitionResults);
     return result;
   }
 }

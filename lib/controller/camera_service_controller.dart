@@ -10,7 +10,9 @@ import 'package:synchronized/synchronized.dart';
 // import 'user_database_controller.dart';
 // import '../services/recognition_service.dart';
 
+import 'attendance_controller.dart';
 import 'face_detector_controller.dart';
+import 'recognition_controller.dart';
 
 class CameraServiceController extends GetxController {
   late CameraController _cameraController;
@@ -33,7 +35,8 @@ class CameraServiceController extends GetxController {
   late CameraDescription _cameraDescription;
 
   final _isInitialized = false.obs;
-  bool _isBusy = false;
+  bool isBusy = false;
+  bool isStopped = false;
 
   bool get isInitialized => _isInitialized.value;
 
@@ -45,8 +48,8 @@ class CameraServiceController extends GetxController {
 
   Future<void> _initialize() async {
     final faceDetectorController = Get.find<FaceDetectorController>();
-    // final recognitionController = Get.find<RecognitionController>();
-    // final userDatabaseController = Get.find<UserDatabaseController>();
+    final recognitionController = Get.find<RecognitionController>();
+    final attendanceController = Get.find<AttendanceController>();
     _cameraController = CameraController(
       _cameraDescription,
       ResolutionPreset.max,
@@ -57,13 +60,24 @@ class CameraServiceController extends GetxController {
           _cameraDescription.sensorOrientation);
       var lock = Lock();
       _cameraController.startImageStream((image) async {
-        if (!_isBusy) {
-          _isBusy = true;
+        if (!isBusy) {
+          isBusy = true;
           _cameraImage = image;
-          await lock.synchronized(() async {
-            await faceDetectorController.doFaceDetectionOnFrame(
-                _cameraImage, _cameraRotation!);
+          // await lock.synchronized(() async {
+          await faceDetectorController.doFaceDetectionOnFrame(
+              _cameraImage, _cameraRotation!);
+          await recognitionController
+              .performRecognitionOnIsolateFirestore(
+            cameraImage: cameraImage,
+            faces: faceDetectorController.faces,
+            cameraLensDirection: cameraLensDirection,
+            users: attendanceController.studentsData,
+          )
+              .then((value) {
+            attendanceController.totalRecognized.addAll(value);
+            isBusy = false;
           });
+          // });
           // await lock.synchronized(() async {
           //   final cameraImage = _cameraImage;
           //   final faces = faceDetectorController.faces;
@@ -77,7 +91,7 @@ class CameraServiceController extends GetxController {
           //     users: users,
           //   );
           // });
-          _isBusy = false;
+          isBusy = false;
         }
       });
     });
@@ -97,7 +111,9 @@ class CameraServiceController extends GetxController {
 
   @override
   void onClose() {
-    _cameraController.stopImageStream();
+    if (!isStopped) {
+      _cameraController.stopImageStream();
+    }
     _cameraController.dispose();
     super.onClose();
   }

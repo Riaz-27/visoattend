@@ -2,6 +2,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
+import '../../models/recognition_model.dart';
+
 class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter({
     required this.imageSize,
@@ -14,7 +16,7 @@ class FaceDetectorPainter extends CustomPainter {
   final Size imageSize;
   final List<Face> faces;
   CameraLensDirection camDirection;
-  final List<dynamic> recognitionResults;
+  final Map<int, RecognitionModel> recognitionResults;
   final bool performedRecognition;
 
   @override
@@ -45,15 +47,15 @@ class FaceDetectorPainter extends CustomPainter {
         );
       }
     } else {
-      for (dynamic result in recognitionResults) {
+      recognitionResults.forEach((key, value){
         String text = '';
         Color color;
 
-        if (result[0] == "Uk") {
-          text = '${result[0]} ${result[1].toStringAsFixed(2)}';
+        if (value.userOrNot is String) {
+          text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
           color = Colors.red;
         } else {
-          text = '${result[0].name} ${result[1].toStringAsFixed(2)}';
+          text = '${value.userOrNot.name} ${value.distance.toStringAsFixed(2)}';
           color = Colors.green;
         }
 
@@ -72,23 +74,23 @@ class FaceDetectorPainter extends CustomPainter {
         );
         tp.layout();
         tp.paint(
-            canvas, Offset(result[2].left * scaleX, result[2].top * scaleY));
+            canvas, Offset(value.position.left * scaleX, value.position.top * scaleY));
 
         canvas.drawRRect(
           RRect.fromLTRBR(
             camDirection == CameraLensDirection.front
-                ? (imageSize.width - result[2].right) * scaleX
-                : result[2].left * scaleX,
-            result[2].top * scaleY,
+                ? (imageSize.width - value.position.right) * scaleX
+                : value.position.left * scaleX,
+            value.position.top * scaleY,
             camDirection == CameraLensDirection.front
-                ? (imageSize.width - result[2].left) * scaleX
-                : result[2].right * scaleX,
-            result[2].bottom * scaleY,
+                ? (imageSize.width - value.position.left) * scaleX
+                : value.position.right * scaleX,
+            value.position.bottom * scaleY,
             const Radius.circular(10),
           ),
           paint..color = color,
         );
-      }
+      });
     }
   }
 

@@ -199,10 +199,10 @@ class CloudFirestoreController extends GetxController {
         final collectionsRef = await _firestoreInstance
             .collection(userCollection)
             .where(FieldPath.documentId,
-                whereIn: studentsUid.sublist(
-                    i, i + 10 > studentsUid.length ? studentsUid.length : i + 10))
+                whereIn: studentsUid.sublist(i,
+                    i + 10 > studentsUid.length ? studentsUid.length : i + 10))
             .get();
-        for(var docRef in collectionsRef.docs){
+        for (var docRef in collectionsRef.docs) {
           finalList.add(UserModel.fromJson(docRef.data()));
         }
       } catch (e) {
@@ -226,5 +226,17 @@ class CloudFirestoreController extends GetxController {
     return collectionRef.docs
         .map((docRef) => AttendanceModel.fromJson(docRef.data()))
         .toList();
+  }
+
+  Future<void> saveAttendanceData(
+    String classroomId,
+    AttendanceModel attendanceData,
+  ) async {
+    await _firestoreInstance
+        .collection(classroomsCollection)
+        .doc(classroomId)
+        .collection(attendanceCollection)
+        .doc()
+        .set(attendanceData.toJson());
   }
 }

@@ -9,6 +9,7 @@ import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper_plus/tflite_flutter_helper_plus.dart';
 import 'package:tflite_flutter_plus/src/bindings/types.dart';
 import 'package:image/image.dart' as img;
+import 'package:visoattend/models/recognition_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
 import '../models/entities/isar_user.dart';
@@ -200,7 +201,7 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
   const threshold = 1.0;
 
   List<double> emb = [];
-  List<dynamic> recognitionResults = [];
+  Map<int, RecognitionModel> recognitionResults = {};
 
   img.Image image;
   //convert CameraImage to Image and rotate it so that our frame will be in a portrait
@@ -248,12 +249,13 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
         return;
       }
       final recognitionResult = findNearestFirestore(emb, users);
-      recognitionResult[2] = faceRect;
-      if (recognitionResult[1] > threshold) {
-        recognitionResult[0] = 'Uk';
+      recognitionResult.position = faceRect;
+      recognitionResult.face = faceImage;
+      if (recognitionResult.distance > threshold) {
+        recognitionResult.userOrNot = 'Uk - ${face.trackingId}';
       }
-      print('The result : $recognitionResult');
-      recognitionResults.add(recognitionResult);
+      final key = face.trackingId!;
+      recognitionResults[key] = recognitionResult;
     }
   }
 
@@ -265,8 +267,10 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
 }
 
 ///  looks for the nearest embedding in the dataset
-dynamic findNearestFirestore(List<double> emb, List<UserModel> users) {
-  dynamic recognitionResult = [UserModel.empty(), -5.0, Rect.zero];
+RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
+  // dynamic recognitionResult = [UserModel.empty(), -5.0, Rect.zero];
+  RecognitionModel recognitionResult = RecognitionModel(
+      userOrNot: UserModel.empty(), distance: -5.0, position: Rect.zero);
 
   for (UserModel user in users) {
     final userEmbeddings = [
@@ -287,9 +291,10 @@ dynamic findNearestFirestore(List<double> emb, List<UserModel> users) {
     }
 
     averageDistance /= 3;
-    if (recognitionResult[1] == -5 || averageDistance < recognitionResult[1]) {
-      recognitionResult[0] = user;
-      recognitionResult[1] = averageDistance;
+    if (recognitionResult.distance == -5.0 ||
+        averageDistance < recognitionResult.distance) {
+      recognitionResult.userOrNot = user;
+      recognitionResult.distance = averageDistance;
     }
   }
 

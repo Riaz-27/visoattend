@@ -16,7 +16,8 @@ class ClassroomPage extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    controller.updateValues(classroomData);
+    controller.updateValues(classroomData).then((_) => controller.getStudentsData());
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Classroom'),
@@ -67,18 +68,22 @@ class ClassroomPage extends GetView<AttendanceController> {
           ),
         ],
       ),
-      floatingActionButton: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          backgroundColor: Colors.orange,
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-        ),
-        onPressed: () {
-          Get.to(() => const AttendanceRecordPage());
-        },
-        child: const Text('Take Attendance'),
+      floatingActionButton:  Obx(
+        () {
+          return controller.currentUserRole == 'Teacher' ? ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              backgroundColor: Colors.orange,
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            ),
+            onPressed: () {
+              Get.to(() => const AttendanceRecordPage());
+            },
+            child: const Text('Take Attendance'),
+          ): const SizedBox();
+        }
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );

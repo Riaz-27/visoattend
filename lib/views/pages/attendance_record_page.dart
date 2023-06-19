@@ -1,13 +1,16 @@
+import 'dart:collection';
 import 'dart:isolate';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controller/attendance_controller.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/face_detector_controller.dart';
 import '../../controller/recognition_controller.dart';
 import '../../controller/user_database_controller.dart';
+import '../../models/recognition_model.dart';
 import '../widgets/face_detector_painter.dart';
 
 class AttendanceRecordPage extends StatelessWidget {
@@ -18,11 +21,10 @@ class AttendanceRecordPage extends StatelessWidget {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();
-    final userDatabaseController = Get.find<UserDatabaseController>();
+    final attendanceController = Get.find<AttendanceController>();
 
     final size = Get.size;
     List<Widget> stackChildren = [];
-    var recognitionResults = recognitionController.recognitionResults;
 
     stackChildren.add(
       Positioned(
@@ -33,17 +35,14 @@ class AttendanceRecordPage extends StatelessWidget {
               ? ClipRect(
                   child: OverflowBox(
                     alignment: Alignment.center,
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        height: 1,
-                        child: AspectRatio(
-                          aspectRatio: 1 /
-                              cameraServiceController
-                                  .cameraController.value.aspectRatio,
-                          child: CameraPreview(
-                              cameraServiceController.cameraController),
-                        ),
+                    child: SizedBox(
+                      height: 1,
+                      child: AspectRatio(
+                        aspectRatio: 1 /
+                            cameraServiceController
+                                .cameraController.value.aspectRatio,
+                        child: CameraPreview(
+                            cameraServiceController.cameraController),
                       ),
                     ),
                   ),
@@ -62,14 +61,14 @@ class AttendanceRecordPage extends StatelessWidget {
         width: size.width,
         height: size.height,
         child: Obx(() {
-          return cameraServiceController.isInitialized &&
-                  recognitionController.performedRecognition
+          final resultOnCurrentFrame = recognitionController.recognitionResults;
+          return resultOnCurrentFrame.isNotEmpty
               ? CustomPaint(
                   painter: FaceDetectorPainter(
                     imageSize: cameraServiceController.getImageSize(),
                     faces: faceDetectorController.faces,
                     camDirection: cameraServiceController.cameraLensDirection,
-                    recognitionResults: recognitionResults,
+                    recognitionResults: resultOnCurrentFrame,
                     performedRecognition:
                         recognitionController.performedRecognition,
                   ),
@@ -121,22 +120,26 @@ class AttendanceRecordPage extends StatelessWidget {
                     //   cameraServiceController.cameraImage,
                     //   cameraServiceController.cameraRotation!,
                     // );
-                    final pres = DateTime.now().millisecondsSinceEpoch;
-                    final cameraImage = cameraServiceController.cameraImage;
-                    final faces = faceDetectorController.faces;
-                    final camDirection =
-                        cameraServiceController.cameraLensDirection;
-                    final users =
-                        await userDatabaseController.getAllIsarUsers();
-                    recognitionResults =
-                        await recognitionController.performRecognitionOnIsolate(
-                      cameraImage: cameraImage,
-                      faces: faces,
-                      cameraLensDirection: camDirection,
-                      users: users,
-                    );
-                    final pre = DateTime.now().millisecondsSinceEpoch - pres;
-                    print('Time total: $pre ms');
+                    // if (attendanceController.studentsData.isEmpty) {
+                    //   print('No Students in this class');
+                    //   return;
+                    // }
+                    // final pres = DateTime.now().millisecondsSinceEpoch;
+                    // final cameraImage = cameraServiceController.cameraImage;
+                    // final faces = faceDetectorController.faces;
+                    // final camDirection =
+                    //     cameraServiceController.cameraLensDirection;
+                    // attendanceController.totalRecognized.addAll(await recognitionController
+                    //     .performRecognitionOnIsolateFirestore(
+                    //   cameraImage: cameraImage,
+                    //   faces: faces,
+                    //   cameraLensDirection: camDirection,
+                    //   users: attendanceController.studentsData,
+                    // ));
+                    // final pre = DateTime.now().millisecondsSinceEpoch - pres;
+                    // print('Time total: $pre ms');
+                    await attendanceController.setMatchedStudents().then(
+                        (_) => attendanceController.saveDataToFirestore());
                   },
                   child: const Text('Record'),
                 ),
@@ -147,10 +150,19 @@ class AttendanceRecordPage extends StatelessWidget {
       ),
     );
 
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: stackChildren,
+    return WillPopScope(
+      onWillPop: () async {
+        cameraServiceController.isBusy = true;
+        await cameraServiceController.cameraController.stopImageStream();
+        cameraServiceController.isStopped = true;
+        await Future.delayed(const Duration(seconds: 2));
+        return true;
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: stackChildren,
+          ),
         ),
       ),
     );
