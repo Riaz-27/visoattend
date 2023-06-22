@@ -37,6 +37,7 @@ class CameraServiceController extends GetxController {
   final _isInitialized = false.obs;
   bool isBusy = false;
   bool isStopped = false;
+  bool isSignUp = false;
 
   bool get isInitialized => _isInitialized.value;
 
@@ -58,7 +59,7 @@ class CameraServiceController extends GetxController {
     await _cameraController.initialize().then((_) {
       _cameraRotation = InputImageRotationValue.fromRawValue(
           _cameraDescription.sensorOrientation);
-      var lock = Lock();
+
       _cameraController.startImageStream((image) async {
         if (!isBusy) {
           isBusy = true;
@@ -66,17 +67,22 @@ class CameraServiceController extends GetxController {
           // await lock.synchronized(() async {
           await faceDetectorController.doFaceDetectionOnFrame(
               _cameraImage, _cameraRotation!);
-          await recognitionController
-              .performRecognitionOnIsolateFirestore(
-            cameraImage: cameraImage,
-            faces: faceDetectorController.faces,
-            cameraLensDirection: cameraLensDirection,
-            users: attendanceController.studentsData,
-          )
-              .then((value) {
-            attendanceController.totalRecognized.addAll(value);
+          if (!isSignUp) {
+            await recognitionController
+                .performRecognitionOnIsolateFirestore(
+              cameraImage: cameraImage,
+              faces: faceDetectorController.faces,
+              cameraLensDirection: cameraLensDirection,
+              users: attendanceController.studentsData,
+            )
+                .then((value) {
+              attendanceController.totalRecognized.addAll(value);
+
+              isBusy = false;
+            });
+          } else {
             isBusy = false;
-          });
+          }
           // });
           // await lock.synchronized(() async {
           //   final cameraImage = _cameraImage;

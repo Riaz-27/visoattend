@@ -25,6 +25,7 @@ class AttendanceRecordPage extends StatelessWidget {
 
     final size = Get.size;
     List<Widget> stackChildren = [];
+    cameraServiceController.isSignUp = false;
 
     stackChildren.add(
       Positioned(

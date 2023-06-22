@@ -5,10 +5,12 @@ import 'package:visoattend/views/pages/auth_page.dart';
 import 'package:visoattend/views/pages/classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
+import '../../controller/face_detector_controller.dart';
 import '../../models/entities/isar_user.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/user_database_controller.dart';
 import '../../models/user_model.dart';
+import '../widgets/face_detector_painter.dart';
 
 class FaceRegisterPage extends StatelessWidget {
   const FaceRegisterPage({Key? key, required this.user}) : super(key: key);
@@ -17,8 +19,9 @@ class FaceRegisterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cameraServiceController = Get.find<CameraServiceController>();
+    final faceDetectorController = Get.find<FaceDetectorController>();
     final userDatabaseController = Get.find<UserDatabaseController>();
-
+    cameraServiceController.isSignUp = true;
     final size = Get.size;
     return Scaffold(
       body: SafeArea(
@@ -32,6 +35,25 @@ class FaceRegisterPage extends StatelessWidget {
                       ? CameraPreview(cameraServiceController.cameraController)
                       : Container();
                 })),
+            Positioned(
+              top: 0.0,
+              left: 0.0,
+              width: size.width,
+              height: size.height,
+              child: Obx(() {
+                return faceDetectorController.faceDetected>0
+                    ? CustomPaint(
+                        painter: FaceDetectorPainter(
+                          imageSize: cameraServiceController.getImageSize(),
+                          faces: faceDetectorController.faces,
+                          camDirection:
+                              cameraServiceController.cameraLensDirection,
+                          performedRecognition: false,
+                        ),
+                      )
+                    : const SizedBox();
+              }),
+            ),
             Positioned(
               left: 10.0,
               right: 10.0,
@@ -91,7 +113,7 @@ class FaceRegisterPage extends StatelessWidget {
                   onPressed: () async {
                     final registerSuccess = await userDatabaseController
                         .registerNewUserToFirestore(user);
-                    if(registerSuccess){
+                    if (registerSuccess) {
                       Get.to(() => const AuthPage());
                     }
                   },

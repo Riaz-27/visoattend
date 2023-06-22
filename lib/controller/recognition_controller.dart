@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
@@ -17,10 +18,11 @@ class RecognitionController extends GetxController {
 
   bool get performedRecognition => _performedRecognition.value;
 
-  final threshold = 1;
+  final threshold = 0.9;
   final recognitionService = RecognitionService();
 
-  var _recognitionResults = <int, RecognitionModel>{}.obs;
+  final _recognitionResults = <int, RecognitionModel>{}.obs;
+
   Map<int, RecognitionModel> get recognitionResults => _recognitionResults;
 
   @override
@@ -64,7 +66,7 @@ class RecognitionController extends GetxController {
       emb = await recognitionService.runModel(faceImage);
 
       if (!isRegistration) {
-        if(users == null){
+        if (users == null) {
           print('Users data not found');
           return;
         }
@@ -102,10 +104,8 @@ class RecognitionController extends GetxController {
         faces: faces,
         isRegistration: isRegistration,
         users: users,
-        cameraLensDirection: cameraLensDirection
-    );
+        cameraLensDirection: cameraLensDirection);
     _performedRecognition(true);
-    _recognitionResults = result;
     return result;
   }
 
@@ -117,18 +117,18 @@ class RecognitionController extends GetxController {
     List<UserModel>? users,
   }) async {
     final interpreterAddress = recognitionService.interpreterAddress;
-
+    final pres = DateTime.now().millisecondsSinceEpoch;
     final result = await recognitionIsolateForFirestore(
         interpreterAddress: interpreterAddress,
         cameraImage: cameraImage,
         faces: faces,
         isRegistration: isRegistration,
         users: users,
-        cameraLensDirection: cameraLensDirection
-    );
+        cameraLensDirection: cameraLensDirection);
     _performedRecognition(true);
     _recognitionResults.value = result;
-    print(_recognitionResults);
+    final pre = DateTime.now().millisecondsSinceEpoch;
+    log('Total Time: ${pre - pres}');
     return result;
   }
 }

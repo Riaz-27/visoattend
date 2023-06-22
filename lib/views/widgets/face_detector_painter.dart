@@ -9,14 +9,14 @@ class FaceDetectorPainter extends CustomPainter {
     required this.imageSize,
     required this.faces,
     required this.camDirection,
-    required this.recognitionResults,
+    this.recognitionResults,
     required this.performedRecognition,
   });
 
   final Size imageSize;
   final List<Face> faces;
   CameraLensDirection camDirection;
-  final Map<int, RecognitionModel> recognitionResults;
+  final Map<int, RecognitionModel>? recognitionResults;
   final bool performedRecognition;
 
   @override
@@ -29,8 +29,25 @@ class FaceDetectorPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..color = Colors.red;
 
-    if(!performedRecognition) {
+    if(recognitionResults == null) {
       for (Face face in faces) {
+        TextSpan span = TextSpan(
+          style: TextStyle(
+            color: Colors.black,
+            backgroundColor: Colors.white.withAlpha(155),
+            fontSize: 15,
+          ),
+          text: face.headEulerAngleY.toString(),
+        );
+        TextPainter tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr,
+        );
+        tp.layout();
+        tp.paint(
+            canvas, Offset(face.boundingBox.left * scaleX, face.boundingBox.top * scaleY));
+
         canvas.drawRRect(
           RRect.fromLTRBR(
             camDirection == CameraLensDirection.front
@@ -47,7 +64,7 @@ class FaceDetectorPainter extends CustomPainter {
         );
       }
     } else {
-      recognitionResults.forEach((key, value){
+      recognitionResults!.forEach((key, value){
         String text = '';
         Color color;
 
@@ -55,7 +72,7 @@ class FaceDetectorPainter extends CustomPainter {
           text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
           color = Colors.red;
         } else {
-          text = '${value.userOrNot.name} ${value.distance.toStringAsFixed(2)}';
+          text = '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
           color = Colors.green;
         }
 

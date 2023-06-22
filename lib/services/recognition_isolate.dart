@@ -56,7 +56,7 @@ Future<void> _recognitionIsolate(List<dynamic> data) async {
   NormalizeOp preProcessNormalizeOp = NormalizeOp(127.5, 127.5);
   final outputBuffer =
       TensorBuffer.createFixedSize(outputShape, TfLiteType.float32);
-  const threshold = 1.0;
+  const threshold = 1;
 
   List<double> emb = [];
   List<dynamic> recognitionResults = [];
@@ -198,7 +198,7 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
   NormalizeOp preProcessNormalizeOp = NormalizeOp(127.5, 127.5);
   final outputBuffer =
       TensorBuffer.createFixedSize(outputShape, TfLiteType.float32);
-  const threshold = 1.0;
+  const threshold = 1;
 
   List<double> emb = [];
   Map<int, RecognitionModel> recognitionResults = {};
@@ -279,7 +279,7 @@ RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
       List<double>.from(user.faceDataLeft),
     ];
     double averageDistance = 0;
-
+    double divider = 3.0;
     for (List<double> embedding in userEmbeddings) {
       double distance = 0;
       for (int i = 0; i < emb.length; i++) {
@@ -288,9 +288,14 @@ RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
       }
       distance = sqrt(distance);
       averageDistance += distance;
+      if(distance<0.75){
+        divider+=0.5;
+      }else {
+        divider-=distance>1?0.25+(distance-1):0.25-(1-distance);
+      }
     }
 
-    averageDistance /= 3;
+    averageDistance /= divider;
     if (recognitionResult.distance == -5.0 ||
         averageDistance < recognitionResult.distance) {
       recognitionResult.userOrNot = user;

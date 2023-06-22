@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/user_model.dart';
+import 'package:visoattend/views/widgets/custom_button.dart';
 
 import '../../controller/cloud_firestore_controller.dart';
+import '../../helper/constants.dart';
+import '../../helper/functions.dart';
 import '../../models/entities/isar_user.dart';
 import '../../controller/user_database_controller.dart';
 import '../widgets/custom_text_form_field.dart';
@@ -17,18 +20,23 @@ class LoginRegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emailValidator = RegExp(
-        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+    // final validEmail = RegExp(
+    //     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+    final validEmail = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,5}');
 
     final TextEditingController nameController = TextEditingController();
     final TextEditingController emailController = TextEditingController();
     final TextEditingController userIdController = TextEditingController();
     final TextEditingController passwordController = TextEditingController();
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
 
-    // final userDatabaseController = Get.find<UserDatabaseController>();
     final authController = Get.find<AuthController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    // final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    final formKey = GlobalKey<FormState>();
+    final height = Get.height;
+    final width = Get.width;
 
     // void signUpUser() {
     //   final name = nameController.text.trim();
@@ -91,7 +99,7 @@ class LoginRegisterPage extends StatelessWidget {
               userId: userId,
               name: name,
               email: email,
-              classrooms: [],
+              classrooms: {},
               faceDataFront: [],
               faceDataLeft: [],
               faceDataRight: [],
@@ -100,7 +108,7 @@ class LoginRegisterPage extends StatelessWidget {
           }
         }
       } else {
-        final bool emailValid = emailValidator.hasMatch(userId);
+        final bool emailValid = validEmail.hasMatch(userId);
         if (emailValid) {
           email = userId;
         } else {
@@ -132,88 +140,170 @@ class LoginRegisterPage extends StatelessWidget {
 
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 15.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              isSignUp ? 'Create Account' : 'Welcome Back',
-              style: const TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            if (isSignUp) ...[
-              CustomTextFormField(
-                hintText: 'Full Name (According to the registration)',
-                controller: nameController,
-              ),
-              const SizedBox(height: 10.0),
-              CustomTextFormField(
-                hintText: 'Email',
-                controller: emailController,
-              ),
-              const SizedBox(height: 10.0),
-            ],
-            CustomTextFormField(
-              hintText: isSignUp ? 'UserID' : 'UserID',
-              controller: userIdController,
-            ),
-            const SizedBox(height: 10.0),
-            CustomTextFormField(
-              hintText: 'Password',
-              controller: passwordController,
-              isPassword: true,
-            ),
-            const SizedBox(height: 20.0),
-            SizedBox(
-              width: double.infinity,
-              height: 48.0,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+        padding: EdgeInsets.symmetric(horizontal: height * 0.025),
+        child: Form(
+          key: formKey,
+          child: Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (!isSignUp) ...[
+                    Text(
+                      'VisoAttend',
+                      style: Get.textTheme.titleLarge!
+                          .copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    verticalGap(height * percentGapSmall),
+                    Text(
+                      'Welcome  Back Please Sign In To Continue',
+                      style: Get.textTheme.titleMedium,
+                    ),
+                    verticalGap(height * percentGapLarge),
+                  ],
+                  if (isSignUp) ...[
+                    Text(
+                      'Create Account',
+                      style: Get.textTheme.titleLarge!
+                          .copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    verticalGap(height * percentGapLarge),
+                    CustomTextFormField(
+                      labelText: 'Full Name (According to the registration)',
+                      controller: nameController,
+                      validator: (value) {
+                        if (value!.isEmpty ||
+                            RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
+                          return 'Name should only contains letters.';
+                        }
+                        return null;
+                      },
+                    ),
+                    verticalGap(height * percentGapMedium),
+                    CustomTextFormField(
+                      labelText: 'Email',
+                      controller: emailController,
+                      validator: (value) {
+                        if (value!.isEmpty || validEmail.hasMatch(value)) {
+                          return 'Email is not valid';
+                        }
+                        cloudFirestoreController
+                            .getUserDataFromFirestoreByEmail(value)
+                            .then((userData) {
+                          if (userData != null) {
+                            return 'Email already exists';
+                          }
+                        });
+                        return null;
+                      },
+                    ),
+                    verticalGap(height * percentGapMedium),
+                  ],
+                  CustomTextFormField(
+                    labelText: 'User ID',
+                    controller: userIdController,
+                    validator: (value) {
+                      // if (value!.isEmpty ||
+                      //     RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                      //   return 'User ID must be letters or number';
+                      // }
+                      return null;
+                    },
                   ),
-                ),
-                onPressed: () {
-                  handleSignInOrSignUp();
-                },
-                child: Obx(
-                  () => authController.isLoading
-                      ? const CircularProgressIndicator()
-                      : Text(isSignUp ? 'Sign Up' : 'Login'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  isSignUp
-                      ? 'Already have an account?'
-                      : "Don't have an account?",
-                  style: const TextStyle(fontSize: 14.0),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Get.offAll(
-                      () => LoginRegisterPage(
-                        isSignUp: !isSignUp,
+                  verticalGap(height * percentGapMedium),
+                  CustomTextFormField(
+                    labelText: 'Password',
+                    controller: passwordController,
+                    isPassword: true,
+                    validator: (value) {
+                      if ( isSignUp && ( value!.isEmpty ||
+                          confirmPasswordController.text != value)) {
+                        return 'Password do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  verticalGap(height * percentGapMedium),
+                  if (isSignUp) ...[
+                    CustomTextFormField(
+                      labelText: 'Confirm Password',
+                      controller: confirmPasswordController,
+                      isPassword: true,
+                      validator: (value) {
+                        if (value!.isEmpty || passwordController.text != value) {
+                          return 'Password do not match';
+                        }
+                        return null;
+                      },
+                    ),
+                    verticalGap(height * percentGapLarge),
+                  ],
+                  if (!isSignUp) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            //TODO Function for reset password
+                          },
+                          child: Text(
+                            'Forgotten Password?',
+                            style: Get.textTheme.labelMedium!.copyWith(
+                              color: Get.theme.colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    verticalGap(height * percentGapMedium),
+                  ],
+                  CustomButton(
+                    text: isSignUp ? 'Sign Up' : 'Login',
+                    onPressed: () {
+                      if(formKey.currentState!.validate()) {
+                        handleSignInOrSignUp();
+                      }
+                    } ,
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 5.0),
+                        child: Text(
+                          isSignUp
+                              ? 'Already have an account?'
+                              : "Don't have an account?",
+                          style: Get.textTheme.labelLarge,
+                        ),
                       ),
-                      transition: Transition.cupertino,
-                    );
-                  },
-                  child: Text(
-                    isSignUp ? 'Login' : 'Sign up',
-                    style: const TextStyle(fontSize: 14.0),
+                      TextButton(
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                        onPressed: () {
+                          Get.offAll(
+                            () => LoginRegisterPage(
+                              isSignUp: !isSignUp,
+                            ),
+                            transition: Transition.cupertino,
+                          );
+                        },
+                        child: Text(
+                          isSignUp ? 'Login' : 'Sign up',
+                          style: Get.textTheme.labelLarge!.copyWith(
+                            color: Get.theme.colorScheme.secondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );

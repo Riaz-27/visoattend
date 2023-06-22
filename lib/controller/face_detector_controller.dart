@@ -11,8 +11,8 @@ class FaceDetectorController extends GetxController {
   List<Face> _faces = [];
   List<Face> get faces => _faces;
 
-  final _faceDetected = false.obs;
-  bool get faceDetected => _faceDetected.value;
+  final _faceDetected = 0.obs;
+  int get faceDetected => _faceDetected.value;
 
   @override
   void onInit() {
@@ -33,15 +33,13 @@ class FaceDetectorController extends GetxController {
   }
 
   Future<void> doFaceDetectionOnFrame(CameraImage image, InputImageRotation rotation) async {
-    _faceDetected(false);
+    _faceDetected.value = 0;
     //convert frame into InputImage format
     var frameImg = _getInputImage(image, rotation);
 
     //Faces Detection
     _faces = await _faceDetector.processImage(frameImg);
-    if(_faces.length>1){
-      _faceDetected(true);
-    }
+    _faceDetected.value = _faces.length;
   }
 
   //converting image to InputImage

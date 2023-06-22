@@ -1,5 +1,5 @@
 class AttendanceModel {
-  String dateTime;
+  int dateTime;
   List<Map<String,dynamic>> studentsData;
   Map<String, String> takenBy;
   int counts;

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/views/pages/create_classroom_page.dart';
 
+import '../../controller/auth_controller.dart';
 import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../views/pages/classroom_page.dart';
@@ -47,6 +48,12 @@ class HomePage extends StatelessWidget {
                         style: const TextStyle(fontSize: 14.0),
                       ),
                     ],
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      await Get.find<AuthController>().signOut();
+                    },
+                    icon: const Icon(Icons.logout_rounded),
                   ),
                   const CircleAvatar(
                     backgroundColor: Colors.blueGrey,
@@ -215,7 +222,7 @@ class HomePage extends StatelessWidget {
               width: double.infinity,
               child: CustomTextFormField(
                 controller: classroomIdController,
-                hintText: 'Enter Class Id',
+                labelText: 'Enter Class Id',
               ),
             ),
             // const SizedBox(height: 10),

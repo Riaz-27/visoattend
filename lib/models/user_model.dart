@@ -1,10 +1,9 @@
-
 class UserModel {
   String authUid;
   String userId;
   String name;
   String email;
-  List<Map<String,dynamic>> classrooms;
+  Map<String,dynamic> classrooms;
   List<dynamic> faceDataFront; // List<double>
   List<dynamic> faceDataLeft; // List<double>
   List<dynamic> faceDataRight; // List<double>
@@ -26,7 +25,7 @@ class UserModel {
       userId: '',
       name: '',
       email: '',
-      classrooms: [],
+      classrooms: {},
       faceDataFront: [],
       faceDataLeft: [],
       faceDataRight: [],
@@ -39,7 +38,7 @@ class UserModel {
       userId: json['userId'],
       name: json['name'],
       email: json['email'],
-      classrooms: List<Map<String,dynamic>>.from(json['classrooms']),
+      classrooms: Map<String,dynamic>.from(json['classrooms']),
       faceDataFront: json['faceDataFront'],
       faceDataLeft: json['faceDataLeft'],
       faceDataRight: json['faceDataRight'],

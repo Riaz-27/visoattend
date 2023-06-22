@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
@@ -58,6 +60,18 @@ class CloudFirestoreController extends GetxController {
     return null;
   }
 
+  Future<UserModel?> getUserDataFromFirestoreByEmail(String email) async {
+    final userDocument = await _firestoreInstance
+        .collection(userCollection)
+        .where('email', isEqualTo: email)
+        .get();
+    final userDoc = userDocument.docs;
+    if (userDoc.isNotEmpty) {
+      return UserModel.fromJson(userDoc.first.data());
+    }
+    return null;
+  }
+
   Future<void> setCurrentUser() async {
     final currentAuthUser = Get.find<AuthController>().currentUser;
     if (currentAuthUser != null) {
@@ -80,7 +94,7 @@ class CloudFirestoreController extends GetxController {
             .doc(user.authUid)
             .set(user.toJson());
       } catch (e) {
-        print(e.toString());
+        dev.log(e.toString());
       }
     }
   }
@@ -88,16 +102,16 @@ class CloudFirestoreController extends GetxController {
   Future<void> updateUserClassroom(Map<String, String> classroomInfo) async {
     try {
       if (_currentUser.value.authUid == '') {
-        print('User Not Found');
+        dev.log('User Not Found');
         return;
       }
-      _currentUser.value.classrooms.add(classroomInfo);
+      _currentUser.value.classrooms[classroomInfo.keys.first] = classroomInfo.values.first;
       await _firestoreInstance
           .collection(userCollection)
           .doc(_currentUser.value.authUid)
           .update({'classrooms': _currentUser.value.classrooms});
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
     }
   }
 
@@ -111,18 +125,18 @@ class CloudFirestoreController extends GetxController {
       docRef.set(classroom.toJson());
       return docRef.id;
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
       return null;
     }
   }
 
   bool isUserAlreadyInThisClassroom(String classroomId) {
     if (_currentUser.value.authUid == '') {
-      print('User not found');
+      dev.log('User not found');
       return true;
     }
-    for (var value in _currentUser.value.classrooms) {
-      if (value['id'] == classroomId) {
+    for (String value in _currentUser.value.classrooms.keys) {
+      if (value == classroomId) {
         return true;
       }
     }
@@ -144,7 +158,7 @@ class CloudFirestoreController extends GetxController {
         'userId': currentUser.userId,
         'authUid': currentUser.authUid,
       });
-      print('The Doc Data : $docData');
+      dev.log('The Doc Data : $docData');
       await _firestoreInstance
           .collection(classroomsCollection)
           .doc(classroomId)
@@ -152,24 +166,22 @@ class CloudFirestoreController extends GetxController {
       _classrooms.add(ClassroomModel.fromJson(docData));
       return true;
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
       return false;
     }
   }
 
   Future<void> getUserClassrooms() async {
     if (_currentUser.value.authUid == '') {
-      print('No User Found!');
+      dev.log('No User Found!');
       return;
     }
-    final classroomList = _currentUser.value.classrooms
-        .map((val) => val['id'].toString())
-        .toList();
+    final classroomList = _currentUser.value.classrooms.keys.toList();
     if (classroomList.isEmpty) {
-      print('ClassroomList is empty');
+      dev.log('ClassroomList is empty');
       return;
     }
-    print('ClassroomList: $classroomList');
+    dev.log('ClassroomList: $classroomList');
     _classrooms.value = [];
     for (int i = 0; i < classroomList.length; i += 10) {
       try {
@@ -186,7 +198,7 @@ class CloudFirestoreController extends GetxController {
           _classrooms.add(ClassroomModel.fromJson(docRef.data()));
         }
       } catch (e) {
-        print(e.toString());
+        dev.log(e.toString());
       }
     }
   }
@@ -206,7 +218,7 @@ class CloudFirestoreController extends GetxController {
           finalList.add(UserModel.fromJson(docRef.data()));
         }
       } catch (e) {
-        print(e.toString());
+        dev.log(e.toString());
         return [];
       }
     }

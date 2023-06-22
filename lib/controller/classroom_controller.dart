@@ -52,12 +52,7 @@ class ClassroomController extends GetxController {
     final classroomId =
         await cloudFirestoreController.createClassroom(classroom);
     if (classroomId != null) {
-      cloudFirestoreController.updateUserClassroom(
-        {
-          'id': classroomId,
-          'role': 'teacher',
-        },
-      );
+      cloudFirestoreController.updateUserClassroom({classroomId: 'Teacher'});
       cloudFirestoreController.classrooms.add(classroom);
     }
   }
@@ -69,11 +64,7 @@ class ClassroomController extends GetxController {
       return;
     }
     await cloudFirestoreController.joinClassroom(classroomId);
-    await cloudFirestoreController.updateUserClassroom(
-      {
-        'id': classroomId,
-        'role': 'student',
-      },
-    );
+    await cloudFirestoreController
+        .updateUserClassroom({classroomId: 'Student'});
   }
 }

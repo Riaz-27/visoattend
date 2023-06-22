@@ -21,6 +21,7 @@ class AttendanceController extends GetxController {
 
   List<UserModel> studentsData = [];
   final _currentUserRole = 'Student'.obs;
+
   String get currentUserRole => _currentUserRole.value;
 
   Map<int, RecognitionModel> totalRecognized = {};
@@ -32,16 +33,11 @@ class AttendanceController extends GetxController {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     _attendances.value = await cloudFirestoreController
         .getClassroomAttendances(classroom.classroomId);
-    final currentUser = cloudFirestoreController.currentUser;
-    if(_classroomData.value.teachers.any((element) =>
-        element['authUid'] == currentUser.authUid)){
-      _currentUserRole.value = 'Teacher';
-    } else if(_classroomData.value.cRs.any((element) =>
-    element['authUid'] == currentUser.authUid)){
-      _currentUserRole.value = 'CR';
-    }
+    _currentUserRole.value =
+        cloudFirestoreController.currentUser.classrooms[classroom.classroomId];
 
-    print('The current user is : ${currentUser.authUid}');
+    print(
+        'The current user is : ${cloudFirestoreController.currentUser.authUid}');
     print('The current user is : $currentUserRole');
   }
 
@@ -73,7 +69,7 @@ class AttendanceController extends GetxController {
       'userId': currentUser.userId,
     };
     AttendanceModel attendanceData = AttendanceModel(
-        dateTime: DateTime.now().toString(),
+        dateTime: DateTime.now().millisecondsSinceEpoch,
         counts: counts,
         studentsData: [],
         takenBy: takenBy);
@@ -90,7 +86,8 @@ class AttendanceController extends GetxController {
       attendanceData.studentsData.add(studentData);
     }
 
-    await cloudFirestoreController.saveAttendanceData(
-        classroomData.classroomId, attendanceData);
+    await cloudFirestoreController
+        .saveAttendanceData(classroomData.classroomId, attendanceData)
+        .then((_) => _attendances.add(attendanceData));
   }
 }
