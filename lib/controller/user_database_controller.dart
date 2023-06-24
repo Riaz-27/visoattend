@@ -5,12 +5,12 @@ import 'package:visoattend/models/user_model.dart';
 
 import '../services/isar_service.dart';
 import '../models/entities/isar_user.dart';
+import 'auth_controller.dart';
 import 'camera_service_controller.dart';
 import 'face_detector_controller.dart';
 import 'recognition_controller.dart';
 
 class UserDatabaseController extends GetxController {
-
   final isarService = IsarService();
 
   final _isFront = false.obs;
@@ -95,6 +95,7 @@ class UserDatabaseController extends GetxController {
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final authController = Get.find<AuthController>();
 
     await faceDetectorController.doFaceDetectionOnFrame(
       cameraServiceController.cameraImage,
@@ -120,12 +121,17 @@ class UserDatabaseController extends GetxController {
     }
 
     if (_isFront.value && _isLeft.value && _isRight.value) {
-      cloudFirestoreController.addUserDataToFirestore(user);
-      cloudFirestoreController.currentUser = user;
+      final userCredential =
+          await authController.createUserWithEmailAndPassword(
+              email: user.email, password: authController.tempPassword);
+      if (userCredential != null) {
+        user.authUid = userCredential.user!.uid;
+        cloudFirestoreController.addUserDataToFirestore(user);
+        cloudFirestoreController.currentUser = user;
+        authController.tempPassword = '';
+      }
       return true;
     }
     return false;
   }
-
-
 }

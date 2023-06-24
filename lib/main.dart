@@ -29,12 +29,12 @@ void main() async {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: lightColorScheme,
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+        textTheme: GoogleFonts.lexendTextTheme(),
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: darkColorScheme,
-        textTheme: GoogleFonts.spaceGroteskTextTheme(),
+        textTheme: GoogleFonts.lexendTextTheme(),
       ),
       home:  const AuthPage(),
     ),

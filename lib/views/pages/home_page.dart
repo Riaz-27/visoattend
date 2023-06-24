@@ -1,32 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/models/classroom_model.dart';
-import 'package:visoattend/views/pages/create_classroom_page.dart';
+import 'package:intl/intl.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
+import '../../controller/profile_pic_controller.dart';
+import '../../helper/functions.dart';
+import '../../models/classroom_model.dart';
+import '../../views/pages/create_classroom_page.dart';
 import '../../controller/auth_controller.dart';
 import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
+import '../../helper/constants.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
+import 'all_classroom_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final height = Get.height;
+    final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    final classroomList = cloudFirestoreController.classesOfToday;
 
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.only(top: 30, right: 16, left: 16),
+          padding: EdgeInsets.only(
+            top: height * percentGapLarge,
+            right: height * percentGapSmall,
+            left: height * percentGapSmall,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -37,52 +50,96 @@ class HomePage extends StatelessWidget {
                             cloudFirestoreController.currentUser.name;
                         return Text(
                           'Welcome, $userName',
-                          style: const TextStyle(
-                            fontSize: 22.0,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Get.textTheme.titleLarge!
+                              .copyWith(fontWeight: FontWeight.bold),
                         );
                       }),
+                      verticalGap(height * percentGapVerySmall),
                       Text(
-                        '${DateTime.now().day} ${_getMonthInLetter(DateTime.now().month)} ${DateTime.now().year}',
-                        style: const TextStyle(fontSize: 14.0),
+                        DateFormat('d MMMM, y').format(DateTime.now()),
+                        style: Get.textTheme.bodyMedium!.copyWith(
+                            color: Get.theme.colorScheme.onBackground
+                                .withAlpha(150)),
                       ),
                     ],
                   ),
+
+                  ///Temporary button
                   IconButton(
                     onPressed: () async {
                       await Get.find<AuthController>().signOut();
                     },
                     icon: const Icon(Icons.logout_rounded),
                   ),
-                  const CircleAvatar(
+                  CircleAvatar(
                     backgroundColor: Colors.blueGrey,
+                    child: Obx(() {
+                      final picUrl =
+                          Get.find<ProfilePicController>().profilePicUrl;
+                      return picUrl == ''
+                          ? const Icon(Icons.people_rounded)
+                          : Image.network(
+                              picUrl,
+                              fit: BoxFit.cover,
+                            );
+                    }),
                   ),
                 ],
               ),
-              const SizedBox(height: 16.0),
-              const Text(
-                'Today\'s Classes',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                ),
+              verticalGap(height * percentGapMedium),
+              // Running Class UI
+              Text(
+                "Running Class",
+                style: Get.textTheme.titleMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16.0),
+              verticalGap(height * percentGapSmall),
+              GestureDetector(
+                onTap: () {
+                  if (classroomList.isNotEmpty) {
+                    Get.to(() =>
+                        ClassroomPage(classroomData: classroomList.first));
+                  }
+                },
+                child: _topView(classroomList: classroomList),
+              ),
+              verticalGap(height * percentGapMedium),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Next Classes",
+                    style: Get.textTheme.titleMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  GestureDetector(
+                    onTap: () => Get.to(() => const AllClassroomPage()),
+                    child: Text(
+                      "All Classes",
+                      style: Get.textTheme.titleSmall!
+                          .copyWith(color: Get.theme.colorScheme.secondary),
+                    ),
+                  ),
+                ],
+              ),
+              verticalGap(height * percentGapSmall),
               Expanded(
                 child: Obx(
                   () {
-                    final classroomList = cloudFirestoreController.classrooms;
-                    if(classroomList.isEmpty){
-                      return const Text('No Classroom Found');
+                    if (classroomList.length == 1) {
+                      return const Text('No more classes today!');
                     }
-                    print('Found Classrooms: ${classroomList.length}');
                     return ListView.builder(
                       itemCount: classroomList.length,
                       itemBuilder: (BuildContext context, int index) {
+                        if (index == 0) {
+                          return const SizedBox();
+                        }
                         return GestureDetector(
-                          onTap: () => Get.to(() => ClassroomPage(classroomData: classroomList[index])),
-                          child: _buildCustomCard(index: index),
+                          onTap: () => Get.to(() => ClassroomPage(
+                              classroomData: classroomList[index])),
+                          child:
+                              _buildCustomCard(classroom: classroomList[index]),
                         );
                       },
                     );
@@ -139,45 +196,60 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildCustomCard({
-    required int index,
+    required ClassroomModel classroom,
   }) {
-    final classData = Get.find<CloudFirestoreController>().classrooms[index];
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
+    final height = Get.height;
+    final width = Get.width;
+
+    final weekTime =
+        classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())];
+    String startTime = weekTime;
+    if (startTime != 'Off Day') {
+      startTime = DateFormat.jm().format(DateTime.parse(weekTime));
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(15.0),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  classData.courseTitle,
-                  style: const TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    classroom.courseTitle,
+                    style: Get.textTheme.titleSmall!
+                        .copyWith(fontWeight: FontWeight.bold),
                   ),
-                ),
-                Text(
-                  classData.courseCode,
-                  style: const TextStyle(fontSize: 14.0),
-                ),
-              ],
+                  Text(
+                    classroom.courseCode,
+                    style: Get.textTheme.titleSmall!.copyWith(
+                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Class Time',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  startTime,
+                  style: Get.textTheme.titleSmall!
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   'Time Left',
-                  style: TextStyle(fontSize: 14.0),
+                  style: Get.textTheme.titleSmall!.copyWith(
+                    color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                  ),
                 ),
               ],
             ),
@@ -185,25 +257,6 @@ class HomePage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getMonthInLetter(int month) {
-    final months = [
-      '', // To align with month indexing starting from 1
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months[month];
   }
 
   void _handleJoinClass() {
@@ -230,7 +283,6 @@ class HomePage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  Get.put(ClassroomController());
                   final classroomDatabaseController =
                       Get.find<ClassroomController>();
                   await classroomDatabaseController
@@ -241,6 +293,93 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _topView({required List<ClassroomModel> classroomList}) {
+    final height = Get.height;
+    final width = Get.width;
+    
+    return Container(
+      height: height * 0.22,
+      width: width,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+      ),
+      padding: const EdgeInsets.all(kSmall),
+      child: Row(
+        children: [
+          horizontalGap(width * percentGapSmall),
+          CircularPercentIndicator(
+            radius: height*0.08,
+            lineWidth: 14,
+            percent: 0.38,
+            circularStrokeCap: CircularStrokeCap.round,
+            progressColor: Colors.red,
+            backgroundColor: Colors.red.withAlpha(40),
+            animation: true,
+            center: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '38%',
+                  style: Get.textTheme.titleLarge,
+                ),
+                Text(
+                  'Attendance',
+                  style: Get.textTheme.labelSmall!.copyWith(color: Colors.red),
+                ),
+              ],
+            ),
+          ),
+          horizontalGap(width * 0.10),
+          Expanded(
+            child: Obx(() {
+              final classroom = classroomList.isNotEmpty
+                  ? classroomList[0]
+                  : ClassroomModel.empty();
+              final extractTime = classroomList.isEmpty
+                  ? ''
+                  : DateFormat.jm().format(DateTime.parse(classroom
+                      .weekTimes[DateFormat('EEEE').format(DateTime.now())]));
+              final startTime = 'Start Time: $extractTime';
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  verticalGap(height * percentGapMedium),
+                  Text(
+                    classroomList.isEmpty
+                        ? 'Looks like its a Holiday!'
+                        : classroom.courseTitle,
+                    style: Get.textTheme.bodyMedium,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  verticalGap(height * percentGapVerySmall),
+                  Text(
+                    classroomList.isEmpty
+                        ? 'Enjoy your Holiday!'
+                        : classroom.courseCode,
+                    style: Get.textTheme.bodySmall,
+                  ),
+                  if (classroomList.isNotEmpty) ...[
+                    verticalGap(height * percentGapVerySmall),
+                    Text(
+                      classroom.section,
+                      style: Get.textTheme.bodySmall,
+                    ),
+                    verticalGap(height * percentGapVerySmall),
+                    Text(
+                      startTime,
+                      style: Get.textTheme.bodySmall,
+                    ),
+                  ]
+                ],
+              );
+            }),
+          )
+        ],
       ),
     );
   }

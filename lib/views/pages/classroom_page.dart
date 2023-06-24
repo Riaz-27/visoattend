@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/attendance_model.dart';
 
 import '../../controller/attendance_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
+import '../../helper/constants.dart';
+import '../../helper/functions.dart';
 import '../../models/classroom_model.dart';
 import 'attendance_record_page.dart';
 
@@ -16,11 +21,19 @@ class ClassroomPage extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    controller.updateValues(classroomData).then((_) => controller.getStudentsData());
+    controller
+        .updateValues(classroomData)
+        .then((_) => controller.getStudentsData());
+
+    final height = Get.height;
+    final width = Get.width;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Classroom'),
+        title: Text(
+          classroomData.courseTitle,
+          style: Get.textTheme.bodyLarge,
+        ),
         actions: [
           IconButton(
             onPressed: () async {
@@ -30,31 +43,17 @@ class ClassroomPage extends GetView<AttendanceController> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: const EdgeInsets.all(10.0),
-              child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Card View',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )),
-            ),
-          ),
-          Expanded(
-            flex: 8,
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
+      body: Padding(
+        padding: EdgeInsets.only(
+          top: height * percentGapSmall,
+          right: height * percentGapSmall,
+          left: height * percentGapSmall,
+        ),
+        child: Column(
+          children: [
+            _topView(context: context, classroom: classroomData),
+            verticalGap(height * percentGapMedium),
+            Expanded(
               child: Obx(() {
                 return ListView.builder(
                   itemCount: controller.attendances.length,
@@ -65,26 +64,27 @@ class ClassroomPage extends GetView<AttendanceController> {
                 );
               }),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      floatingActionButton:  Obx(
-        () {
-          return controller.currentUserRole == 'Teacher' ? ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              backgroundColor: Colors.orange,
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            ),
-            onPressed: () {
-              Get.to(() => const AttendanceRecordPage());
-            },
-            child: const Text('Take Attendance'),
-          ): const SizedBox();
-        }
-      ),
+      floatingActionButton: Obx(() {
+        return controller.currentUserRole == 'Teacher'
+            ? ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0, vertical: 12.0),
+                ),
+                onPressed: () {
+                  Get.to(() => const AttendanceRecordPage());
+                },
+                child: const Text('Take Attendance'),
+              )
+            : const SizedBox();
+      }),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -96,6 +96,143 @@ class ClassroomPage extends GetView<AttendanceController> {
       ),
       child: const ListTile(
         title: Text('attendance'),
+      ),
+    );
+  }
+
+  Widget _topView({required BuildContext context, required ClassroomModel classroom,}) {
+    final height = Get.height;
+    final width = Get.width;
+
+    return Container(
+      height: height * 0.28,
+      width: width,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+      ),
+      padding: const EdgeInsets.all(kSmall),
+      child: Row(
+        children: [
+          horizontalGap(width * percentGapSmall),
+          Column(
+            children: [
+              verticalGap(height * percentGapSmall),
+              CircularPercentIndicator(
+                radius: height * 0.08,
+                lineWidth: 14,
+                percent: 0.38,
+                circularStrokeCap: CircularStrokeCap.round,
+                progressColor: Colors.red,
+                backgroundColor: Colors.red.withAlpha(40),
+                animation: true,
+                center: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '38%',
+                      style: Get.textTheme.titleLarge,
+                    ),
+                    Text(
+                      'Attendance',
+                      style:
+                          Get.textTheme.labelSmall!.copyWith(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+              verticalGap(height * percentGapSmall),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircularPercentIndicator(
+                    radius: height * 0.025,
+                    lineWidth: 7,
+                    percent: 0.3,
+                    circularStrokeCap: CircularStrokeCap.round,
+                    progressColor: Colors.red,
+                    backgroundColor: Colors.red.withAlpha(40),
+                    animation: true,
+                    center: Text(
+                      '3',
+                      style: Get.textTheme.titleMedium,
+                    ),
+                  ),
+                  horizontalGap(width*percentGapSmall),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      verticalGap(height * percentGapVerySmall),
+                      Text(
+                        'Missing Classes',
+                        style: Get.textTheme.bodySmall!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                      Text(
+                        'Out of 10 classes',
+                        style: Get.textTheme.bodySmall!,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          horizontalGap(width * 0.05),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    await Clipboard.setData(ClipboardData(text: classroom.classroomId)).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Classroom ID copied to clipboard")));
+                    });
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Copy Code',
+                        style: Get.textTheme.bodySmall,
+                      ),
+                      horizontalGap(width * percentGapVerySmall),
+                      Icon(
+                        Icons.copy_rounded,
+                        size: 18,
+                        color: Get.textTheme.bodySmall!.color,
+                      ),
+                    ],
+                  ),
+                ),
+                verticalGap(height * percentGapVerySmall),
+                Text(
+                  classroom.courseTitle,
+                  style: Get.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                verticalGap(height * percentGapVerySmall),
+                Text(
+                  classroom.courseCode,
+                  style: Get.textTheme.bodySmall,
+                ),
+                verticalGap(height * percentGapVerySmall),
+                Text(
+                  classroom.section,
+                  style: Get.textTheme.bodySmall,
+                ),
+                verticalGap(height * percentGapVerySmall),
+                Text(
+                  'startTime',
+                  style: Get.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }

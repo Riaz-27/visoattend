@@ -39,11 +39,11 @@ class CustomTextFormField extends StatelessWidget {
         ),
         errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(kLarge),
-            borderSide: BorderSide(color: Get.theme.colorScheme.outline.withAlpha(60))
+            borderSide: BorderSide(color: Get.theme.colorScheme.error.withAlpha(140))
         ),
         focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(kLarge),
-            borderSide: BorderSide(color: Get.theme.colorScheme.outline)
+            borderSide: BorderSide(color: Get.theme.colorScheme.error)
         ),
       ),
     );

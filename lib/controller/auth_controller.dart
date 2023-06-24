@@ -13,6 +13,8 @@ class AuthController extends GetxController {
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
+  String tempPassword = '';
+
   Future<void> signInWithEmailAndPassword({
     required String email,
     required String password,
@@ -56,6 +58,14 @@ class AuthController extends GetxController {
     }
     _isLoading(false);
     return null;
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   Future<void> signOut() async {

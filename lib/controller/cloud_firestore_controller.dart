@@ -1,7 +1,9 @@
 import 'dart:developer' as dev;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
@@ -28,6 +30,9 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get classrooms => _classrooms;
 
+  final _classesOfToday = <ClassroomModel>[].obs;
+  List<ClassroomModel> get classesOfToday => _classesOfToday;
+
   @override
   void onInit() {
     initialize();
@@ -36,7 +41,7 @@ class CloudFirestoreController extends GetxController {
 
   void initialize() async {
     await setCurrentUser();
-    await getUserClassrooms();
+    await getUserClassrooms().then((_) => filterClassesOfToday());
   }
 
   void resetValues() async {
@@ -123,6 +128,7 @@ class CloudFirestoreController extends GetxController {
       final docRef = _firestoreInstance.collection(classroomsCollection).doc();
       classroom.classroomId = docRef.id;
       docRef.set(classroom.toJson());
+      _classrooms.add(classroom);
       return docRef.id;
     } catch (e) {
       dev.log(e.toString());
@@ -223,6 +229,32 @@ class CloudFirestoreController extends GetxController {
       }
     }
     return finalList;
+  }
+
+  void filterClassesOfToday() {
+    _classesOfToday.value = [];
+    final allClasses = _classrooms;
+    final weekDay = DateFormat('EEEE').format(DateTime.now());
+    for(ClassroomModel classroom in allClasses){
+      if(classroom.weekTimes[weekDay] !='Off Day'){
+        _classesOfToday.add(classroom);
+      }
+    }
+    _classesOfToday.sort((a, b){
+      String aData = TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay])).toString();
+      String bData = TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay])).toString();
+      return aData.compareTo(bData);
+    });
+    int count = 0;
+    for(ClassroomModel classroom in _classesOfToday){
+      final startTime = TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]));
+      final now = TimeOfDay.now();
+      final timeDifferance = (now.hour*60 + now.minute) - (startTime.hour*60 + startTime.minute);
+      if(timeDifferance>0){
+        count++;
+      }
+    }
+    _classesOfToday.removeRange(0, count-1);
   }
 
   /// Attendance Control

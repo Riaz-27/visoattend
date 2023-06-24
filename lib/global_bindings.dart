@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
 import 'package:visoattend/controller/auth_controller.dart';
+import 'package:visoattend/controller/profile_pic_controller.dart';
 
 import '../controller/camera_service_controller.dart';
 import '../controller/face_detector_controller.dart';
@@ -20,5 +21,6 @@ class GlobalBinding implements Bindings {
     Get.lazyPut(() => CloudFirestoreController(), fenix: true);
     Get.lazyPut(() => ClassroomController(), fenix: true);
     Get.lazyPut(() => AttendanceController(), fenix: true);
+    Get.lazyPut(() => ProfilePicController(), fenix: true);
   }
 }

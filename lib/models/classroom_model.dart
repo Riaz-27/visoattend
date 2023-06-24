@@ -4,7 +4,7 @@ class ClassroomModel {
   String courseTitle;
   String section;
   String session;
-  List<String> weekTimes;
+  Map<String, dynamic> weekTimes;
   List<Map<String, dynamic>> teachers;
   List<Map<String, dynamic>> cRs;
   List<Map<String, dynamic>> students;
@@ -28,7 +28,7 @@ class ClassroomModel {
       courseTitle: '',
       section: '',
       session: '',
-      weekTimes: [],
+      weekTimes: {},
       teachers: [],
       cRs: [],
       students: [],
@@ -42,7 +42,7 @@ class ClassroomModel {
       courseTitle: json['courseTitle'],
       section: json['section'],
       session: json['session'],
-      weekTimes: List<String>.from(json['weekTimes']),
+      weekTimes: Map<String,dynamic>.from(json['weekTimes']),
       teachers: List<Map<String,dynamic>>.from(json['teachers']),
       cRs: List<Map<String,dynamic>>.from(json['cRs']),
       students: List<Map<String,dynamic>>.from(json['students']),

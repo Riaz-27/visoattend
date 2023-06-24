@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/user_model.dart';
+import 'package:visoattend/views/pages/reset_password_page.dart';
 import 'package:visoattend/views/widgets/custom_button.dart';
 
 import '../../controller/cloud_firestore_controller.dart';
@@ -37,6 +38,9 @@ class LoginRegisterPage extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final height = Get.height;
     final width = Get.width;
+
+    String? emailValidatorString;
+    String? userValidatorString;
 
     // void signUpUser() {
     //   final name = nameController.text.trim();
@@ -88,25 +92,18 @@ class LoginRegisterPage extends StatelessWidget {
       UserModel? userData;
 
       if (isSignUp) {
-        userData =
-            await cloudFirestoreController.getUserDataFromFirestore(userId);
-        if (userData == null) {
-          final userCredential = await authController
-              .createUserWithEmailAndPassword(email: email, password: password);
-          if (userCredential != null) {
-            final user = UserModel(
-              authUid: userCredential.user!.uid,
-              userId: userId,
-              name: name,
-              email: email,
-              classrooms: {},
-              faceDataFront: [],
-              faceDataLeft: [],
-              faceDataRight: [],
-            );
-            Get.to(() => FaceRegisterPage(user: user));
-          }
-        }
+        authController.tempPassword = password;
+        final user = UserModel(
+          authUid: 'null',
+          userId: userId,
+          name: name,
+          email: email,
+          classrooms: {},
+          faceDataFront: [],
+          faceDataLeft: [],
+          faceDataRight: [],
+        );
+        Get.to(() => FaceRegisterPage(user: user));
       } else {
         final bool emailValid = validEmail.hasMatch(userId);
         if (emailValid) {
@@ -138,6 +135,26 @@ class LoginRegisterPage extends StatelessWidget {
       }
     }
 
+    Future<void> validateEmail(String email) async {
+      final userData =
+          await cloudFirestoreController.getUserDataFromFirestoreByEmail(email);
+      if(userData != null){
+        emailValidatorString = 'A user with this Email address already exists';
+        return;
+      }
+      emailValidatorString = null;
+    }
+
+    Future<void> validateUser(String userId) async {
+      final userData =
+          await cloudFirestoreController.getUserDataFromFirestore(userId);
+      if(userData != null){
+        userValidatorString = 'A user with this User ID already exists';
+        return;
+      }
+      userValidatorString = null;
+    }
+
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: height * 0.025),
@@ -156,7 +173,7 @@ class LoginRegisterPage extends StatelessWidget {
                     ),
                     verticalGap(height * percentGapSmall),
                     Text(
-                      'Welcome  Back Please Sign In To Continue',
+                      'Welcome  Back Please sign in to continue',
                       style: Get.textTheme.titleMedium,
                     ),
                     verticalGap(height * percentGapLarge),
@@ -173,7 +190,8 @@ class LoginRegisterPage extends StatelessWidget {
                       controller: nameController,
                       validator: (value) {
                         if (value!.isEmpty ||
-                            RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
+                            !RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
+                          print('The Value: $value');
                           return 'Name should only contains letters.';
                         }
                         return null;
@@ -184,17 +202,10 @@ class LoginRegisterPage extends StatelessWidget {
                       labelText: 'Email',
                       controller: emailController,
                       validator: (value) {
-                        if (value!.isEmpty || validEmail.hasMatch(value)) {
+                        if (value!.isEmpty || !validEmail.hasMatch(value)) {
                           return 'Email is not valid';
                         }
-                        cloudFirestoreController
-                            .getUserDataFromFirestoreByEmail(value)
-                            .then((userData) {
-                          if (userData != null) {
-                            return 'Email already exists';
-                          }
-                        });
-                        return null;
+                        return emailValidatorString;
                       },
                     ),
                     verticalGap(height * percentGapMedium),
@@ -203,10 +214,13 @@ class LoginRegisterPage extends StatelessWidget {
                     labelText: 'User ID',
                     controller: userIdController,
                     validator: (value) {
-                      // if (value!.isEmpty ||
-                      //     RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
-                      //   return 'User ID must be letters or number';
-                      // }
+                      if (value!.isEmpty ||
+                          !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                        return 'User ID must be letters or number';
+                      }
+                      if (isSignUp) {
+                        return userValidatorString;
+                      }
                       return null;
                     },
                   ),
@@ -216,8 +230,9 @@ class LoginRegisterPage extends StatelessWidget {
                     controller: passwordController,
                     isPassword: true,
                     validator: (value) {
-                      if ( isSignUp && ( value!.isEmpty ||
-                          confirmPasswordController.text != value)) {
+                      if (isSignUp &&
+                          (value!.isEmpty ||
+                              confirmPasswordController.text != value)) {
                         return 'Password do not match';
                       }
                       return null;
@@ -230,7 +245,8 @@ class LoginRegisterPage extends StatelessWidget {
                       controller: confirmPasswordController,
                       isPassword: true,
                       validator: (value) {
-                        if (value!.isEmpty || passwordController.text != value) {
+                        if (value!.isEmpty ||
+                            passwordController.text != value) {
                           return 'Password do not match';
                         }
                         return null;
@@ -244,7 +260,7 @@ class LoginRegisterPage extends StatelessWidget {
                       children: [
                         GestureDetector(
                           onTap: () {
-                            //TODO Function for reset password
+                            Get.to(() => const ResetPasswordPage());
                           },
                           child: Text(
                             'Forgotten Password?',
@@ -259,12 +275,14 @@ class LoginRegisterPage extends StatelessWidget {
                     verticalGap(height * percentGapMedium),
                   ],
                   CustomButton(
-                    text: isSignUp ? 'Sign Up' : 'Login',
-                    onPressed: () {
-                      if(formKey.currentState!.validate()) {
+                    text: isSignUp ? 'Sign Up' : 'Sign In',
+                    onPressed: () async {
+                      await validateEmail(emailController.text);
+                      await validateUser(userIdController.text);
+                      if (formKey.currentState!.validate()) {
                         handleSignInOrSignUp();
                       }
-                    } ,
+                    },
                   ),
                   verticalGap(height * percentGapSmall),
                   Row(
@@ -291,7 +309,7 @@ class LoginRegisterPage extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          isSignUp ? 'Login' : 'Sign up',
+                          isSignUp ? 'Sign In' : 'Sign up',
                           style: Get.textTheme.labelLarge!.copyWith(
                             color: Get.theme.colorScheme.secondary,
                             fontWeight: FontWeight.bold,
