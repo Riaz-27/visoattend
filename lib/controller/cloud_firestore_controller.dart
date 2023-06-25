@@ -30,21 +30,25 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get classrooms => _classrooms;
 
+  final _filteredClassroom = <ClassroomModel>[].obs;
+
+  List<ClassroomModel> get filteredClassroom => _filteredClassroom;
+
   final _classesOfToday = <ClassroomModel>[].obs;
+
   List<ClassroomModel> get classesOfToday => _classesOfToday;
 
-  @override
-  void onInit() {
-    initialize();
-    super.onInit();
-  }
+  final _isInitialized = false.obs;
+  bool get isInitialized => _isInitialized.value;
+
 
   void initialize() async {
+    await resetValues();
     await setCurrentUser();
     await getUserClassrooms().then((_) => filterClassesOfToday());
   }
 
-  void resetValues() async {
+  Future<void> resetValues() async {
     _isLoading(false);
     _currentUser(UserModel.empty());
     _classrooms([]);
@@ -79,14 +83,17 @@ class CloudFirestoreController extends GetxController {
 
   Future<void> setCurrentUser() async {
     final currentAuthUser = Get.find<AuthController>().currentUser;
-    if (currentAuthUser != null) {
-      final userDoc = await _firestoreInstance
-          .collection(userCollection)
-          .doc(currentAuthUser.uid)
-          .get();
-      if (userDoc.data() != null) {
-        _currentUser(UserModel.fromJson(userDoc.data()!));
-      }
+    if (currentAuthUser == null) {
+      await resetValues();
+      return;
+    }
+
+    final userDoc = await _firestoreInstance
+        .collection(userCollection)
+        .doc(currentAuthUser.uid)
+        .get();
+    if (userDoc.data() != null) {
+      _currentUser(UserModel.fromJson(userDoc.data()!));
     }
   }
 
@@ -110,7 +117,8 @@ class CloudFirestoreController extends GetxController {
         dev.log('User Not Found');
         return;
       }
-      _currentUser.value.classrooms[classroomInfo.keys.first] = classroomInfo.values.first;
+      _currentUser.value.classrooms[classroomInfo.keys.first] =
+          classroomInfo.values.first;
       await _firestoreInstance
           .collection(userCollection)
           .doc(_currentUser.value.authUid)
@@ -188,7 +196,8 @@ class CloudFirestoreController extends GetxController {
       return;
     }
     dev.log('ClassroomList: $classroomList');
-    _classrooms.value = [];
+    // _classrooms.value = [];
+    List<ClassroomModel> classes = [];
     for (int i = 0; i < classroomList.length; i += 10) {
       try {
         final collectionRef = await _firestoreInstance
@@ -200,13 +209,16 @@ class CloudFirestoreController extends GetxController {
                         ? classroomList.length
                         : i + 10))
             .get();
+        dev.log(collectionRef.docs.length.toString());
         for (var docRef in collectionRef.docs) {
-          _classrooms.add(ClassroomModel.fromJson(docRef.data()));
+          classes.add(ClassroomModel.fromJson(docRef.data()));
         }
+        _classrooms.value = classes;
       } catch (e) {
         dev.log(e.toString());
       }
     }
+    _isInitialized.value = true;
   }
 
   Future<List<UserModel>> getStudentsOfClassroom(
@@ -234,27 +246,55 @@ class CloudFirestoreController extends GetxController {
   void filterClassesOfToday() {
     _classesOfToday.value = [];
     final allClasses = _classrooms;
+    if (_classrooms.isEmpty) {
+      return;
+    }
     final weekDay = DateFormat('EEEE').format(DateTime.now());
-    for(ClassroomModel classroom in allClasses){
-      if(classroom.weekTimes[weekDay] !='Off Day'){
+    for (ClassroomModel classroom in allClasses) {
+      if (classroom.weekTimes[weekDay] != 'Off Day') {
         _classesOfToday.add(classroom);
       }
     }
-    _classesOfToday.sort((a, b){
-      String aData = TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay])).toString();
-      String bData = TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay])).toString();
+    _classesOfToday.sort((a, b) {
+      String aData =
+          TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay]))
+              .toString();
+      String bData =
+          TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay]))
+              .toString();
       return aData.compareTo(bData);
     });
     int count = 0;
-    for(ClassroomModel classroom in _classesOfToday){
-      final startTime = TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]));
+    for (ClassroomModel classroom in _classesOfToday) {
+      final startTime =
+          TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]));
       final now = TimeOfDay.now();
-      final timeDifferance = (now.hour*60 + now.minute) - (startTime.hour*60 + startTime.minute);
-      if(timeDifferance>0){
+      final timeDifferance = (now.hour * 60 + now.minute) -
+          (startTime.hour * 60 + startTime.minute);
+      if (timeDifferance > 0) {
         count++;
       }
     }
-    _classesOfToday.removeRange(0, count-1);
+    if (count > 0) {
+      _classesOfToday.removeRange(0, count - 1);
+    }
+  }
+
+  //filtering classroom for the search result
+  void filterSearchResult(String value) {
+    _filteredClassroom.value = [];
+    if (value.isEmpty) {
+      _filteredClassroom.value = _classrooms;
+    } else {
+      value = value.toLowerCase();
+      _filteredClassroom.value = _classrooms
+          .where((classroom) =>
+              classroom.courseTitle.toLowerCase().contains(value) ||
+              classroom.courseCode.toLowerCase().contains(value) ||
+              classroom.session.toLowerCase().contains(value) ||
+              classroom.section.toLowerCase().contains(value))
+          .toList();
+    }
   }
 
   /// Attendance Control

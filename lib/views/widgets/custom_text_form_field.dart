@@ -10,6 +10,7 @@ class CustomTextFormField extends StatelessWidget {
     this.hintText,
     this.isPassword = false,
     this.validator,
+    this.onChanged,
   }) : super(key: key);
 
   final String? hintText;
@@ -17,6 +18,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final bool isPassword;
   final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -24,27 +26,27 @@ class CustomTextFormField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword,
       validator: validator,
+      onChanged: onChanged,
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         hintText: hintText,
         labelText: labelText,
         labelStyle: Get.textTheme.titleSmall,
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(kLarge),
-          borderSide: BorderSide(color: Get.theme.colorScheme.outline)
-        ),
+            borderRadius: BorderRadius.circular(kLarge),
+            borderSide: BorderSide(color: Get.theme.colorScheme.outline)),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(kLarge),
-            borderSide: BorderSide(color: Get.theme.colorScheme.outline.withAlpha(60))
-        ),
+            borderRadius: BorderRadius.circular(kLarge),
+            borderSide:
+                BorderSide(color: Get.theme.colorScheme.outline.withAlpha(60))),
         errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(kLarge),
-            borderSide: BorderSide(color: Get.theme.colorScheme.error.withAlpha(140))
-        ),
+            borderSide:
+                BorderSide(color: Get.theme.colorScheme.error.withAlpha(140))),
         focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(kLarge),
-            borderSide: BorderSide(color: Get.theme.colorScheme.error)
-        ),
+            borderSide: BorderSide(color: Get.theme.colorScheme.error)),
       ),
     );
   }

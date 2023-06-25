@@ -46,6 +46,10 @@ class AttendanceController extends GetxController {
     for (var student in classroomData.students + classroomData.cRs) {
       allStudentsUid.add(student['authUid']);
     }
+    if(allStudentsUid.isEmpty){
+      print('No Students in this class');
+      return;
+    }
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     studentsData =
         await cloudFirestoreController.getStudentsOfClassroom(allStudentsUid);

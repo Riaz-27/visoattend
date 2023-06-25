@@ -17,13 +17,16 @@ class AllClassroomPage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
     final searchController = TextEditingController();
-    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>()..filterSearchResult('');
 
-    final classroomList = cloudFirestoreController.classrooms;
+    final classroomList = cloudFirestoreController.filteredClassroom;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('All Classes', style: Get.textTheme.titleLarge,),
+        title: Text(
+          'All Classes',
+          style: Get.textTheme.titleLarge,
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -35,8 +38,12 @@ class AllClassroomPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              CustomTextFormField(labelText: 'Search Class', controller: searchController),
-              verticalGap(height*percentGapMedium),
+              CustomTextFormField(
+                labelText: 'Search Class',
+                controller: searchController,
+                onChanged: (value) => cloudFirestoreController.filterSearchResult(value),
+              ),
+              verticalGap(height * percentGapMedium),
               Expanded(
                 child: Obx(() {
                   return ListView.builder(
@@ -95,7 +102,7 @@ Widget _buildCustomCard({
               ],
             ),
           ),
-          horizontalGap(width*percentGapVerySmall),
+          horizontalGap(width * percentGapVerySmall),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

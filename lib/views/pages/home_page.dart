@@ -15,6 +15,7 @@ import '../../helper/constants.dart';
 import '../../views/pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
 import 'all_classroom_page.dart';
+import 'auth_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -24,6 +25,9 @@ class HomePage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    if(!cloudFirestoreController.isInitialized){
+      cloudFirestoreController.initialize();
+    }
 
     final classroomList = cloudFirestoreController.classesOfToday;
 
@@ -56,7 +60,7 @@ class HomePage extends StatelessWidget {
                       }),
                       verticalGap(height * percentGapVerySmall),
                       Text(
-                        DateFormat('d MMMM, y').format(DateTime.now()),
+                        DateFormat('EEEE d MMMM, y').format(DateTime.now()),
                         style: Get.textTheme.bodyMedium!.copyWith(
                             color: Get.theme.colorScheme.onBackground
                                 .withAlpha(150)),
@@ -68,6 +72,7 @@ class HomePage extends StatelessWidget {
                   IconButton(
                     onPressed: () async {
                       await Get.find<AuthController>().signOut();
+                      Get.offAll(()=>const AuthPage());
                     },
                     icon: const Icon(Icons.logout_rounded),
                   ),
@@ -158,7 +163,7 @@ class HomePage extends StatelessWidget {
               backgroundColor: Colors.white,
               enableDrag: true,
               Padding(
-                padding: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(kSmall),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -172,7 +177,7 @@ class HomePage extends StatelessWidget {
                         child: const Text('Join Class'),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    verticalGap(height*percentGapSmall),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -199,7 +204,6 @@ class HomePage extends StatelessWidget {
     required ClassroomModel classroom,
   }) {
     final height = Get.height;
-    final width = Get.width;
 
     final weekTime =
         classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())];
@@ -215,7 +219,7 @@ class HomePage extends StatelessWidget {
         color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(kSmall),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -313,8 +317,8 @@ class HomePage extends StatelessWidget {
         children: [
           horizontalGap(width * percentGapSmall),
           CircularPercentIndicator(
-            radius: height*0.08,
-            lineWidth: 14,
+            radius: height*0.07,
+            lineWidth: 12,
             percent: 0.38,
             circularStrokeCap: CircularStrokeCap.round,
             progressColor: Colors.red,
