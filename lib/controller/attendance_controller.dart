@@ -24,9 +24,18 @@ class AttendanceController extends GetxController {
 
   String get currentUserRole => _currentUserRole.value;
 
+  final _currentUserMissedClasses = 0.obs;
+  int get currentUserMissedClasses => _currentUserMissedClasses.value;
+
   Map<int, RecognitionModel> totalRecognized = {};
 
   Map<String, RecognitionModel> matchedStudents = {}; // String is user.authUid
+
+  @override
+  onInit(){
+    ever(_attendances, (_) => calculateMissedClass());
+    super.onInit();
+  }
 
   Future<void> updateValues(ClassroomModel classroom) async {
     _classroomData.value = classroom;
@@ -46,7 +55,7 @@ class AttendanceController extends GetxController {
     for (var student in classroomData.students + classroomData.cRs) {
       allStudentsUid.add(student['authUid']);
     }
-    if(allStudentsUid.isEmpty){
+    if (allStudentsUid.isEmpty) {
       print('No Students in this class');
       return;
     }
@@ -73,25 +82,32 @@ class AttendanceController extends GetxController {
       'userId': currentUser.userId,
     };
     AttendanceModel attendanceData = AttendanceModel(
-        dateTime: DateTime.now().millisecondsSinceEpoch,
-        counts: counts,
-        studentsData: [],
-        takenBy: takenBy);
+      dateTime: DateTime.now().millisecondsSinceEpoch,
+      counts: counts,
+      studentsData: {},
+      takenBy: takenBy,
+    );
     for (var student in studentsData) {
-      final studentData = {
-        'authUid': student.authUid,
-        'name': student.name,
-        'userId': student.userId,
-        'status': 'Absent',
-      };
+      attendanceData.studentsData[student.authUid] = 'Absent';
       if (matchedStudents.containsKey(student.authUid)) {
-        studentData['status'] = 'Present';
+        attendanceData.studentsData[student.authUid] = 'Present';
       }
-      attendanceData.studentsData.add(studentData);
     }
 
     await cloudFirestoreController
         .saveAttendanceData(classroomData.classroomId, attendanceData)
         .then((_) => _attendances.add(attendanceData));
   }
+
+  void calculateMissedClass(){
+    final userAuthUid = Get.find<CloudFirestoreController>().currentUser.authUid;
+    _currentUserMissedClasses.value =0;
+    for(AttendanceModel attendance in _attendances){
+      if(attendance.studentsData[userAuthUid] == 'Absent'){
+        _currentUserMissedClasses.value++;
+      }
+    }
+  }
+
+
 }

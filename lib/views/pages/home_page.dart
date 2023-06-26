@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:visoattend/controller/attendance_controller.dart';
+import 'package:visoattend/controller/timer_controller.dart';
 
 import '../../controller/profile_pic_controller.dart';
 import '../../helper/functions.dart';
@@ -22,14 +26,16 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final height = Get.height;
     final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    if(!cloudFirestoreController.isInitialized){
+    if (!cloudFirestoreController.isInitialized) {
       cloudFirestoreController.initialize();
     }
-
     final classroomList = cloudFirestoreController.classesOfToday;
+
+    final timerController = Get.find<TimerController>();
 
     return Scaffold(
       body: SafeArea(
@@ -72,7 +78,8 @@ class HomePage extends StatelessWidget {
                   IconButton(
                     onPressed: () async {
                       await Get.find<AuthController>().signOut();
-                      Get.offAll(()=>const AuthPage());
+                      cloudFirestoreController.isInitialized = false;
+                      Get.offAll(() => const AuthPage());
                     },
                     icon: const Icon(Icons.logout_rounded),
                   ),
@@ -106,7 +113,7 @@ class HomePage extends StatelessWidget {
                         ClassroomPage(classroomData: classroomList.first));
                   }
                 },
-                child: _topView(classroomList: classroomList),
+                child: _topView( context: context,classroomList: classroomList),
               ),
               verticalGap(height * percentGapMedium),
               Row(
@@ -177,7 +184,7 @@ class HomePage extends StatelessWidget {
                         child: const Text('Join Class'),
                       ),
                     ),
-                    verticalGap(height*percentGapSmall),
+                    verticalGap(height * percentGapSmall),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -301,10 +308,12 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _topView({required List<ClassroomModel> classroomList}) {
+  Widget _topView({required BuildContext context, required List<ClassroomModel> classroomList}) {
     final height = Get.height;
     final width = Get.width;
-    
+
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
     return Container(
       height: height * 0.22,
       width: width,
@@ -316,28 +325,47 @@ class HomePage extends StatelessWidget {
       child: Row(
         children: [
           horizontalGap(width * percentGapSmall),
-          CircularPercentIndicator(
-            radius: height*0.07,
-            lineWidth: 12,
-            percent: 0.38,
-            circularStrokeCap: CircularStrokeCap.round,
-            progressColor: Colors.red,
-            backgroundColor: Colors.red.withAlpha(40),
-            animation: true,
-            center: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '38%',
-                  style: Get.textTheme.titleLarge,
-                ),
-                Text(
-                  'Attendance',
-                  style: Get.textTheme.labelSmall!.copyWith(color: Colors.red),
-                ),
-              ],
-            ),
-          ),
+          Obx(() {
+            if(classroomList.isNotEmpty){
+              cloudFirestoreController.calculateHomeClassAttendance(classroomList.first.classroomId);
+            }
+            final totalClasses = cloudFirestoreController.homeClassAttendances;
+            final missedClasses = cloudFirestoreController.homeMissedClasses;
+            final percent = (totalClasses - missedClasses) / totalClasses;
+            String status = 'Collegiate';
+            Color color = Get.theme.colorScheme.primary;
+            if (percent < 0.6) {
+              color = Get.theme.colorScheme.error;
+              status = 'Dis-Collegiate';
+            } else if (percent < 0.7) {
+              color = Colors.orange;
+              status = 'Non-Collegiate';
+            }
+            return CircularPercentIndicator(
+              radius: height * 0.07,
+              lineWidth: 12,
+              percent: totalClasses > 0 ? percent : 0,
+              circularStrokeCap: CircularStrokeCap.round,
+              progressColor: color,
+              backgroundColor: Get.theme.colorScheme.onBackground.withAlpha(15),
+              animation: true,
+              center: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    totalClasses > 0
+                        ? '${(percent * 100).toStringAsFixed(0)}%'
+                        : 'N/A',
+                    style: Get.textTheme.titleLarge,
+                  ),
+                  Text(
+                    status,
+                    style: Get.textTheme.labelSmall!.copyWith(color: color),
+                  ),
+                ],
+              ),
+            );
+          }),
           horizontalGap(width * 0.10),
           Expanded(
             child: Obx(() {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as dev;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -39,8 +40,10 @@ class CloudFirestoreController extends GetxController {
   List<ClassroomModel> get classesOfToday => _classesOfToday;
 
   final _isInitialized = false.obs;
+
   bool get isInitialized => _isInitialized.value;
 
+  set isInitialized(value) => _isInitialized.value = value;
 
   void initialize() async {
     await resetValues();
@@ -213,11 +216,11 @@ class CloudFirestoreController extends GetxController {
         for (var docRef in collectionRef.docs) {
           classes.add(ClassroomModel.fromJson(docRef.data()));
         }
-        _classrooms.value = classes;
       } catch (e) {
         dev.log(e.toString());
       }
     }
+    _classrooms.value = classes;
     _isInitialized.value = true;
   }
 
@@ -278,6 +281,9 @@ class CloudFirestoreController extends GetxController {
     if (count > 0) {
       _classesOfToday.removeRange(0, count - 1);
     }
+    if (_classesOfToday.isNotEmpty) {
+      calculateHomeClassAttendance(_classesOfToday.first.classroomId);
+    }
   }
 
   //filtering classroom for the search result
@@ -300,12 +306,21 @@ class CloudFirestoreController extends GetxController {
   /// Attendance Control
   final attendanceCollection = 'Attendances';
 
+  final _homeMissedClasses = 0.obs;
+
+  int get homeMissedClasses => _homeMissedClasses.value;
+
+  final _homeClassAttendances = 0.obs;
+
+  int get homeClassAttendances => _homeClassAttendances.value;
+
   Future<List<AttendanceModel>> getClassroomAttendances(
       String classroomId) async {
     final collectionRef = await _firestoreInstance
         .collection(classroomsCollection)
         .doc(classroomId)
         .collection(attendanceCollection)
+        .orderBy('dateTime', descending: true)
         .get();
     return collectionRef.docs
         .map((docRef) => AttendanceModel.fromJson(docRef.data()))
@@ -322,5 +337,16 @@ class CloudFirestoreController extends GetxController {
         .collection(attendanceCollection)
         .doc()
         .set(attendanceData.toJson());
+  }
+
+  Future<void> calculateHomeClassAttendance(String classroomId) async {
+    final attendances = await getClassroomAttendances(classroomId);
+    _homeClassAttendances(attendances.length);
+
+    for (AttendanceModel attendance in attendances) {
+      if (attendance.studentsData[currentUser.authUid] == 'Absent') {
+        _homeMissedClasses.value++;
+      }
+    }
   }
 }

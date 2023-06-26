@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/user_model.dart';
+import 'package:visoattend/views/pages/auth_page.dart';
 import 'package:visoattend/views/pages/reset_password_page.dart';
 import 'package:visoattend/views/widgets/custom_button.dart';
 
@@ -83,7 +84,7 @@ class LoginRegisterPage extends StatelessWidget {
     //   });
     // }
 
-    void handleSignInOrSignUp() async {
+    Future<void> handleSignInOrSignUp() async {
       final name = nameController.text.trim();
       final password = passwordController.text;
       final userId = userIdController.text.trim();
@@ -124,6 +125,7 @@ class LoginRegisterPage extends StatelessWidget {
           );
           cloudFirestoreController.currentUser = userData!;
           cloudFirestoreController.getUserClassrooms();
+          Get.to(()=> const AuthPage());
         } else {
           Get.snackbar(
             'Invalid user',
@@ -138,7 +140,7 @@ class LoginRegisterPage extends StatelessWidget {
     Future<void> validateEmail(String email) async {
       final userData =
           await cloudFirestoreController.getUserDataFromFirestoreByEmail(email);
-      if(userData != null){
+      if (userData != null) {
         emailValidatorString = 'A user with this Email address already exists';
         return;
       }
@@ -148,7 +150,7 @@ class LoginRegisterPage extends StatelessWidget {
     Future<void> validateUser(String userId) async {
       final userData =
           await cloudFirestoreController.getUserDataFromFirestore(userId);
-      if(userData != null){
+      if (userData != null) {
         userValidatorString = 'A user with this User ID already exists';
         return;
       }
@@ -274,16 +276,25 @@ class LoginRegisterPage extends StatelessWidget {
                     ),
                     verticalGap(height * percentGapMedium),
                   ],
-                  CustomButton(
-                    text: isSignUp ? 'Sign Up' : 'Sign In',
-                    onPressed: () async {
-                      await validateEmail(emailController.text);
-                      await validateUser(userIdController.text);
-                      if (formKey.currentState!.validate()) {
-                        handleSignInOrSignUp();
-                      }
-                    },
-                  ),
+                  Obx(() {
+                    return authController.isLoading
+                        ? const SizedBox(
+                            height: 25,
+                            width: 25,
+                            child: CircularProgressIndicator(),
+                          )
+                        : CustomButton(
+                            text: isSignUp ? 'Sign Up' : 'Sign In',
+                            onPressed: () async {
+                              authController.isLoading = true;
+                              await validateEmail(emailController.text);
+                              await validateUser(userIdController.text);
+                              if (formKey.currentState!.validate()) {
+                                await handleSignInOrSignUp();
+                              }
+                            },
+                          );
+                  }),
                   verticalGap(height * percentGapSmall),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,

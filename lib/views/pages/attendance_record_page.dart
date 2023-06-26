@@ -117,28 +117,6 @@ class AttendanceRecordPage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () async {
-                    // await faceDetectorController.doFaceDetectionOnFrame(
-                    //   cameraServiceController.cameraImage,
-                    //   cameraServiceController.cameraRotation!,
-                    // );
-                    // if (attendanceController.studentsData.isEmpty) {
-                    //   print('No Students in this class');
-                    //   return;
-                    // }
-                    // final pres = DateTime.now().millisecondsSinceEpoch;
-                    // final cameraImage = cameraServiceController.cameraImage;
-                    // final faces = faceDetectorController.faces;
-                    // final camDirection =
-                    //     cameraServiceController.cameraLensDirection;
-                    // attendanceController.totalRecognized.addAll(await recognitionController
-                    //     .performRecognitionOnIsolateFirestore(
-                    //   cameraImage: cameraImage,
-                    //   faces: faces,
-                    //   cameraLensDirection: camDirection,
-                    //   users: attendanceController.studentsData,
-                    // ));
-                    // final pre = DateTime.now().millisecondsSinceEpoch - pres;
-                    // print('Time total: $pre ms');
                     await attendanceController.setMatchedStudents().then(
                         (_) => attendanceController.saveDataToFirestore());
                   },

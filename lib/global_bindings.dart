@@ -9,6 +9,7 @@ import '../controller/recognition_controller.dart';
 import '../controller/user_database_controller.dart';
 import 'controller/classroom_controller.dart';
 import 'controller/cloud_firestore_controller.dart';
+import 'controller/timer_controller.dart';
 
 class GlobalBinding implements Bindings {
   @override
@@ -22,5 +23,6 @@ class GlobalBinding implements Bindings {
     Get.lazyPut(() => ClassroomController(), fenix: true);
     Get.lazyPut(() => AttendanceController(), fenix: true);
     Get.lazyPut(() => ProfilePicController(), fenix: true);
+    Get.lazyPut(() => TimerController(), fenix: true);
   }
 }

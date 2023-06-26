@@ -6,6 +6,7 @@ class AuthController extends GetxController {
   final _isLoading = false.obs;
 
   bool get isLoading => _isLoading.value;
+  set isLoading(value) => _isLoading.value = value;
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 

@@ -1,6 +1,6 @@
 class AttendanceModel {
   int dateTime;
-  List<Map<String,dynamic>> studentsData;
+  Map<String,dynamic> studentsData;
   Map<String, String> takenBy;
   int counts;
 
@@ -14,7 +14,7 @@ class AttendanceModel {
   factory AttendanceModel.fromJson(Map<String, dynamic> json) {
     return AttendanceModel(
       dateTime: json['dateTime'],
-      studentsData: List<Map<String,dynamic>>.from(json['studentsData']),
+      studentsData: Map<String,dynamic>.from(json['studentsData']),
       takenBy: Map<String, String>.from(json['takenBy']),
       counts: json['counts'],
     );
