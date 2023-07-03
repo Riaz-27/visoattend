@@ -11,6 +11,7 @@ import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
 import '../models/attendance_model.dart';
+import 'timer_controller.dart';
 
 class CloudFirestoreController extends GetxController {
   final _firestoreInstance = FirebaseFirestore.instance;
@@ -38,6 +39,10 @@ class CloudFirestoreController extends GetxController {
   final _classesOfToday = <ClassroomModel>[].obs;
 
   List<ClassroomModel> get classesOfToday => _classesOfToday;
+
+  final _timeLeftOfClasses = [].obs;
+
+  List<dynamic> get timeLeftOfClasses => _timeLeftOfClasses;
 
   final _isInitialized = false.obs;
 
@@ -247,42 +252,63 @@ class CloudFirestoreController extends GetxController {
   }
 
   void filterClassesOfToday() {
+    print('Classes Filtered');
     _classesOfToday.value = [];
     final allClasses = _classrooms;
     if (_classrooms.isEmpty) {
       return;
     }
     final weekDay = DateFormat('EEEE').format(DateTime.now());
+    List<ClassroomModel> todayClasses =[];
     for (ClassroomModel classroom in allClasses) {
-      if (classroom.weekTimes[weekDay] != 'Off Day') {
-        _classesOfToday.add(classroom);
+      if (classroom.weekTimes[weekDay]['time'] != 'Off Day') {
+        todayClasses.add(classroom);
       }
     }
+    _classesOfToday.value = todayClasses;
     _classesOfToday.sort((a, b) {
       String aData =
-          TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay]))
+          TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay]['time']))
               .toString();
       String bData =
-          TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay]))
+          TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay]['time']))
               .toString();
       return aData.compareTo(bData);
     });
     int count = 0;
+    List<int> tempTime = [];
     for (ClassroomModel classroom in _classesOfToday) {
       final startTime =
-          TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]));
+          TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]['time']));
       final now = TimeOfDay.now();
       final timeDifferance = (now.hour * 60 + now.minute) -
           (startTime.hour * 60 + startTime.minute);
-      if (timeDifferance > 0) {
+      tempTime.add(timeDifferance * -1);
+      if (timeDifferance >= 0) {
         count++;
       }
     }
+    _timeLeftOfClasses.value = tempTime;
     if (count > 0) {
       _classesOfToday.removeRange(0, count - 1);
+      _timeLeftOfClasses.removeRange(0, count - 1);
     }
     if (_classesOfToday.isNotEmpty) {
       calculateHomeClassAttendance(_classesOfToday.first.classroomId);
+    }
+    if (_timeLeftOfClasses.isNotEmpty &&
+        (_timeLeftOfClasses.first > 0 || _timeLeftOfClasses.length > 1)) {
+      Get.find<TimerController>().startTimer();
+    } else {
+      Get.find<TimerController>().cancelTimer();
+    }
+  }
+
+  void updateTimeLeft() {
+    print('Running Update');
+
+    if (_timeLeftOfClasses.isNotEmpty) {
+      filterClassesOfToday();
     }
   }
 
@@ -314,6 +340,8 @@ class CloudFirestoreController extends GetxController {
 
   int get homeClassAttendances => _homeClassAttendances.value;
 
+  String homeClassId = '';
+
   Future<List<AttendanceModel>> getClassroomAttendances(
       String classroomId) async {
     final collectionRef = await _firestoreInstance
@@ -340,13 +368,22 @@ class CloudFirestoreController extends GetxController {
   }
 
   Future<void> calculateHomeClassAttendance(String classroomId) async {
-    final attendances = await getClassroomAttendances(classroomId);
-    _homeClassAttendances(attendances.length);
+    if(homeClassId == classroomId){
+      return;
+    }
+    homeClassId = classroomId;
 
+    final attendances = await getClassroomAttendances(classroomId);
+    _homeClassAttendances.value = attendances.length;
+
+    print('CAL HOME CLASS');
+
+    int missedClass = 0;
     for (AttendanceModel attendance in attendances) {
       if (attendance.studentsData[currentUser.authUid] == 'Absent') {
-        _homeMissedClasses.value++;
+        missedClass++;
       }
     }
+    _homeMissedClasses.value = missedClass;
   }
 }

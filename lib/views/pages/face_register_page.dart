@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/views/pages/auth_page.dart';
-import 'package:visoattend/views/pages/classroom_page.dart';
+import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../controller/face_detector_controller.dart';

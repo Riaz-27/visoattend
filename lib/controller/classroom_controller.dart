@@ -17,13 +17,13 @@ class ClassroomController extends GetxController {
   List<String> get weekDays => _weekDays;
 
   final _selectedWeekTimes = {
-    'Saturday': 'Off Day',
-    'Sunday': 'Off Day',
-    'Monday': 'Off Day',
-    'Tuesday': 'Off Day',
-    'Wednesday': 'Off Day',
-    'Thursday': 'Off Day',
-    'Friday': 'Off Day',
+    'Saturday': {'time': 'Off Day', 'room': ''},
+    'Sunday': {'time': 'Off Day', 'room': ''},
+    'Monday': {'time': 'Off Day', 'room': ''},
+    'Tuesday': {'time': 'Off Day', 'room': ''},
+    'Wednesday': {'time': 'Off Day', 'room': ''},
+    'Thursday': {'time': 'Off Day', 'room': ''},
+    'Friday': {'time': 'Off Day', 'room': ''},
   }.obs;
 
   Map<String, dynamic> get selectedWeekTimes => _selectedWeekTimes;
@@ -31,7 +31,6 @@ class ClassroomController extends GetxController {
   final _selectedWeeks = List.generate(7, (index) => false).obs;
 
   List<bool> get selectedWeeks => _selectedWeeks;
-
 
   Future<void> createNewClassroom({
     required courseCode,
@@ -61,7 +60,8 @@ class ClassroomController extends GetxController {
     final classroomId =
         await cloudFirestoreController.createClassroom(classroom);
     if (classroomId != null) {
-      await cloudFirestoreController.updateUserClassroom({classroomId: 'Teacher'});
+      await cloudFirestoreController
+          .updateUserClassroom({classroomId: 'Teacher'});
       cloudFirestoreController.filterClassesOfToday();
     }
   }
@@ -77,5 +77,4 @@ class ClassroomController extends GetxController {
         .updateUserClassroom({classroomId: 'Student'});
     cloudFirestoreController.filterClassesOfToday();
   }
-
 }

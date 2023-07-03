@@ -3,16 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/attendance_model.dart';
-import 'package:visoattend/views/pages/auth_page.dart';
 
-import '../../controller/attendance_controller.dart';
-import '../../controller/cloud_firestore_controller.dart';
-import '../../helper/constants.dart';
-import '../../helper/functions.dart';
-import '../../models/classroom_model.dart';
-import 'attendance_record_page.dart';
+import '../../../controller/attendance_controller.dart';
+import '../../../controller/cloud_firestore_controller.dart';
+import '../../../helper/constants.dart';
+import '../../../helper/functions.dart';
+import '../../../models/classroom_model.dart';
+import '../attendance_record_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
   const ClassroomPage({super.key, required this.classroomData});
@@ -21,7 +19,6 @@ class ClassroomPage extends GetView<AttendanceController> {
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
     controller
         .updateValues(classroomData)
         .then((_) => controller.getStudentsData());
@@ -30,50 +27,38 @@ class ClassroomPage extends GetView<AttendanceController> {
     final width = Get.width;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          classroomData.courseTitle,
-          style: Get.textTheme.bodyLarge,
-        ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              await authController.signOut();
-              Get.offAll(() => const AuthPage());
-            },
-            icon: const Icon(Icons.logout_rounded),
-          )
-        ],
-      ),
       body: Padding(
-        padding: EdgeInsets.only(
-          top: height * percentGapSmall,
-          right: height * percentGapSmall,
-          left: height * percentGapSmall,
+        padding: EdgeInsets.symmetric(
+          horizontal: height * percentGapSmall,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _topView(context: context, classroom: classroomData),
-            verticalGap(height * percentGapMedium),
-            Text(
-              "Attendance History",
-              style: Get.textTheme.titleMedium!
-                  .copyWith(fontWeight: FontWeight.bold),
-            ),
-            verticalGap(height * percentGapMedium),
-            Expanded(
-              child: Obx(() {
-                return ListView.builder(
-                  itemCount: controller.attendances.length,
-                  itemBuilder: (context, index) {
-                    return _buildAttendanceListView(
-                        attendance: controller.attendances[index]);
-                  },
-                );
-              }),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _topView(context: context, classroom: classroomData),
+              verticalGap(height * percentGapSmall),
+              Text(
+                "Attendance History",
+                style: Get.textTheme.titleMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
+              ),
+              verticalGap(height * percentGapSmall),
+              Flexible(
+                child: Obx(() {
+                  return ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: controller.attendances.length,
+                    itemBuilder: (context, index) {
+                      return _buildAttendanceListView(
+                          attendance: controller.attendances[index]);
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: Obx(() {
@@ -117,7 +102,7 @@ class ClassroomPage extends GetView<AttendanceController> {
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
         padding: const EdgeInsets.all(kSmall),
@@ -177,7 +162,7 @@ class ClassroomPage extends GetView<AttendanceController> {
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       padding: const EdgeInsets.all(kSmall),
       child: Row(

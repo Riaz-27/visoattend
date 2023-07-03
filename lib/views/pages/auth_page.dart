@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
-import 'package:visoattend/views/pages/classroom_page.dart';
+import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import 'login_register_page.dart';

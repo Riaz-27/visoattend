@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/pages/classroom_page.dart';
+import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
+import 'package:visoattend/views/pages/detailed_classroom_page.dart';
 import 'package:visoattend/views/widgets/custom_text_form_field.dart';
 
 import '../../controller/cloud_firestore_controller.dart';
@@ -23,9 +24,10 @@ class AllClassroomPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        forceMaterialTransparency: true,
         title: Text(
           'All Classes',
-          style: Get.textTheme.titleLarge,
+          style: Get.textTheme.bodyLarge,
         ),
       ),
       body: SafeArea(
@@ -51,7 +53,7 @@ class AllClassroomPage extends StatelessWidget {
                     itemBuilder: (_, index) {
                       return GestureDetector(
                         onTap: () => Get.to(() =>
-                            ClassroomPage(classroomData: classroomList[index])),
+                            DetailedClassroomPage(classroomData: classroomList[index])),
                         child:
                             _buildCustomCard(classroom: classroomList[index]),
                       );

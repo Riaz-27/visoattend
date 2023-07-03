@@ -11,22 +11,22 @@ import 'package:visoattend/controller/timer_controller.dart';
 import '../../controller/profile_pic_controller.dart';
 import '../../helper/functions.dart';
 import '../../models/classroom_model.dart';
-import '../../views/pages/create_classroom_page.dart';
+import '../../views/pages/create_edit_classroom_page.dart';
 import '../../controller/auth_controller.dart';
 import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
-import '../../views/pages/classroom_page.dart';
+import 'classroom_pages/classroom_page.dart';
 import '../../views/widgets/custom_text_form_field.dart';
 import 'all_classroom_page.dart';
 import 'auth_page.dart';
+import 'detailed_classroom_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     final height = Get.height;
     final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
@@ -100,36 +100,52 @@ class HomePage extends StatelessWidget {
               ),
               verticalGap(height * percentGapMedium),
               // Running Class UI
-              Text(
-                "Running Class",
-                style: Get.textTheme.titleMedium!
-                    .copyWith(fontWeight: FontWeight.bold),
-              ),
+              Obx(() {
+                final classTimes = cloudFirestoreController.timeLeftOfClasses;
+                final isRunning = classTimes.isNotEmpty
+                    ? classTimes.first < 1
+                        ? true
+                        : false
+                    : false;
+                return Text(
+                  isRunning ? "Running Class" : "Next Class",
+                  style: Get.textTheme.titleMedium!
+                      .copyWith(fontWeight: FontWeight.bold),
+                );
+              }),
               verticalGap(height * percentGapSmall),
               GestureDetector(
                 onTap: () {
                   if (classroomList.isNotEmpty) {
-                    Get.to(() =>
-                        ClassroomPage(classroomData: classroomList.first));
+                    Get.to(() => DetailedClassroomPage(
+                        classroomData: classroomList.first));
                   }
                 },
-                child: _topView( context: context,classroomList: classroomList),
+                child: _topView(context: context, classroomList: classroomList),
               ),
               verticalGap(height * percentGapMedium),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Next Classes",
+                    "Later Today",
                     style: Get.textTheme.titleMedium!
                         .copyWith(fontWeight: FontWeight.bold),
                   ),
                   GestureDetector(
                     onTap: () => Get.to(() => const AllClassroomPage()),
-                    child: Text(
-                      "All Classes",
-                      style: Get.textTheme.titleSmall!
-                          .copyWith(color: Get.theme.colorScheme.secondary),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: kSmall, vertical: kVerySmall),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                          color: Get.theme.colorScheme.secondaryContainer),
+                      child: Text(
+                        "All Classes",
+                        style: Get.textTheme.bodySmall!.copyWith(
+                            color: Get.theme.colorScheme.secondary,
+                            fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -148,10 +164,13 @@ class HomePage extends StatelessWidget {
                           return const SizedBox();
                         }
                         return GestureDetector(
-                          onTap: () => Get.to(() => ClassroomPage(
-                              classroomData: classroomList[index])),
-                          child:
-                              _buildCustomCard(classroom: classroomList[index]),
+                          // onTap: () => Get.to(() => ClassroomPage(
+                          //     classroomData: classroomList[index])),
+                          onTap: () => Get.to(() => DetailedClassroomPage(
+                                classroomData: classroomList[index],
+                              )),
+                          child: _buildCustomCard(
+                              classroom: classroomList[index], index: index),
                         );
                       },
                     );
@@ -189,7 +208,7 @@ class HomePage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          Get.to(() => const CreateClassroomPage());
+                          Get.to(() => const CreateEditClassroomPage());
                           //
                         },
                         child: const Text('Create Class'),
@@ -209,26 +228,24 @@ class HomePage extends StatelessWidget {
 
   Widget _buildCustomCard({
     required ClassroomModel classroom,
+    required int index,
   }) {
     final height = Get.height;
 
     final weekTime =
-        classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())];
-    String startTime = weekTime;
-    if (startTime != 'Off Day') {
-      startTime = DateFormat.jm().format(DateTime.parse(weekTime));
-    }
+        classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]['time'];
+    final startTime = DateFormat.jm().format(DateTime.parse(weekTime));
 
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(kSmall),
+        padding: EdgeInsets.all(height * percentGapSmall),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
@@ -239,6 +256,7 @@ class HomePage extends StatelessWidget {
                     style: Get.textTheme.titleSmall!
                         .copyWith(fontWeight: FontWeight.bold),
                   ),
+                  verticalGap(height * percentGapVerySmall),
                   Text(
                     classroom.courseCode,
                     style: Get.textTheme.titleSmall!.copyWith(
@@ -251,16 +269,35 @@ class HomePage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                Obx(() {
+                  final timeLeft = Get.find<CloudFirestoreController>()
+                      .timeLeftOfClasses[index];
+                  final timeLeftHour = (timeLeft / 60).floor();
+                  final timeLeftMin = timeLeft % 60;
+                  String timeLeftText = '';
+                  Color textColor = Colors.green;
+                  if (timeLeftHour > 0) {
+                    timeLeftText += '${timeLeftHour}h ';
+                  }
+                  timeLeftText += '${timeLeftMin}m Left';
+                  if (timeLeftHour == 0 && timeLeftMin <= 5) {
+                    textColor = Colors.red;
+                  } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+                    textColor = Colors.orange;
+                  }
+                  return Text(
+                    timeLeftText,
+                    style: Get.textTheme.titleSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  );
+                }),
+                verticalGap(height * percentGapVerySmall),
                 Text(
                   startTime,
-                  style: Get.textTheme.titleSmall!
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Time Left',
                   style: Get.textTheme.titleSmall!.copyWith(
-                    color: Get.theme.colorScheme.onBackground.withAlpha(150),
-                  ),
+                      color: Get.theme.colorScheme.onBackground.withAlpha(150)),
                 ),
               ],
             ),
@@ -308,7 +345,10 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _topView({required BuildContext context, required List<ClassroomModel> classroomList}) {
+  Widget _topView({
+    required BuildContext context,
+    required List<ClassroomModel> classroomList,
+  }) {
     final height = Get.height;
     final width = Get.width;
 
@@ -319,16 +359,13 @@ class HomePage extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       padding: const EdgeInsets.all(kSmall),
       child: Row(
         children: [
           horizontalGap(width * percentGapSmall),
           Obx(() {
-            if(classroomList.isNotEmpty){
-              cloudFirestoreController.calculateHomeClassAttendance(classroomList.first.classroomId);
-            }
             final totalClasses = cloudFirestoreController.homeClassAttendances;
             final missedClasses = cloudFirestoreController.homeMissedClasses;
             final percent = (totalClasses - missedClasses) / totalClasses;
@@ -341,8 +378,9 @@ class HomePage extends StatelessWidget {
               color = Colors.orange;
               status = 'Non-Collegiate';
             }
+
             return CircularPercentIndicator(
-              radius: height * 0.07,
+              radius: height * 0.08,
               lineWidth: 12,
               percent: totalClasses > 0 ? percent : 0,
               circularStrokeCap: CircularStrokeCap.round,
@@ -372,11 +410,29 @@ class HomePage extends StatelessWidget {
               final classroom = classroomList.isNotEmpty
                   ? classroomList[0]
                   : ClassroomModel.empty();
-              final extractTime = classroomList.isEmpty
+              final startTime = classroomList.isEmpty
                   ? ''
                   : DateFormat.jm().format(DateTime.parse(classroom
-                      .weekTimes[DateFormat('EEEE').format(DateTime.now())]));
-              final startTime = 'Start Time: $extractTime';
+                      .weekTimes[DateFormat('EEEE').format(DateTime.now())]['time']));
+              final timeLeftOfClasses =
+                  cloudFirestoreController.timeLeftOfClasses;
+              print(timeLeftOfClasses);
+              String timeLeftText = '';
+              Color textColor = Colors.green;
+              if (timeLeftOfClasses.isNotEmpty && timeLeftOfClasses.first > 0) {
+                final timeLeft = timeLeftOfClasses.first;
+                final timeLeftHour = (timeLeft / 60).floor();
+                final timeLeftMin = timeLeft % 60;
+                if (timeLeftHour > 0) {
+                  timeLeftText += '${timeLeftHour}h ';
+                }
+                timeLeftText += '${timeLeftMin}m Left';
+                if (timeLeftHour == 0 && timeLeftMin <= 5) {
+                  textColor = Colors.red;
+                } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+                  textColor = Colors.orange;
+                }
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -401,10 +457,16 @@ class HomePage extends StatelessWidget {
                       classroom.section,
                       style: Get.textTheme.bodySmall,
                     ),
-                    verticalGap(height * percentGapVerySmall),
+                    verticalGap(height * percentGapMedium),
                     Text(
                       startTime,
                       style: Get.textTheme.bodySmall,
+                    ),
+                    Text(
+                      timeLeftText,
+                      style: Get.textTheme.bodySmall!.copyWith(
+                        color: textColor,
+                      ),
                     ),
                   ]
                 ],

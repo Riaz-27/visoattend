@@ -1,22 +1,24 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/controller/cloud_firestore_controller.dart';
 
 class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
   @override
   void onDetached() {
-    myTimer.cancel();
+    cancelTimer();
   }
 
   @override
   void onInactive() {
-    myTimer.cancel();
+    cancelTimer();
   }
 
   @override
   void onPaused() {
-    myTimer.cancel();
+    cancelTimer();
   }
 
   @override
@@ -24,18 +26,32 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
     startTimer();
   }
 
-  @override
-  void onInit() {
-    startTimer();
-    super.onInit();
-  }
+  // @override
+  // void onInit() {
+  //   startTimer();
+  //   super.onInit();
+  // }
 
-  late Timer myTimer;
+  Timer? _myTimer;
+  bool _isInitialized = false;
 
   void startTimer() {
-    myTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      print('Timer : ${DateFormat('h:m:s').format(DateTime.now())}');
-    });
+    if (!_isInitialized) {
+      final cloudFirestoreController = Get.find<CloudFirestoreController>();
+      _myTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        final now = DateTime.now();
+        if (now.second == 1) {
+          cloudFirestoreController.updateTimeLeft();
+        }
+      });
+      _isInitialized = true;
+    }
   }
 
+  void cancelTimer() {
+    if (_isInitialized) {
+      _myTimer!.cancel();
+      _isInitialized = false;
+    }
+  }
 }

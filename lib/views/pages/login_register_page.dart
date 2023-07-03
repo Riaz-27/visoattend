@@ -13,7 +13,7 @@ import '../../models/entities/isar_user.dart';
 import '../../controller/user_database_controller.dart';
 import '../widgets/custom_text_form_field.dart';
 import 'face_register_page.dart';
-import 'classroom_page.dart';
+import 'classroom_pages/classroom_page.dart';
 
 class LoginRegisterPage extends StatelessWidget {
   const LoginRegisterPage({Key? key, this.isSignUp = false}) : super(key: key);
