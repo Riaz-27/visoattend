@@ -19,12 +19,7 @@ class ClassroomPage extends GetView<AttendanceController> {
 
   @override
   Widget build(BuildContext context) {
-    controller
-        .updateValues(classroomData)
-        .then((_) => controller.getStudentsData());
-
     final height = Get.height;
-    final width = Get.width;
 
     return Scaffold(
       body: Padding(

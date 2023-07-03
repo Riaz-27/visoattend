@@ -193,6 +193,17 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
+  Future<void> updateClassroom(ClassroomModel classroom) async {
+    try {
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update(classroom.toJson());
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
   Future<void> getUserClassrooms() async {
     if (_currentUser.value.authUid == '') {
       dev.log('No User Found!');
@@ -259,27 +270,27 @@ class CloudFirestoreController extends GetxController {
       return;
     }
     final weekDay = DateFormat('EEEE').format(DateTime.now());
-    List<ClassroomModel> todayClasses =[];
+    List<ClassroomModel> todayClasses = [];
     for (ClassroomModel classroom in allClasses) {
-      if (classroom.weekTimes[weekDay]['time'] != 'Off Day') {
+      if (classroom.weekTimes[weekDay]['startTime'] != 'Off Day') {
         todayClasses.add(classroom);
       }
     }
     _classesOfToday.value = todayClasses;
     _classesOfToday.sort((a, b) {
-      String aData =
-          TimeOfDay.fromDateTime(DateTime.parse(a.weekTimes[weekDay]['time']))
-              .toString();
-      String bData =
-          TimeOfDay.fromDateTime(DateTime.parse(b.weekTimes[weekDay]['time']))
-              .toString();
+      String aData = TimeOfDay.fromDateTime(
+              DateTime.parse(a.weekTimes[weekDay]['startTime']))
+          .toString();
+      String bData = TimeOfDay.fromDateTime(
+              DateTime.parse(b.weekTimes[weekDay]['startTime']))
+          .toString();
       return aData.compareTo(bData);
     });
     int count = 0;
     List<int> tempTime = [];
     for (ClassroomModel classroom in _classesOfToday) {
-      final startTime =
-          TimeOfDay.fromDateTime(DateTime.parse(classroom.weekTimes[weekDay]['time']));
+      final startTime = TimeOfDay.fromDateTime(
+          DateTime.parse(classroom.weekTimes[weekDay]['startTime']));
       final now = TimeOfDay.now();
       final timeDifferance = (now.hour * 60 + now.minute) -
           (startTime.hour * 60 + startTime.minute);
@@ -368,7 +379,7 @@ class CloudFirestoreController extends GetxController {
   }
 
   Future<void> calculateHomeClassAttendance(String classroomId) async {
-    if(homeClassId == classroomId){
+    if (homeClassId == classroomId) {
       return;
     }
     homeClassId = classroomId;

@@ -233,7 +233,7 @@ class HomePage extends StatelessWidget {
     final height = Get.height;
 
     final weekTime =
-        classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]['time'];
+        classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]['startTime'];
     final startTime = DateFormat.jm().format(DateTime.parse(weekTime));
 
     return Container(
@@ -413,7 +413,7 @@ class HomePage extends StatelessWidget {
               final startTime = classroomList.isEmpty
                   ? ''
                   : DateFormat.jm().format(DateTime.parse(classroom
-                      .weekTimes[DateFormat('EEEE').format(DateTime.now())]['time']));
+                      .weekTimes[DateFormat('EEEE').format(DateTime.now())]['startTime']));
               final timeLeftOfClasses =
                   cloudFirestoreController.timeLeftOfClasses;
               print(timeLeftOfClasses);

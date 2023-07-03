@@ -291,6 +291,8 @@ class LoginRegisterPage extends StatelessWidget {
                               await validateUser(userIdController.text);
                               if (formKey.currentState!.validate()) {
                                 await handleSignInOrSignUp();
+                              } else {
+                                authController.isLoading = false;
                               }
                             },
                           );

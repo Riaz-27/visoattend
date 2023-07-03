@@ -32,7 +32,21 @@ class FaceRegisterPage extends StatelessWidget {
                 width: size.width,
                 child: Obx(() {
                   return (cameraServiceController.isInitialized)
-                      ? CameraPreview(cameraServiceController.cameraController)
+                      ? ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              height: 1,
+                              child: AspectRatio(
+                                aspectRatio: 1 /
+                                    cameraServiceController
+                                        .cameraController.value.aspectRatio,
+                                child: CameraPreview(
+                                    cameraServiceController.cameraController),
+                              ),
+                            ),
+                          ),
+                        )
                       : Container();
                 })),
             Positioned(
@@ -41,7 +55,7 @@ class FaceRegisterPage extends StatelessWidget {
               width: size.width,
               height: size.height,
               child: Obx(() {
-                return faceDetectorController.faceDetected>0
+                return faceDetectorController.faceDetected > 0
                     ? CustomPaint(
                         painter: FaceDetectorPainter(
                           imageSize: cameraServiceController.getImageSize(),
