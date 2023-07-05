@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/controller/classroom_controller.dart';
+import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/helper/constants.dart';
 import 'package:visoattend/helper/functions.dart';
+import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../models/classroom_model.dart';
 
@@ -31,7 +33,6 @@ class CreateEditClassroomPage extends StatelessWidget {
     final classroomController = Get.find<ClassroomController>();
 
     final height = Get.height;
-    final width = Get.width;
 
     if (isEdit && classroom != null) {
       courseTitleController.text = classroom!.courseTitle;
@@ -71,19 +72,27 @@ class CreateEditClassroomPage extends StatelessWidget {
         actions: [
           if (isEdit)
             Padding(
-              padding: const EdgeInsets.only(right: kSmall),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  color: Get.theme.colorScheme.error,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(kSmall),
-                  child: Text(
-                    'Delete',
-                    style: Get.textTheme.bodySmall!.copyWith(
-                      color: Get.theme.colorScheme.onError,
-                      fontWeight: FontWeight.bold,
+              padding: const EdgeInsets.only(right: kMedium, top: kVerySmall),
+              child: GestureDetector(
+                onTap: () => _handleClassDelete(context,
+                    classroom: classroom!,
+                    courseTitle: courseTitleController.text),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    color: Get.theme.colorScheme.error,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: kSmall,
+                      vertical: kVerySmall,
+                    ),
+                    child: Text(
+                      'Archive',
+                      style: Get.textTheme.bodySmall!.copyWith(
+                        color: Get.theme.colorScheme.onError,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -159,7 +168,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                 onPressed: () async {
                   final courseCode = courseCodeController.text.trim();
                   final courseTitle = courseTitleController.text.trim();
-                  if(courseTitle.isEmpty || courseTitle.isEmpty){
+                  if (courseTitle.isEmpty || courseTitle.isEmpty) {
                     return;
                   }
                   if (isEdit && classroom != null) {
@@ -167,7 +176,8 @@ class CreateEditClassroomPage extends StatelessWidget {
                     classroom!.courseTitle = courseTitleController.text.trim();
                     classroom!.session = sessionController.text.trim();
                     classroom!.section = sectionController.text.trim();
-                    classroom!.weekTimes = classroomController.selectedWeekTimes;
+                    classroom!.weekTimes =
+                        classroomController.selectedWeekTimes;
                     await classroomController.updateClassroom(classroom!);
                   } else if (!isEdit) {
                     await classroomController.createNewClassroom(
@@ -187,6 +197,66 @@ class CreateEditClassroomPage extends StatelessWidget {
       ),
     );
   }
+}
+
+void _handleClassDelete(
+  BuildContext context, {
+  required ClassroomModel classroom,
+  required String courseTitle,
+}) {
+  final deleteController = TextEditingController();
+  final classroomController = Get.find<ClassroomController>();
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(
+          'Archive Classroom',
+          style:
+              Get.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: Get.width,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Enter the Course Title to confirm',
+                style: Get.textTheme.bodyMedium,
+              ),
+              verticalGap(Get.height * percentGapSmall),
+              TextField(
+                controller: deleteController,
+                decoration: InputDecoration(
+                  hintText: courseTitle,
+                  isDense: true,
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (courseTitle == deleteController.text) {
+                await classroomController.archiveClassroom(classroom).then(
+                      (_) => Get.find<CloudFirestoreController>().initialize(),
+                    );
+                Get.offAll(()=>const HomePage());
+              }
+            },
+            child: const Text('Confirm'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 Future<void> _selectTime(BuildContext context, int index,
@@ -253,7 +323,8 @@ Future<void> _selectTime(BuildContext context, int index,
         classroomController.selectedStartTimes[index];
     classroomController.selectedWeekTimes[weekDay]['endTime'] =
         classroomController.selectedEndTimes[index];
-  } else {
+  } else if (!isEndTime &&
+      classroomController.selectedStartTimes[index] == 'Off Day') {
     classroomController.selectedWeeks[index] = false;
   }
 }
@@ -375,6 +446,7 @@ Widget _buildWeekTimeList(
                         contentPadding: const EdgeInsets.all(8),
                         isDense: true,
                         labelText: 'Room No',
+                        labelStyle: Get.textTheme.labelMedium,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

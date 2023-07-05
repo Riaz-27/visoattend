@@ -55,6 +55,7 @@ class ClassroomController extends GetxController {
       'authUid': currentUser.authUid,
     };
     final classroom = ClassroomModel(
+      isArchived: false,
       classroomId: 'null',
       courseCode: courseCode,
       courseTitle: courseTitle,
@@ -95,5 +96,10 @@ class ClassroomController extends GetxController {
     );
     cloudFirestoreController.classrooms[index] = classroom;
     cloudFirestoreController.filterClassesOfToday();
+  }
+
+  Future<void> archiveClassroom(ClassroomModel classroom) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    cloudFirestoreController.archiveClassroom(classroom);
   }
 }

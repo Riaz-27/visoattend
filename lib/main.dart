@@ -33,7 +33,7 @@ void main() async {
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorScheme: darkColorScheme,
+        colorScheme: lightColorScheme,
         textTheme: GoogleFonts.lexendTextTheme(),
       ),
       home:  const AuthPage(),

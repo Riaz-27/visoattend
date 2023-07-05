@@ -28,7 +28,7 @@ class FaceRegisterPage extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-                height: size.height - 220,
+                height: size.height,
                 width: size.width,
                 child: Obx(() {
                   return (cameraServiceController.isInitialized)

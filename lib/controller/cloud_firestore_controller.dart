@@ -32,6 +32,10 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get classrooms => _classrooms;
 
+  final _archivedClassrooms = <ClassroomModel>[].obs;
+
+  List<ClassroomModel> get archivedClassrooms => _archivedClassrooms;
+
   final _filteredClassroom = <ClassroomModel>[].obs;
 
   List<ClassroomModel> get filteredClassroom => _filteredClassroom;
@@ -40,9 +44,13 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get classesOfToday => _classesOfToday;
 
-  final _timeLeftOfClasses = [].obs;
+  final _timeLeftToStart = [].obs;
 
-  List<dynamic> get timeLeftOfClasses => _timeLeftOfClasses;
+  List<dynamic> get timeLeftToStart => _timeLeftToStart;
+
+  final _timeLeftToEnd = [].obs;
+
+  List<dynamic> get timeLeftToEnd => _timeLeftToEnd;
 
   final _isInitialized = false.obs;
 
@@ -50,7 +58,7 @@ class CloudFirestoreController extends GetxController {
 
   set isInitialized(value) => _isInitialized.value = value;
 
-  void initialize() async {
+  Future<void> initialize() async {
     await resetValues();
     await setCurrentUser();
     await getUserClassrooms().then((_) => filterClassesOfToday());
@@ -204,6 +212,17 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
+  Future<void> archiveClassroom(ClassroomModel classroom) async {
+    try {
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update({'isArchived': true});
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
   Future<void> getUserClassrooms() async {
     if (_currentUser.value.authUid == '') {
       dev.log('No User Found!');
@@ -217,6 +236,7 @@ class CloudFirestoreController extends GetxController {
     dev.log('ClassroomList: $classroomList');
     // _classrooms.value = [];
     List<ClassroomModel> classes = [];
+    List<ClassroomModel> archivedClasses = [];
     for (int i = 0; i < classroomList.length; i += 10) {
       try {
         final collectionRef = await _firestoreInstance
@@ -230,13 +250,19 @@ class CloudFirestoreController extends GetxController {
             .get();
         dev.log(collectionRef.docs.length.toString());
         for (var docRef in collectionRef.docs) {
-          classes.add(ClassroomModel.fromJson(docRef.data()));
+          final classroom = ClassroomModel.fromJson(docRef.data());
+          if (classroom.isArchived) {
+            archivedClasses.add(classroom);
+          } else {
+            classes.add(classroom);
+          }
         }
       } catch (e) {
         dev.log(e.toString());
       }
     }
     _classrooms.value = classes;
+    _archivedClassrooms.value = archivedClasses;
     _isInitialized.value = true;
   }
 
@@ -263,7 +289,8 @@ class CloudFirestoreController extends GetxController {
   }
 
   void filterClassesOfToday() {
-    print('Classes Filtered');
+    // Getting the class
+    dev.log('Classes Filtered');
     _classesOfToday.value = [];
     final allClasses = _classrooms;
     if (_classrooms.isEmpty) {
@@ -286,31 +313,49 @@ class CloudFirestoreController extends GetxController {
           .toString();
       return aData.compareTo(bData);
     });
+
+    //filtering using time
     int count = 0;
-    List<int> tempTime = [];
+    List<int> tempStartTimes = [];
+    List<int> tempEndTimes = [];
     for (ClassroomModel classroom in _classesOfToday) {
       final startTime = TimeOfDay.fromDateTime(
           DateTime.parse(classroom.weekTimes[weekDay]['startTime']));
+      final endTime = TimeOfDay.fromDateTime(
+          DateTime.parse(classroom.weekTimes[weekDay]['endTime']));
       final now = TimeOfDay.now();
-      final timeDifferance = (now.hour * 60 + now.minute) -
+      final startTimeDifferance = (now.hour * 60 + now.minute) -
           (startTime.hour * 60 + startTime.minute);
-      tempTime.add(timeDifferance * -1);
-      if (timeDifferance >= 0) {
+      final endTimeDifferance =
+          (now.hour * 60 + now.minute) - (endTime.hour * 60 + endTime.minute);
+      tempStartTimes.add(startTimeDifferance * -1);
+      tempEndTimes.add(endTimeDifferance);
+      if (startTimeDifferance >= 0) {
         count++;
       }
     }
-    _timeLeftOfClasses.value = tempTime;
+    _timeLeftToStart.value = tempStartTimes;
+    _timeLeftToEnd.value = tempEndTimes;
     if (count > 0) {
       _classesOfToday.removeRange(0, count - 1);
-      _timeLeftOfClasses.removeRange(0, count - 1);
+      _timeLeftToStart.removeRange(0, count - 1);
+      _timeLeftToEnd.removeRange(0, count - 1);
+    }
+    if (_classesOfToday.isNotEmpty) {
+      if (_timeLeftToEnd.first >= 0) {
+        _classesOfToday.removeAt(0);
+        _timeLeftToStart.removeAt(0);
+        _timeLeftToEnd.removeAt(0);
+      }
     }
     if (_classesOfToday.isNotEmpty) {
       calculateHomeClassAttendance(_classesOfToday.first.classroomId);
     }
-    if (_timeLeftOfClasses.isNotEmpty &&
-        (_timeLeftOfClasses.first > 0 || _timeLeftOfClasses.length > 1)) {
+    if (_timeLeftToEnd.isNotEmpty && _timeLeftToEnd.first < 0) {
+      dev.log('Timer Started');
       Get.find<TimerController>().startTimer();
     } else {
+      dev.log('Timer Closed');
       Get.find<TimerController>().cancelTimer();
     }
   }
@@ -318,7 +363,7 @@ class CloudFirestoreController extends GetxController {
   void updateTimeLeft() {
     print('Running Update');
 
-    if (_timeLeftOfClasses.isNotEmpty) {
+    if (_timeLeftToStart.isNotEmpty) {
       filterClassesOfToday();
     }
   }

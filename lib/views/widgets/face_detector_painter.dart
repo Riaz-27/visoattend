@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import '../../models/recognition_model.dart';
@@ -31,22 +32,10 @@ class FaceDetectorPainter extends CustomPainter {
 
     if(recognitionResults == null) {
       for (Face face in faces) {
-        TextSpan span = TextSpan(
-          style: TextStyle(
-            color: Colors.black,
-            backgroundColor: Colors.white.withAlpha(155),
-            fontSize: 15,
-          ),
-          text: face.headEulerAngleY.toString(),
-        );
-        TextPainter tp = TextPainter(
-          text: span,
-          textAlign: TextAlign.left,
-          textDirection: TextDirection.ltr,
-        );
-        tp.layout();
-        tp.paint(
-            canvas, Offset(face.boundingBox.left * scaleX, face.boundingBox.top * scaleY));
+        Color color = Get.theme.colorScheme.primary;
+        if(face.headEulerAngleY! > 35 || face.headEulerAngleY! < -35){
+          color = Get.theme.colorScheme.error;
+        }
 
         canvas.drawRRect(
           RRect.fromLTRBR(
@@ -60,7 +49,7 @@ class FaceDetectorPainter extends CustomPainter {
             face.boundingBox.bottom * scaleY,
             const Radius.circular(10),
           ),
-          paint..color = Colors.blueGrey,
+          paint..color = color,
         );
       }
     } else {
@@ -70,10 +59,10 @@ class FaceDetectorPainter extends CustomPainter {
 
         if (value.userOrNot is String) {
           text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
-          color = Colors.red;
+          color = Get.theme.colorScheme.error;
         } else {
           text = '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
-          color = Colors.green;
+          color = Get.theme.colorScheme.primary;
         }
 
         TextSpan span = TextSpan(

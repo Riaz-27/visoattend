@@ -58,26 +58,27 @@ class ClassroomPage extends GetView<AttendanceController> {
       ),
       floatingActionButton: Obx(() {
         return controller.currentUserRole == 'Teacher'
-            ? ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24.0, vertical: 12.0),
-                ),
+            ? FloatingActionButton.extended(
                 onPressed: () {
                   if (controller.studentsData.isEmpty) {
                     return;
                   }
                   Get.to(() => const AttendanceRecordPage());
                 },
-                child: const Text('Take Attendance'),
+                label: const Text('Take Attendance'),
+                icon: const Icon(
+                  Icons.add,
+                  size: 18,
+                ),
+                extendedPadding: const EdgeInsets.symmetric(
+                  horizontal: kSmall,
+                ),
+                extendedIconLabelSpacing: 0,
+                extendedTextStyle: Get.textTheme.labelMedium,
               )
             : const SizedBox();
       }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -163,88 +164,90 @@ class ClassroomPage extends GetView<AttendanceController> {
       child: Row(
         children: [
           horizontalGap(width * percentGapSmall),
-          Obx(
-             () {
-               final missedClasses = controller.currentUserMissedClasses;
-               final totalClasses = controller.attendances.length;
-               final percent = (totalClasses-missedClasses)/totalClasses;
-               String status = 'Collegiate';
-               Color color = Get.theme.colorScheme.primary;
-               if(percent<0.6){
-                 color = Get.theme.colorScheme.error;
-                 status = 'Dis-Collegiate';
-               } else if(percent < 0.7){
-                 color = Colors.orange;
-                 status = 'Non-Collegiate';
-               }
-              return Column(
-                children: [
-                  verticalGap(height * percentGapSmall),
-                  CircularPercentIndicator(
-                      radius: height * 0.08,
-                      lineWidth: 12,
-                      percent: totalClasses>0? percent : 0,
-                      circularStrokeCap: CircularStrokeCap.round,
-                      progressColor: color,
-                      backgroundColor: Get.theme.colorScheme.onBackground.withAlpha(15),
-                      animation: true,
-                      center: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text( totalClasses>0?
-                            '${(percent*100).toStringAsFixed(0)}%':'N/A',
-                            style: Get.textTheme.titleLarge,
-                          ),
-                          Text(
-                            status,
-                            style: Get.textTheme.labelSmall!
-                                .copyWith(color: color),
-                          ),
-                        ],
-                      ),
-                   ),
-                  verticalGap(height * percentGapSmall),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Obx(() {
+            final missedClasses = controller.currentUserMissedClasses;
+            final totalClasses = controller.attendances.length;
+            final percent = (totalClasses - missedClasses) / totalClasses;
+            String status = 'Collegiate';
+            Color color = Get.theme.colorScheme.primary;
+            if (percent < 0.6) {
+              color = Get.theme.colorScheme.error;
+              status = 'Dis-Collegiate';
+            } else if (percent < 0.7) {
+              color = Colors.orange;
+              status = 'Non-Collegiate';
+            }
+            return Column(
+              children: [
+                verticalGap(height * percentGapSmall),
+                CircularPercentIndicator(
+                  radius: height * 0.08,
+                  lineWidth: 12,
+                  percent: totalClasses > 0 ? percent : 0,
+                  circularStrokeCap: CircularStrokeCap.round,
+                  progressColor: color,
+                  backgroundColor:
+                      Get.theme.colorScheme.onBackground.withAlpha(15),
+                  animation: true,
+                  center: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularPercentIndicator(
-                        radius: height * 0.025,
-                        lineWidth: 5,
-                        percent: totalClasses>0?missedClasses/totalClasses:0,
-                        circularStrokeCap: CircularStrokeCap.round,
-                        progressColor: Get.theme.colorScheme.error,
-                        backgroundColor: Get.theme.colorScheme.onBackground.withAlpha(15),
-                        animation: true,
-                        center: Text(
-                          missedClasses.toString(),
-                          style: Get.textTheme.titleMedium,
-                        ),
+                      Text(
+                        totalClasses > 0
+                            ? '${(percent * 100).toStringAsFixed(0)}%'
+                            : 'N/A',
+                        style: Get.textTheme.titleLarge,
                       ),
-                      horizontalGap(width * percentGapSmall),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          verticalGap(height * percentGapVerySmall),
-                          Text(
-                            'Missed Classes',
-                            style: Get.textTheme.bodySmall!.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Get.theme.colorScheme.error,
-                            ),
-                          ),
-                          Text(
-                            'Out of $totalClasses classes',
-                            style: Get.textTheme.bodySmall!,
-                          ),
-                        ],
+                      Text(
+                        status,
+                        style: Get.textTheme.labelSmall!.copyWith(color: color),
                       ),
                     ],
                   ),
-                ],
-              );
-            }
-          ),
+                ),
+                verticalGap(height * percentGapSmall),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircularPercentIndicator(
+                      radius: height * 0.025,
+                      lineWidth: 5,
+                      percent:
+                          totalClasses > 0 ? missedClasses / totalClasses : 0,
+                      circularStrokeCap: CircularStrokeCap.round,
+                      progressColor: Get.theme.colorScheme.error,
+                      backgroundColor:
+                          Get.theme.colorScheme.onBackground.withAlpha(15),
+                      animation: true,
+                      center: Text(
+                        missedClasses.toString(),
+                        style: Get.textTheme.titleMedium,
+                      ),
+                    ),
+                    horizontalGap(width * percentGapSmall),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        verticalGap(height * percentGapVerySmall),
+                        Text(
+                          'Missed Classes',
+                          style: Get.textTheme.bodySmall!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Get.theme.colorScheme.error,
+                          ),
+                        ),
+                        Text(
+                          'Out of $totalClasses classes',
+                          style: Get.textTheme.bodySmall!,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
           horizontalGap(width * 0.05),
           Expanded(
             child: Column(
