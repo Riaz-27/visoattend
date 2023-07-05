@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/controller/attendance_controller.dart';
 import 'package:visoattend/controller/classroom_controller.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/helper/constants.dart';
 import 'package:visoattend/helper/functions.dart';
+import 'package:visoattend/views/pages/detailed_classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../models/classroom_model.dart';
@@ -31,6 +33,8 @@ class CreateEditClassroomPage extends StatelessWidget {
         List.generate(7, (index) => TextEditingController());
 
     final classroomController = Get.find<ClassroomController>();
+
+    final currentUser = Get.find<CloudFirestoreController>().currentUser;
 
     final height = Get.height;
 
@@ -70,7 +74,7 @@ class CreateEditClassroomPage extends StatelessWidget {
           style: Get.textTheme.bodyLarge,
         ),
         actions: [
-          if (isEdit)
+          if (isEdit && currentUser.authUid == classroom!.teachers[0]['authUid'])
             Padding(
               padding: const EdgeInsets.only(right: kMedium, top: kVerySmall),
               child: GestureDetector(
@@ -179,6 +183,9 @@ class CreateEditClassroomPage extends StatelessWidget {
                     classroom!.weekTimes =
                         classroomController.selectedWeekTimes;
                     await classroomController.updateClassroom(classroom!);
+                    Get.back();
+                    Get.back();
+                    Get.to(() => DetailedClassroomPage(classroomData: classroom!));
                   } else if (!isEdit) {
                     await classroomController.createNewClassroom(
                       courseCode: courseCode,
@@ -186,8 +193,8 @@ class CreateEditClassroomPage extends StatelessWidget {
                       section: sectionController.text.trim(),
                       session: sessionController.text.trim(),
                     );
+                    Get.back();
                   }
-                  Get.back();
                 },
                 child: const Text('Confirm'),
               ),
@@ -248,7 +255,7 @@ void _handleClassDelete(
                 await classroomController.archiveClassroom(classroom).then(
                       (_) => Get.find<CloudFirestoreController>().initialize(),
                     );
-                Get.offAll(()=>const HomePage());
+                Get.offAll(() => const HomePage());
               }
             },
             child: const Text('Confirm'),

@@ -24,7 +24,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
 
     final navigationPages = [
       ClassroomPage(classroomData: classroomData),
-      const PeoplePage(),
+      PeoplePage(classroom: classroomData),
       const LeaveRequestPage(),
     ];
 

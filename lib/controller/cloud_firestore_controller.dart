@@ -52,6 +52,10 @@ class CloudFirestoreController extends GetxController {
 
   List<dynamic> get timeLeftToEnd => _timeLeftToEnd;
 
+  final _isHoliday = true.obs;
+
+  bool get isHoliday => _isHoliday.value;
+
   final _isInitialized = false.obs;
 
   bool get isInitialized => _isInitialized.value;
@@ -300,6 +304,7 @@ class CloudFirestoreController extends GetxController {
     List<ClassroomModel> todayClasses = [];
     for (ClassroomModel classroom in allClasses) {
       if (classroom.weekTimes[weekDay]['startTime'] != 'Off Day') {
+        _isHoliday.value = false;
         todayClasses.add(classroom);
       }
     }

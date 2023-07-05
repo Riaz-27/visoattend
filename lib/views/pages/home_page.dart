@@ -464,7 +464,7 @@ class HomePage extends StatelessWidget {
                     startTextColor = Colors.orange;
                   }
                 } else {
-                  startTimeLeftText += 'Running';
+                  startTimeLeftText = 'Running';
                   startTextColor = Get.theme.colorScheme.primary;
                   endTimeLeftText = '';
                   if (timeLeftToEnd.first < 0) {
@@ -488,9 +488,11 @@ class HomePage extends StatelessWidget {
                 children: [
                   verticalGap(height * percentGapSmall),
                   Text(
-                    classroomList.isEmpty
+                    cloudFirestoreController.isHoliday
                         ? 'Looks like its a Holiday!'
-                        : classroom.courseTitle,
+                        : classroomList.isEmpty
+                            ? 'No more classes today'
+                            : classroom.courseTitle,
                     style: Get.textTheme.labelMedium!
                         .copyWith(fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
@@ -499,7 +501,7 @@ class HomePage extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        classroomList.isEmpty
+                        cloudFirestoreController.isHoliday
                             ? 'Enjoy your Holiday!'
                             : classroom.courseCode,
                         style: Get.textTheme.labelMedium,
@@ -508,7 +510,7 @@ class HomePage extends StatelessWidget {
                         horizontalGap(width * percentGapSmall),
                         Text(
                           'Section: ',
-                          style: Get.textTheme.labelMedium!.copyWith(
+                          style: Get.textTheme.labelSmall!.copyWith(
                               color: Get.theme.colorScheme.onBackground
                                   .withAlpha(150)),
                         ),
@@ -523,20 +525,22 @@ class HomePage extends StatelessWidget {
                     verticalGap(height * percentGapSmall),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.location_pin,
-                          size: 14,
-                        ),
-                        Text(
-                          'Room No: ',
-                          style: Get.textTheme.labelMedium!.copyWith(
-                              color: Get.theme.colorScheme.onBackground
-                                  .withAlpha(150)),
-                        ),
-                        Text(
-                          roomNo,
-                          style: Get.textTheme.labelMedium,
-                        ),
+                        if(roomNo != '') ...[
+                          const Icon(
+                            Icons.location_pin,
+                            size: 14,
+                          ),
+                          Text(
+                            'Room No: ',
+                            style: Get.textTheme.labelSmall!.copyWith(
+                                color: Get.theme.colorScheme.onBackground
+                                    .withAlpha(150)),
+                          ),
+                          Text(
+                            roomNo,
+                            style: Get.textTheme.labelMedium,
+                          ),
+                        ]
                       ],
                     ),
                     verticalGap(height * percentGapSmall),

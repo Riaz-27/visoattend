@@ -163,8 +163,9 @@ class ClassroomPage extends GetView<AttendanceController> {
       padding: const EdgeInsets.all(kSmall),
       child: Row(
         children: [
-          horizontalGap(width * percentGapSmall),
+          horizontalGap(width * percentGapVerySmall),
           Obx(() {
+            // Calculation Missed class
             final missedClasses = controller.currentUserMissedClasses;
             final totalClasses = controller.attendances.length;
             final percent = (totalClasses - missedClasses) / totalClasses;
@@ -177,6 +178,7 @@ class ClassroomPage extends GetView<AttendanceController> {
               color = Colors.orange;
               status = 'Non-Collegiate';
             }
+
             return Column(
               children: [
                 verticalGap(height * percentGapSmall),
@@ -210,8 +212,8 @@ class ClassroomPage extends GetView<AttendanceController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CircularPercentIndicator(
-                      radius: height * 0.025,
-                      lineWidth: 5,
+                      radius: height * 0.023,
+                      lineWidth: 7,
                       percent:
                           totalClasses > 0 ? missedClasses / totalClasses : 0,
                       circularStrokeCap: CircularStrokeCap.round,
@@ -221,7 +223,12 @@ class ClassroomPage extends GetView<AttendanceController> {
                       animation: true,
                       center: Text(
                         missedClasses.toString(),
-                        style: Get.textTheme.titleMedium,
+                        style: Get.textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: missedClasses > 0
+                              ? Get.theme.colorScheme.error
+                              : Get.theme.colorScheme.onBackground,
+                        ),
                       ),
                     ),
                     horizontalGap(width * percentGapSmall),
@@ -250,11 +257,57 @@ class ClassroomPage extends GetView<AttendanceController> {
           }),
           horizontalGap(width * 0.05),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Obx(() {
-                  return controller.currentUserRole == 'Teacher'
+            child: Obx(() {
+              //finding class schedule
+              String? scheduleText = "Today's class";
+              DateTime nextDate = DateTime.now();
+              String startTime = classroom
+                  .weekTimes[DateFormat('EEEE').format(nextDate)]['startTime'];
+              String endTime = classroom
+                  .weekTimes[DateFormat('EEEE').format(nextDate)]['endTime'];
+              String roomNo = classroom
+                  .weekTimes[DateFormat('EEEE').format(nextDate)]['room'];
+
+              if (startTime == 'Off Day' ||
+                  (endTime != 'Off Day' &&
+                      DateTime.parse(endTime)
+                          .copyWith(
+                              day: nextDate.day,
+                              month: nextDate.month,
+                              year: nextDate.year)
+                          .isBefore(DateTime.now()))) {
+                scheduleText = 'Next class';
+                for (int i = 1; i <= 7; i++) {
+                  nextDate = DateTime.now().add(Duration(days: i));
+                  startTime =
+                      classroom.weekTimes[DateFormat('EEEE').format(nextDate)]
+                          ['startTime'];
+                  endTime =
+                      classroom.weekTimes[DateFormat('EEEE').format(nextDate)]
+                          ['endTime'];
+                  roomNo = classroom
+                      .weekTimes[DateFormat('EEEE').format(nextDate)]['room'];
+                  if (startTime != 'Off Day') {
+                    break;
+                  }
+                  if (i == 7) {
+                    scheduleText = null;
+                  }
+                }
+              }
+              if (scheduleText != null) {
+                if (scheduleText.contains('Next')) {
+                  scheduleText +=
+                      ' - ${DateFormat('E, d MMMM').format(nextDate)}';
+                }
+                startTime = DateFormat.jm().format(DateTime.parse(startTime));
+                endTime = DateFormat.jm().format(DateTime.parse(endTime));
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  controller.currentUserRole == 'Teacher'
                       ? GestureDetector(
                           onTap: () async {
                             await Clipboard.setData(
@@ -286,31 +339,122 @@ class ClassroomPage extends GetView<AttendanceController> {
                             ],
                           ),
                         )
-                      : const SizedBox();
-                }),
-                verticalGap(height * percentGapVerySmall),
-                Text(
-                  classroom.courseTitle,
-                  style: Get.textTheme.bodyMedium,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                verticalGap(height * percentGapVerySmall),
-                Text(
-                  classroom.courseCode,
-                  style: Get.textTheme.bodySmall,
-                ),
-                verticalGap(height * percentGapVerySmall),
-                Text(
-                  classroom.section,
-                  style: Get.textTheme.bodySmall,
-                ),
-                verticalGap(height * percentGapVerySmall),
-                Text(
-                  'startTime',
-                  style: Get.textTheme.bodySmall,
-                ),
-              ],
-            ),
+                      : SizedBox(
+                          height: height * percentGapSmall,
+                        ),
+                  verticalGap(height * percentGapVerySmall),
+                  Text(
+                    classroom.courseTitle,
+                    style: Get.textTheme.labelMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  verticalGap(height * percentGapVerySmall),
+                  Row(
+                    children: [
+                      Text(
+                        'Code: ',
+                        style: Get.textTheme.labelSmall!.copyWith(
+                          color:
+                              Get.theme.colorScheme.onBackground.withAlpha(150),
+                        ),
+                      ),
+                      Text(
+                        classroom.courseCode,
+                        style: Get.textTheme.labelMedium,
+                      ),
+                    ],
+                  ),
+                  verticalGap(height * percentGapVerySmall),
+                  Row(
+                    children: [
+                      Text(
+                        classroom.section.isEmpty ? '' : 'Section: ',
+                        style: Get.textTheme.labelSmall!.copyWith(
+                          color:
+                              Get.theme.colorScheme.onBackground.withAlpha(150),
+                        ),
+                      ),
+                      Text(
+                        classroom.section,
+                        style: Get.textTheme.labelMedium,
+                      ),
+                    ],
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Text(
+                    scheduleText ?? 'Schedule not set yet',
+                    style: Get.textTheme.labelSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                    ),
+                  ),
+                  verticalGap(height * percentGapVerySmall),
+                  Row(
+                    children: [
+                      if (roomNo != '') ...[
+                        const Icon(
+                          Icons.location_pin,
+                          size: 14,
+                        ),
+                        Text(
+                          'Room No: ',
+                          style: Get.textTheme.labelSmall!.copyWith(
+                              color: Get.theme.colorScheme.onBackground
+                                  .withAlpha(150)),
+                        ),
+                        Text(
+                          roomNo,
+                          style: Get.textTheme.labelMedium,
+                        ),
+                      ],
+                    ],
+                  ),
+                  verticalGap(height * 0.015),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (scheduleText != null) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'From',
+                              style: Get.textTheme.labelSmall!.copyWith(
+                                color: Get.theme.colorScheme.onBackground
+                                    .withAlpha(150),
+                              ),
+                            ),
+                            verticalGap(height * percentGapVerySmall),
+                            Text(
+                              startTime,
+                              style: Get.textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                        horizontalGap(width * 0.08),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'To',
+                              style: Get.textTheme.labelSmall!.copyWith(
+                                color: Get.theme.colorScheme.onBackground
+                                    .withAlpha(150),
+                              ),
+                            ),
+                            verticalGap(height * percentGapVerySmall),
+                            Text(
+                              endTime,
+                              style: Get.textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                      ]
+                    ],
+                  )
+                ],
+              );
+            }),
           )
         ],
       ),
