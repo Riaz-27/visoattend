@@ -78,7 +78,7 @@ Widget _buildCustomCard({
   return Container(
     margin: EdgeInsets.only(bottom: height * percentGapSmall),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(15),
       color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
     ),
     child: Padding(

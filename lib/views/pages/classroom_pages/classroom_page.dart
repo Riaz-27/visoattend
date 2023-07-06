@@ -10,6 +10,7 @@ import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
 import '../../../models/classroom_model.dart';
+import '../../widgets/custom_button.dart';
 import '../attendance_record_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
@@ -57,24 +58,55 @@ class ClassroomPage extends GetView<AttendanceController> {
         ),
       ),
       floatingActionButton: Obx(() {
-        return controller.currentUserRole == 'Teacher'
-            ? FloatingActionButton.extended(
-                onPressed: () {
-                  if (controller.studentsData.isEmpty) {
-                    return;
-                  }
-                  Get.to(() => const AttendanceRecordPage());
-                },
-                label: const Text('Take Attendance'),
-                icon: const Icon(
-                  Icons.add,
-                  size: 18,
+        final isClassEmpty =
+            classroomData.students.length + classroomData.cRs.length > 0;
+        return controller.currentUserRole == 'Teacher' && isClassEmpty
+            ? Padding(
+                padding: const EdgeInsets.only(bottom: 20, right: 10),
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Get.bottomSheet(
+                      backgroundColor: Get.theme.colorScheme.surface,
+                      enableDrag: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(15),
+                          topLeft: Radius.circular(15),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: kSmall, vertical: kMedium),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CustomButton(
+                              height: height * 0.055,
+                              backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                              textColor: Get.theme.colorScheme.onSecondaryContainer,
+                              text: 'Take Attendance',
+                              onPressed: () {
+                                Get.back();
+                                Get.to(() => const AttendanceRecordPage());
+                              },
+                            ),
+                            verticalGap(height * percentGapSmall),
+                            CustomButton(
+                              height: height * 0.055,
+                              backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                              textColor: Get.theme.colorScheme.onSecondaryContainer,
+                              text: 'Open Attendance',
+                              onPressed: () {
+                                //TODO
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Icon(Icons.add),
                 ),
-                extendedPadding: const EdgeInsets.symmetric(
-                  horizontal: kSmall,
-                ),
-                extendedIconLabelSpacing: 0,
-                extendedTextStyle: Get.textTheme.labelMedium,
               )
             : const SizedBox();
       }),
@@ -86,18 +118,20 @@ class ClassroomPage extends GetView<AttendanceController> {
     final height = Get.height;
     final width = Get.width;
     final dateTime = DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+    final isToday = DateFormat('dMy').format(dateTime) ==
+        DateFormat('dMy').format(DateTime.now());
 
     final currentUser = Get.find<CloudFirestoreController>().currentUser;
     final presentStatus = attendance.studentsData[currentUser.authUid];
     final userRole = controller.currentUserRole;
-    final color = presentStatus == 'Absent'
+    final color = presentStatus == 'Absent' || presentStatus == null
         ? Get.theme.colorScheme.error
         : Get.theme.colorScheme.primary;
 
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15),
         color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
@@ -105,7 +139,7 @@ class ClassroomPage extends GetView<AttendanceController> {
         child: Row(
           children: [
             Text(
-              dateTime.day.toString(),
+              DateFormat('dd').format(dateTime),
               style: Get.textTheme.displaySmall!
                   .copyWith(color: Get.theme.colorScheme.onBackground),
             ),
@@ -125,12 +159,12 @@ class ClassroomPage extends GetView<AttendanceController> {
               ],
             ),
             const Spacer(),
-            if (userRole == 'Student')
+            if (userRole == 'Student' || userRole == 'CR')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    presentStatus ?? '',
+                    presentStatus ?? 'Missing',
                     style: Get.textTheme.titleSmall!.copyWith(color: color),
                   ),
                   Text(
@@ -139,7 +173,8 @@ class ClassroomPage extends GetView<AttendanceController> {
                   ),
                 ],
               ),
-            if (userRole != 'Student') const Icon(Icons.chevron_right),
+            if (userRole == 'Teacher' || (userRole == 'CR' && isToday))
+              const Icon(Icons.chevron_right),
           ],
         ),
       ),
@@ -157,7 +192,7 @@ class ClassroomPage extends GetView<AttendanceController> {
       height: height * 0.28,
       width: width,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       padding: const EdgeInsets.all(kSmall),
@@ -165,10 +200,18 @@ class ClassroomPage extends GetView<AttendanceController> {
         children: [
           horizontalGap(width * percentGapVerySmall),
           Obx(() {
+            final currentUserRole =
+                Get.find<AttendanceController>().currentUserRole;
+            final isTeacher = currentUserRole == 'Teacher';
             // Calculation Missed class
             final missedClasses = controller.currentUserMissedClasses;
             final totalClasses = controller.attendances.length;
-            final percent = (totalClasses - missedClasses) / totalClasses;
+            final percent = totalClasses > 0
+                ? (totalClasses - missedClasses) / totalClasses
+                : 0.0;
+            String percentText = totalClasses > 0
+                ? '${(percent * 100).toStringAsFixed(0)}%'
+                : 'N/A';
             String status = 'Collegiate';
             Color color = Get.theme.colorScheme.primary;
             if (percent < 0.6) {
@@ -178,14 +221,20 @@ class ClassroomPage extends GetView<AttendanceController> {
               color = Colors.orange;
               status = 'Non-Collegiate';
             }
+            if (isTeacher) {
+              color = Get.theme.colorScheme.secondary;
+              percentText = totalClasses.toString();
+              status = 'Classes Taken';
+            }
 
             return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 verticalGap(height * percentGapSmall),
                 CircularPercentIndicator(
                   radius: height * 0.08,
                   lineWidth: 12,
-                  percent: totalClasses > 0 ? percent : 0,
+                  percent: isTeacher ? 1 : percent,
                   circularStrokeCap: CircularStrokeCap.round,
                   progressColor: color,
                   backgroundColor:
@@ -195,9 +244,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        totalClasses > 0
-                            ? '${(percent * 100).toStringAsFixed(0)}%'
-                            : 'N/A',
+                        percentText,
                         style: Get.textTheme.titleLarge,
                       ),
                       Text(
@@ -208,50 +255,51 @@ class ClassroomPage extends GetView<AttendanceController> {
                   ),
                 ),
                 verticalGap(height * percentGapSmall),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircularPercentIndicator(
-                      radius: height * 0.023,
-                      lineWidth: 7,
-                      percent:
-                          totalClasses > 0 ? missedClasses / totalClasses : 0,
-                      circularStrokeCap: CircularStrokeCap.round,
-                      progressColor: Get.theme.colorScheme.error,
-                      backgroundColor:
-                          Get.theme.colorScheme.onBackground.withAlpha(15),
-                      animation: true,
-                      center: Text(
-                        missedClasses.toString(),
-                        style: Get.textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: missedClasses > 0
-                              ? Get.theme.colorScheme.error
-                              : Get.theme.colorScheme.onBackground,
-                        ),
-                      ),
-                    ),
-                    horizontalGap(width * percentGapSmall),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        verticalGap(height * percentGapVerySmall),
-                        Text(
-                          'Missed Classes',
-                          style: Get.textTheme.bodySmall!.copyWith(
+                if (!isTeacher)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircularPercentIndicator(
+                        radius: height * 0.023,
+                        lineWidth: 7,
+                        percent:
+                            totalClasses > 0 ? missedClasses / totalClasses : 0,
+                        circularStrokeCap: CircularStrokeCap.round,
+                        progressColor: Get.theme.colorScheme.error,
+                        backgroundColor:
+                            Get.theme.colorScheme.onBackground.withAlpha(15),
+                        animation: true,
+                        center: Text(
+                          missedClasses.toString(),
+                          style: Get.textTheme.bodyMedium!.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Get.theme.colorScheme.error,
+                            color: missedClasses > 0
+                                ? Get.theme.colorScheme.error
+                                : Get.theme.colorScheme.onBackground,
                           ),
                         ),
-                        Text(
-                          'Out of $totalClasses classes',
-                          style: Get.textTheme.bodySmall!,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      horizontalGap(width * percentGapSmall),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          verticalGap(height * percentGapVerySmall),
+                          Text(
+                            'Missed Classes',
+                            style: Get.textTheme.bodySmall!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Get.theme.colorScheme.error,
+                            ),
+                          ),
+                          Text(
+                            'Out of $totalClasses classes',
+                            style: Get.textTheme.bodySmall!,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
               ],
             );
           }),

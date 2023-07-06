@@ -72,6 +72,7 @@ class CloudFirestoreController extends GetxController {
     _isLoading(false);
     _currentUser(UserModel.empty());
     _classrooms([]);
+    homeClassId = '';
   }
 
   /// User data control
@@ -401,6 +402,10 @@ class CloudFirestoreController extends GetxController {
 
   int get homeClassAttendances => _homeClassAttendances.value;
 
+  final _homeClassUserRole = 'Student'.obs;
+
+  String get homeClassUserRole => _homeClassUserRole.value;
+
   String homeClassId = '';
 
   Future<List<AttendanceModel>> getClassroomAttendances(
@@ -433,6 +438,7 @@ class CloudFirestoreController extends GetxController {
       return;
     }
     homeClassId = classroomId;
+    _homeClassUserRole.value = currentUser.classrooms[classroomId];
 
     final attendances = await getClassroomAttendances(classroomId);
     _homeClassAttendances.value = attendances.length;
@@ -446,5 +452,80 @@ class CloudFirestoreController extends GetxController {
       }
     }
     _homeMissedClasses.value = missedClass;
+  }
+
+  /// Control selected user role
+  final _selectedUserRole = 'Student'.obs;
+
+  String get selectedUserRole => _selectedUserRole.value;
+
+  set selectedUserRole(String value) => _selectedUserRole.value = value;
+
+  Future<void> changeUserRole({
+    required Map<String, dynamic> user,
+    required ClassroomModel classroom,
+    required String currentRole,
+  }) async {
+    if (selectedUserRole == currentRole) {
+      return;
+    }
+
+    if (currentRole == 'Teacher') {
+      classroom.teachers
+          .removeWhere((element) => element['authUid'] == user['authUid']);
+    } else if (currentRole == 'CR') {
+      classroom.cRs
+          .removeWhere((element) => element['authUid'] == user['authUid']);
+    } else if (currentRole == 'Student') {
+      classroom.students
+          .removeWhere((element) => element['authUid'] == user['authUid']);
+    }
+
+    if (selectedUserRole == 'Teacher') {
+      classroom.teachers.add(user);
+    } else if (selectedUserRole == 'CR') {
+      classroom.cRs.add(user);
+    } else if (selectedUserRole == 'Student') {
+      classroom.students.add(user);
+    }
+
+    // Updating firestore data
+    try {
+      final selectedUserDoc = await _firestoreInstance
+          .collection(userCollection)
+          .doc(user['authUid'])
+          .get();
+      final selectedUser = UserModel.fromJson(selectedUserDoc.data()!);
+      selectedUser.classrooms[classroom.classroomId] = selectedUserRole;
+      _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update({
+        'teachers': classroom.teachers,
+        'cRs': classroom.cRs,
+        'students': classroom.students,
+      });
+      _firestoreInstance
+          .collection(userCollection)
+          .doc(user['authUid'])
+          .update({
+        'classrooms': selectedUser.classrooms,
+      });
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
+  /// Open Attendance
+  Future<void> changeOpenAttendance(
+      String classroomId, String openAttendance) async {
+    try {
+      _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroomId)
+          .update({'openAttendance': openAttendance});
+    } catch (e) {
+      dev.log(e.toString());
+    }
   }
 }

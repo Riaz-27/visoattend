@@ -6,17 +6,25 @@ class CustomButton extends StatelessWidget {
     super.key,
     this.width,
     this.height,
+    this.backgroundColor,
+    this.textColor,
+    this.fontWeight,
     required this.text,
     required this.onPressed,
   });
 
   final double? width;
   final double? height;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final FontWeight? fontWeight;
   final String text;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Get.theme.colorScheme;
+    final textTheme = Get.theme.textTheme;
     return SizedBox(
       width: width ?? Get.width,
       height: height ?? Get.height * 0.06,
@@ -24,13 +32,12 @@ class CustomButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          backgroundColor: Get.theme.colorScheme.secondary,
+          backgroundColor: backgroundColor ?? colorScheme.secondary,
         ),
         child: Text(
           text,
-          style: Get.textTheme.bodyLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          style: textTheme.bodyLarge!.copyWith(
+            color: textColor ?? colorScheme.surface,
           ),
         ),
       ),

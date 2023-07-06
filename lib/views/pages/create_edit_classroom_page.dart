@@ -10,6 +10,7 @@ import 'package:visoattend/views/pages/detailed_classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../models/classroom_model.dart';
+import '../widgets/custom_button.dart';
 
 class CreateEditClassroomPage extends StatelessWidget {
   const CreateEditClassroomPage({
@@ -168,7 +169,12 @@ class CreateEditClassroomPage extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(bottom: height * percentGapSmall),
-              child: ElevatedButton(
+              child:
+              CustomButton(
+                height: height * 0.055,
+                backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                textColor: Get.theme.colorScheme.onSecondaryContainer,
+                text: 'Confirm',
                 onPressed: () async {
                   final courseCode = courseCodeController.text.trim();
                   final courseTitle = courseTitleController.text.trim();
@@ -196,7 +202,6 @@ class CreateEditClassroomPage extends StatelessWidget {
                     Get.back();
                   }
                 },
-                child: const Text('Confirm'),
               ),
             ),
           ],

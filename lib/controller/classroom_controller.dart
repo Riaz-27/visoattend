@@ -56,6 +56,7 @@ class ClassroomController extends GetxController {
     };
     final classroom = ClassroomModel(
       isArchived: false,
+      openAttendance: 'off',
       classroomId: 'null',
       courseCode: courseCode,
       courseTitle: courseTitle,

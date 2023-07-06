@@ -20,11 +20,13 @@ class AttendanceController extends GetxController {
   ClassroomModel get classroomData => _classroomData.value;
 
   List<UserModel> studentsData = [];
+
   final _currentUserRole = 'Student'.obs;
 
   String get currentUserRole => _currentUserRole.value;
 
   final _currentUserMissedClasses = 0.obs;
+
   int get currentUserMissedClasses => _currentUserMissedClasses.value;
 
   Map<int, RecognitionModel> totalRecognized = {};
@@ -32,7 +34,7 @@ class AttendanceController extends GetxController {
   Map<String, RecognitionModel> matchedStudents = {}; // String is user.authUid
 
   @override
-  onInit(){
+  onInit() {
     ever(_attendances, (_) => calculateMissedClass());
     super.onInit();
   }
@@ -99,15 +101,50 @@ class AttendanceController extends GetxController {
         .then((_) => _attendances.add(attendanceData));
   }
 
-  void calculateMissedClass(){
-    final userAuthUid = Get.find<CloudFirestoreController>().currentUser.authUid;
-    _currentUserMissedClasses.value =0;
-    for(AttendanceModel attendance in _attendances){
-      if(attendance.studentsData[userAuthUid] == 'Absent'){
+  void calculateMissedClass() {
+    final userAuthUid =
+        Get.find<CloudFirestoreController>().currentUser.authUid;
+    _currentUserMissedClasses.value = 0;
+    for (AttendanceModel attendance in _attendances) {
+      if (attendance.studentsData[userAuthUid] == 'Absent' ||
+          attendance.studentsData[userAuthUid] == null) {
         _currentUserMissedClasses.value++;
       }
     }
   }
 
+  double getUserAttendancePercent(String userAuthUid) {
+    int missedClasses = 0;
+    final totalClasses = _attendances.length;
+    for (AttendanceModel attendance in _attendances) {
+      if (attendance.studentsData[userAuthUid] == 'Absent' ||
+          attendance.studentsData[userAuthUid] == null) {
+        missedClasses++;
+      }
+    }
+    return totalClasses > 0 ? (totalClasses - missedClasses) / totalClasses : 0;
+  }
 
+  Future<void> openAttendance() async {
+    final now = DateTime.now().millisecondsSinceEpoch.toString();
+    try {
+      await Get.find<CloudFirestoreController>()
+          .changeOpenAttendance(classroomData.classroomId, now);
+      _classroomData.value.openAttendance = now;
+      
+    } catch (e) {
+      return;
+    }
+  }
+
+  Future<void> closeAttendance() async {
+    const now = 'off';
+    try {
+      await Get.find<CloudFirestoreController>()
+          .changeOpenAttendance(classroomData.classroomId, now);
+      _classroomData.value.openAttendance = now;
+    } catch (e) {
+      return;
+    }
+  }
 }

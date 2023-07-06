@@ -26,19 +26,14 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
     startTimer();
   }
 
-  // @override
-  // void onInit() {
-  //   startTimer();
-  //   super.onInit();
-  // }
-
-  Timer? _myTimer;
+  /// Timer for classroom start end related data
+  Timer? _classTimer;
   bool _isInitialized = false;
 
   void startTimer() {
     if (!_isInitialized) {
       final cloudFirestoreController = Get.find<CloudFirestoreController>();
-      _myTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _classTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         final now = DateTime.now();
         if (now.second == 1) {
           cloudFirestoreController.updateTimeLeft();
@@ -50,8 +45,26 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
 
   void cancelTimer() {
     if (_isInitialized) {
-      _myTimer!.cancel();
+      _classTimer!.cancel();
       _isInitialized = false;
     }
+  }
+
+  /// Timer for handling open attendance
+  Timer? _attendanceTimer;
+
+  final _timeLeft = 0.obs;
+
+  int get timeLeft => _timeLeft.value;
+
+  set timeLeft(int val) => _timeLeft.value = val;
+
+  void startAttendanceTimer() {
+    _attendanceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _timeLeft.value--;
+      if(_timeLeft.value == 0){
+        _attendanceTimer!.cancel();
+      }
+    });
   }
 }

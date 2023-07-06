@@ -29,12 +29,17 @@ class ProfilePicController extends GetxController {
     }
   }
 
-  void getUserProfilePic({required String userAuthUid}) async {
-    final ref = _firebaseStorage
-        .ref()
-        .child('/profile_pics')
-        .child('$userAuthUid.jpg');
-
-    _profilePicUrl.value = await ref.getDownloadURL();
+  Future<String?> getUserProfilePic({required String userAuthUid}) async {
+    try{
+      final ref = _firebaseStorage
+          .ref()
+          .child('/profile_pics')
+          .child('$userAuthUid.jpg');
+      final picUrl = await ref.getDownloadURL();
+      _profilePicUrl.value = picUrl;
+      return picUrl;
+    } catch(e){
+      return null;
+    }
   }
 }

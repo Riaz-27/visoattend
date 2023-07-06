@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
 import 'package:visoattend/controller/timer_controller.dart';
+import 'package:visoattend/views/widgets/custom_button.dart';
 
 import '../../controller/profile_pic_controller.dart';
 import '../../helper/functions.dart';
@@ -88,19 +89,21 @@ class HomePage extends StatelessWidget {
                         },
                         icon: const Icon(Icons.logout_rounded),
                       ),
-                      CircleAvatar(
-                        backgroundColor: Colors.blueGrey,
-                        child: Obx(() {
-                          final picUrl =
-                              Get.find<ProfilePicController>().profilePicUrl;
-                          return picUrl == ''
-                              ? const Icon(Icons.people_rounded)
-                              : Image.network(
-                                  picUrl,
-                                  fit: BoxFit.cover,
-                                );
-                        }),
-                      ),
+                      Obx(() {
+                        final picUrl =
+                            Get.find<ProfilePicController>().profilePicUrl;
+                        return Container(
+                          width: 35,
+                          height: 35,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(picUrl),
+                            ),
+                          ),
+                        );
+                      }),
                     ],
                   ),
                   verticalGap(height * percentGapMedium),
@@ -197,33 +200,39 @@ class HomePage extends StatelessWidget {
         child: FloatingActionButton(
           onPressed: () {
             Get.bottomSheet(
-              backgroundColor: Colors.white,
+              backgroundColor: Get.theme.colorScheme.surface,
               enableDrag: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(15),
+                  topLeft: Radius.circular(15),
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.all(kSmall),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: kSmall, vertical: kMedium),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Get.back();
-                          _handleJoinClass();
-                        },
-                        child: const Text('Join Class'),
-                      ),
+                    CustomButton(
+                      height: height * 0.055,
+                      backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                      textColor: Get.theme.colorScheme.onSecondaryContainer,
+                      text: 'Join Class',
+                      onPressed: () {
+                        Get.back();
+                        _handleJoinClass();
+                      },
                     ),
                     verticalGap(height * percentGapSmall),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Get.to(() => const CreateEditClassroomPage());
-                          //
-                        },
-                        child: const Text('Create Class'),
-                      ),
+                    CustomButton(
+                      height: height * 0.055,
+                      backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                      textColor: Get.theme.colorScheme.onSecondaryContainer,
+                      text: 'Create Class',
+                      onPressed: () {
+                        Get.to(() => const CreateEditClassroomPage());
+                      },
                     ),
                   ],
                 ),
@@ -250,7 +259,7 @@ class HomePage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(15),
         color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
@@ -320,35 +329,37 @@ class HomePage extends StatelessWidget {
 
   void _handleJoinClass() {
     final TextEditingController classroomIdController = TextEditingController();
+    final height = Get.height;
     Get.bottomSheet(
       enableDrag: true,
       isScrollControlled: true,
       backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(15),
+          topLeft: Radius.circular(15),
+        ),
+      ),
       Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 100,
+              height: 80,
               width: double.infinity,
               child: CustomTextFormField(
                 controller: classroomIdController,
-                labelText: 'Enter Class Id',
+                labelText: 'Enter Classroom ID',
               ),
             ),
-            // const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final classroomDatabaseController =
-                      Get.find<ClassroomController>();
-                  await classroomDatabaseController
-                      .joinClassroom(classroomIdController.text);
-                },
-                child: const Text('Join'),
-              ),
+            CustomButton(
+              height: height*0.055,
+              text: 'Join Class',
+              onPressed: () async {
+                await Get.find<ClassroomController>()
+                    .joinClassroom(classroomIdController.text);
+              },
             ),
           ],
         ),
@@ -369,7 +380,7 @@ class HomePage extends StatelessWidget {
       height: height * 0.23,
       width: width,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       padding: const EdgeInsets.all(kSmall),
@@ -377,9 +388,17 @@ class HomePage extends StatelessWidget {
         children: [
           horizontalGap(width * percentGapSmall),
           Obx(() {
+            final isTeacher =
+                cloudFirestoreController.homeClassUserRole == 'Teacher';
+            //Home class missing information
             final totalClasses = cloudFirestoreController.homeClassAttendances;
             final missedClasses = cloudFirestoreController.homeMissedClasses;
-            final percent = (totalClasses - missedClasses) / totalClasses;
+            final percent = totalClasses > 0
+                ? (totalClasses - missedClasses) / totalClasses
+                : 0.0;
+            String percentText = totalClasses > 0
+                ? '${(percent * 100).toStringAsFixed(0)}%'
+                : 'N/A';
             String status = 'Collegiate';
             Color color = Get.theme.colorScheme.primary;
             if (percent < 0.6) {
@@ -389,11 +408,16 @@ class HomePage extends StatelessWidget {
               color = Colors.orange;
               status = 'Non-Collegiate';
             }
+            if (isTeacher) {
+              percentText = totalClasses.toString();
+              status = 'classes taken';
+              color = Get.theme.colorScheme.secondary;
+            }
 
             return CircularPercentIndicator(
-              radius: height * 0.08,
+              radius: height * 0.07,
               lineWidth: 12,
-              percent: totalClasses > 0 ? percent : 0,
+              percent: percent,
               circularStrokeCap: CircularStrokeCap.round,
               progressColor: color,
               backgroundColor: Get.theme.colorScheme.onBackground.withAlpha(15),
@@ -402,9 +426,7 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    totalClasses > 0
-                        ? '${(percent * 100).toStringAsFixed(0)}%'
-                        : 'N/A',
+                    percentText,
                     style: Get.textTheme.titleLarge,
                   ),
                   Text(
@@ -525,7 +547,7 @@ class HomePage extends StatelessWidget {
                     verticalGap(height * percentGapSmall),
                     Row(
                       children: [
-                        if(roomNo != '') ...[
+                        if (roomNo != '') ...[
                           const Icon(
                             Icons.location_pin,
                             size: 14,

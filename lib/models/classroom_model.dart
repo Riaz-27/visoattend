@@ -1,5 +1,6 @@
 class ClassroomModel {
   bool isArchived;
+  String openAttendance;
   String classroomId;
   String courseCode;
   String courseTitle;
@@ -12,6 +13,7 @@ class ClassroomModel {
 
   ClassroomModel({
     required this.isArchived,
+    required this.openAttendance,
     required this.classroomId,
     required this.courseCode,
     required this.courseTitle,
@@ -26,6 +28,7 @@ class ClassroomModel {
   factory ClassroomModel.empty() {
     return ClassroomModel(
       isArchived: false,
+      openAttendance: 'off',
       classroomId: '',
       courseCode: '',
       courseTitle: '',
@@ -41,6 +44,7 @@ class ClassroomModel {
   factory ClassroomModel.fromJson(Map<String, dynamic> json) {
     return ClassroomModel(
       isArchived: json['isArchived'],
+      openAttendance: json['openAttendance'],
       classroomId: json['classroomId'],
       courseCode: json['courseCode'],
       courseTitle: json['courseTitle'],
@@ -56,6 +60,7 @@ class ClassroomModel {
   Map<String, dynamic> toJson() {
     return {
       'isArchived': isArchived,
+      'openAttendance': openAttendance,
       'classroomId': classroomId,
       'courseCode': courseCode,
       'courseTitle': courseTitle,
