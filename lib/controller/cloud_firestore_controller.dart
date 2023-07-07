@@ -157,7 +157,6 @@ class CloudFirestoreController extends GetxController {
       final docRef = _firestoreInstance.collection(classroomsCollection).doc();
       classroom.classroomId = docRef.id;
       docRef.set(classroom.toJson());
-      _classrooms.add(classroom);
       return docRef.id;
     } catch (e) {
       dev.log(e.toString());
@@ -186,6 +185,7 @@ class CloudFirestoreController extends GetxController {
           .get();
       final docData = docRef.data();
       if (docData == null || docData.isEmpty) {
+        dev.log('Class not found');
         return false;
       }
       docData['students'].add({
@@ -198,7 +198,6 @@ class CloudFirestoreController extends GetxController {
           .collection(classroomsCollection)
           .doc(classroomId)
           .update({'students': docData['students']});
-      _classrooms.add(ClassroomModel.fromJson(docData));
       return true;
     } catch (e) {
       dev.log(e.toString());
@@ -223,6 +222,27 @@ class CloudFirestoreController extends GetxController {
           .collection(classroomsCollection)
           .doc(classroom.classroomId)
           .update({'isArchived': true});
+      await initialize();
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
+  Future<void> leaveClassroom(ClassroomModel classroom) async {
+    try {
+      classroom.students.removeWhere(
+          (students) => students['authUid'] == currentUser.authUid);
+      currentUser.classrooms
+          .removeWhere((key, value) => key == classroom.classroomId);
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update({'students': classroom.students});
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(currentUser.authUid)
+          .update({'classrooms': currentUser.classrooms});
+      await initialize();
     } catch (e) {
       dev.log(e.toString());
     }
@@ -408,6 +428,22 @@ class CloudFirestoreController extends GetxController {
 
   String homeClassId = '';
 
+  Stream<List<AttendanceModel>> attendancesStream(String classroomId){
+    return _firestoreInstance
+        .collection(classroomsCollection)
+        .doc(classroomId)
+        .collection(attendanceCollection)
+        .orderBy('dateTime', descending: true)
+        .snapshots()
+        .map((query) {
+      List<AttendanceModel> attendanceList = [];
+      for (var element in query.docs) {
+        attendanceList.add(AttendanceModel.fromJson(element.data()));
+      }
+      return attendanceList;
+    });
+  }
+
   Future<List<AttendanceModel>> getClassroomAttendances(
       String classroomId) async {
     final collectionRef = await _firestoreInstance
@@ -527,5 +563,17 @@ class CloudFirestoreController extends GetxController {
     } catch (e) {
       dev.log(e.toString());
     }
+  }
+
+  Stream<ClassroomModel> classroomStream(String classroomId) {
+    return _firestoreInstance
+        .collection(classroomsCollection)
+        .doc(classroomId)
+        .snapshots()
+        .map((documentSnapshot) {
+      return documentSnapshot.data() != null
+          ? ClassroomModel.fromJson(documentSnapshot.data()!)
+          : ClassroomModel.empty();
+    });
   }
 }

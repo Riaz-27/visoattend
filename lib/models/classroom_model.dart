@@ -28,7 +28,7 @@ class ClassroomModel {
   factory ClassroomModel.empty() {
     return ClassroomModel(
       isArchived: false,
-      openAttendance: 'off',
+      openAttendance: '',
       classroomId: '',
       courseCode: '',
       courseTitle: '',

@@ -9,17 +9,21 @@ import 'camera_service_controller.dart';
 import 'cloud_firestore_controller.dart';
 import 'face_detector_controller.dart';
 import 'recognition_controller.dart';
+import 'timer_controller.dart';
 
 class AttendanceController extends GetxController {
   final _attendances = <AttendanceModel>[].obs;
 
   List<AttendanceModel> get attendances => _attendances;
 
-  final _classroomData = ClassroomModel.empty().obs;
+  final _classroomData = ClassroomModel
+      .empty()
+      .obs;
 
   ClassroomModel get classroomData => _classroomData.value;
 
   List<UserModel> studentsData = [];
+
 
   final _currentUserRole = 'Student'.obs;
 
@@ -33,23 +37,55 @@ class AttendanceController extends GetxController {
 
   Map<String, RecognitionModel> matchedStudents = {}; // String is user.authUid
 
+  int openAttendanceTimerSec = 300;
+
   @override
   onInit() {
     ever(_attendances, (_) => calculateMissedClass());
     super.onInit();
   }
 
+
   Future<void> updateValues(ClassroomModel classroom) async {
-    _classroomData.value = classroom;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    _classroomData.bindStream(cloudFirestoreController.classroomStream(classroom.classroomId));
+    // _classroomData.value = classroom;
     _attendances.value = await cloudFirestoreController
         .getClassroomAttendances(classroom.classroomId);
     _currentUserRole.value =
-        cloudFirestoreController.currentUser.classrooms[classroom.classroomId];
+    cloudFirestoreController.currentUser.classrooms[_classroomData.value.classroomId];
 
     print(
-        'The current user is : ${cloudFirestoreController.currentUser.authUid}');
+        'The current user is : ${cloudFirestoreController.currentUser
+            .authUid}');
     print('The current user is : $currentUserRole');
+    print('The clasroom Data : ${classroomData.openAttendance}');
+
+    if(currentUserRole == 'Student'){
+      return;
+    }
+    //Check for open attendance
+    final dbOpenAttendance = _classroomData.value.openAttendance;
+
+    if (dbOpenAttendance != 'off') {
+      await checkOpenCloseAttendance(dbOpenAttendance);
+    }
+  }
+
+  Future<void> checkOpenCloseAttendance(String dbOpenAttendance) async {
+    final timerController = Get.find<TimerController>();
+    final now = DateTime.now();
+    final dbDateTime = DateTime.fromMillisecondsSinceEpoch(
+        int.parse(dbOpenAttendance));
+    final dbTimeSeconds = (dbDateTime.minute * 60 + dbDateTime.second)+openAttendanceTimerSec;
+    final nowTimeSeconds = now.minute * 60 + now.second;
+    final timeDiff = dbTimeSeconds - nowTimeSeconds;
+    if (timeDiff > 0){
+      timerController.startAttendanceTimer(timeDiff);
+    } else {
+      timerController.cancelAttendanceTimer();
+      await closeAttendance();
+    }
   }
 
   Future<void> getStudentsData() async {
@@ -63,7 +99,7 @@ class AttendanceController extends GetxController {
     }
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     studentsData =
-        await cloudFirestoreController.getStudentsOfClassroom(allStudentsUid);
+    await cloudFirestoreController.getStudentsOfClassroom(allStudentsUid);
   }
 
   Future<void> setMatchedStudents() async {
@@ -84,7 +120,9 @@ class AttendanceController extends GetxController {
       'userId': currentUser.userId,
     };
     AttendanceModel attendanceData = AttendanceModel(
-      dateTime: DateTime.now().millisecondsSinceEpoch,
+      dateTime: DateTime
+          .now()
+          .millisecondsSinceEpoch,
       counts: counts,
       studentsData: {},
       takenBy: takenBy,
@@ -103,7 +141,10 @@ class AttendanceController extends GetxController {
 
   void calculateMissedClass() {
     final userAuthUid =
-        Get.find<CloudFirestoreController>().currentUser.authUid;
+        Get
+            .find<CloudFirestoreController>()
+            .currentUser
+            .authUid;
     _currentUserMissedClasses.value = 0;
     for (AttendanceModel attendance in _attendances) {
       if (attendance.studentsData[userAuthUid] == 'Absent' ||
@@ -126,12 +167,14 @@ class AttendanceController extends GetxController {
   }
 
   Future<void> openAttendance() async {
-    final now = DateTime.now().millisecondsSinceEpoch.toString();
+    final now = DateTime
+        .now()
+        .millisecondsSinceEpoch
+        .toString();
     try {
       await Get.find<CloudFirestoreController>()
           .changeOpenAttendance(classroomData.classroomId, now);
-      _classroomData.value.openAttendance = now;
-      
+      Get.find<TimerController>().startAttendanceTimer(openAttendanceTimerSec);
     } catch (e) {
       return;
     }
@@ -142,9 +185,21 @@ class AttendanceController extends GetxController {
     try {
       await Get.find<CloudFirestoreController>()
           .changeOpenAttendance(classroomData.classroomId, now);
-      _classroomData.value.openAttendance = now;
+      Get.find<TimerController>().cancelAttendanceTimer();
     } catch (e) {
       return;
     }
+  }
+
+  @override
+  void dispose() {
+    Get.find<TimerController>().cancelAttendanceTimer();
+    super.dispose();
+  }
+
+  @override
+  InternalFinalCallback<void> get onDelete {
+    Get.find<TimerController>().cancelAttendanceTimer();
+    return super.onDelete;
   }
 }

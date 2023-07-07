@@ -73,7 +73,7 @@ class ClassroomController extends GetxController {
     if (classroomId != null) {
       await cloudFirestoreController
           .updateUserClassroom({classroomId: 'Teacher'});
-      cloudFirestoreController.filterClassesOfToday();
+      await cloudFirestoreController.initialize();
     }
   }
 
@@ -86,7 +86,7 @@ class ClassroomController extends GetxController {
     await cloudFirestoreController.joinClassroom(classroomId);
     await cloudFirestoreController
         .updateUserClassroom({classroomId: 'Student'});
-    cloudFirestoreController.filterClassesOfToday();
+    await cloudFirestoreController.initialize();
   }
 
   Future<void> updateClassroom(ClassroomModel classroom) async {
@@ -102,5 +102,10 @@ class ClassroomController extends GetxController {
   Future<void> archiveClassroom(ClassroomModel classroom) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     cloudFirestoreController.archiveClassroom(classroom);
+  }
+
+  Future<void> leaveClassroom(ClassroomModel classroom) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    cloudFirestoreController.leaveClassroom(classroom);
   }
 }

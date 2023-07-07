@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:visoattend/controller/timer_controller.dart';
 import 'package:visoattend/models/attendance_model.dart';
 
 import '../../../controller/attendance_controller.dart';
@@ -14,9 +15,9 @@ import '../../widgets/custom_button.dart';
 import '../attendance_record_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
-  const ClassroomPage({super.key, required this.classroomData});
-
-  final ClassroomModel classroomData;
+  const ClassroomPage({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +33,7 @@ class ClassroomPage extends GetView<AttendanceController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _topView(context: context, classroom: classroomData),
+              _topView(context: context),
               verticalGap(height * percentGapSmall),
               Text(
                 "Attendance History",
@@ -57,59 +58,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           ),
         ),
       ),
-      floatingActionButton: Obx(() {
-        final isClassEmpty =
-            classroomData.students.length + classroomData.cRs.length > 0;
-        return controller.currentUserRole == 'Teacher' && isClassEmpty
-            ? Padding(
-                padding: const EdgeInsets.only(bottom: 20, right: 10),
-                child: FloatingActionButton(
-                  onPressed: () {
-                    Get.bottomSheet(
-                      backgroundColor: Get.theme.colorScheme.surface,
-                      enableDrag: true,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(15),
-                          topLeft: Radius.circular(15),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: kSmall, vertical: kMedium),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CustomButton(
-                              height: height * 0.055,
-                              backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                              textColor: Get.theme.colorScheme.onSecondaryContainer,
-                              text: 'Take Attendance',
-                              onPressed: () {
-                                Get.back();
-                                Get.to(() => const AttendanceRecordPage());
-                              },
-                            ),
-                            verticalGap(height * percentGapSmall),
-                            CustomButton(
-                              height: height * 0.055,
-                              backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                              textColor: Get.theme.colorScheme.onSecondaryContainer,
-                              text: 'Open Attendance',
-                              onPressed: () {
-                                //TODO
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Icon(Icons.add),
-                ),
-              )
-            : const SizedBox();
-      }),
+      floatingActionButton: _bottomFloatingButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -173,8 +122,13 @@ class ClassroomPage extends GetView<AttendanceController> {
                   ),
                 ],
               ),
-            if (userRole == 'Teacher' || (userRole == 'CR' && isToday))
-              const Icon(Icons.chevron_right),
+            Obx((){
+              final openAttendance = controller.classroomData.openAttendance;
+              if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
+                return const Icon(Icons.chevron_right);
+              }
+              return const SizedBox();
+            })
           ],
         ),
       ),
@@ -183,7 +137,6 @@ class ClassroomPage extends GetView<AttendanceController> {
 
   Widget _topView({
     required BuildContext context,
-    required ClassroomModel classroom,
   }) {
     final height = Get.height;
     final width = Get.width;
@@ -307,6 +260,10 @@ class ClassroomPage extends GetView<AttendanceController> {
           Expanded(
             child: Obx(() {
               //finding class schedule
+              final classroom = controller.classroomData;
+              if (classroom.classroomId == '') {
+                return const SizedBox();
+              }
               String? scheduleText = "Today's class";
               DateTime nextDate = DateTime.now();
               String startTime = classroom
@@ -507,5 +464,120 @@ class ClassroomPage extends GetView<AttendanceController> {
         ],
       ),
     );
+  }
+
+  Widget _bottomFloatingButton() {
+    final height = Get.height;
+    final timerController = Get.find<TimerController>();
+
+    return Obx(() {
+      final classroomData = controller.classroomData;
+      final isClassEmpty =
+          classroomData.students.length + classroomData.cRs.length == 0;
+      final userRole = controller.currentUserRole;
+      if (isClassEmpty) {
+        return const SizedBox();
+      }
+      if (userRole == 'Teacher') {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20, right: 10),
+          child: FloatingActionButton(
+            onPressed: () {
+              Get.bottomSheet(
+                backgroundColor: Get.theme.colorScheme.surface,
+                enableDrag: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(15),
+                    topLeft: Radius.circular(15),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: kSmall, vertical: kMedium),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomButton(
+                        height: height * 0.055,
+                        backgroundColor:
+                            Get.theme.colorScheme.secondaryContainer,
+                        textColor: Get.theme.colorScheme.onSecondaryContainer,
+                        text: 'Take Attendance',
+                        onPressed: () {
+                          Get.back();
+                          Get.to(() => const AttendanceRecordPage());
+                        },
+                      ),
+                      verticalGap(height * percentGapSmall),
+                      Obx(() {
+                        final isOpenAttendance =
+                            controller.classroomData.openAttendance;
+                        String buttonText = 'Open Attendance';
+                        final timeLeft = timerController.timeLeft;
+                        print(isOpenAttendance);
+                        if (isOpenAttendance != 'off') {
+                          if (timeLeft > 0) {
+                            buttonText = 'Close Attendance';
+                            final timeMin = timeLeft ~/ 60;
+                            final timeSec = timeLeft % 60;
+                            if (timeMin > 0) {
+                              buttonText += ' (${timeMin}m ${timeSec}s)';
+                            } else {
+                              buttonText += ' (${timeSec}s)';
+                            }
+                          } else {
+                            buttonText = 'Open Attendance';
+                            controller.closeAttendance();
+                          }
+                        }
+                        return CustomButton(
+                          height: height * 0.055,
+                          backgroundColor:
+                              Get.theme.colorScheme.secondaryContainer,
+                          textColor: Get.theme.colorScheme.onSecondaryContainer,
+                          text: buttonText,
+                          onPressed: () async {
+                            if (buttonText[0] == 'O') {
+                              await controller.openAttendance();
+                            } else {
+                              await controller.closeAttendance();
+                            }
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
+        );
+      }
+      final openAttendance = controller.classroomData.openAttendance;
+      if (userRole == 'CR' && openAttendance != 'off') {
+        controller.checkOpenCloseAttendance(openAttendance);
+        final timeLeft = timerController.timeLeft;
+        final timeMin = timeLeft~/60;
+        final timeSec = timeLeft%60;
+        String timeText = 'Take Attendance';
+        if(timeMin > 0){
+          timeText += ' (${timeMin}m ${timeSec}s)';
+        } else {
+          timeText += ' (${timeSec}s)';
+        }
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Get.to(() => const AttendanceRecordPage());
+          },
+          label: Text(timeText),
+        );
+      } else if (userRole == 'CR' && openAttendance == 'off'){
+        timerController.cancelAttendanceTimer();
+      }
+
+      return const SizedBox();
+    });
   }
 }

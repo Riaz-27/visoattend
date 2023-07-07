@@ -11,19 +11,18 @@ import '../../../controller/profile_pic_controller.dart';
 import '../../../helper/functions.dart';
 import '../../../models/classroom_model.dart';
 
-class PeoplePage extends StatelessWidget {
-  const PeoplePage({super.key, required this.classroom});
-
-  final ClassroomModel classroom;
+class PeoplePage extends GetView<AttendanceController> {
+  const PeoplePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final classroom = controller.classroomData;
     final height = Get.height;
     final width = Get.width;
     final colorScheme = Get.theme.colorScheme;
     final textTheme = Get.textTheme;
 
-    final currentUserRole = Get.find<AttendanceController>().currentUserRole;
+    final currentUserRole = controller.currentUserRole;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -164,6 +163,7 @@ class PeoplePage extends StatelessWidget {
     required String userRole,
     bool forTeacher = false,
   }) {
+    final classroom = controller.classroomData;
     final height = Get.height;
     final width = Get.width;
     final textTheme = Get.textTheme;
@@ -172,8 +172,7 @@ class PeoplePage extends StatelessWidget {
     String picUrl =
         'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7';
 
-    final attendanceController = Get.find<AttendanceController>();
-    final isTeacher = attendanceController.currentUserRole == 'Teacher';
+    final isTeacher = controller.currentUserRole == 'Teacher';
 
     final currentUserAuthUid =
         Get.find<CloudFirestoreController>().currentUser.authUid;
@@ -192,7 +191,7 @@ class PeoplePage extends StatelessWidget {
         color: colorScheme.surface,
         child: Obx(() {
           final percent =
-              attendanceController.getUserAttendancePercent(user['authUid']);
+              controller.getUserAttendancePercent(user['authUid']);
           Color color = colorScheme.primary;
           String status = 'Collegiate';
           if (percent < 0.6) {
@@ -371,7 +370,7 @@ class PeoplePage extends StatelessWidget {
                     onPressed: () async {
                       await cloudFirestoreController.changeUserRole(
                         user: user,
-                        classroom: classroom,
+                        classroom: controller.classroomData,
                         currentRole: userRole,
                       );
                       Get.back();

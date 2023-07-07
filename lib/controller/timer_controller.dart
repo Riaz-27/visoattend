@@ -52,19 +52,33 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
 
   /// Timer for handling open attendance
   Timer? _attendanceTimer;
+  bool _isATInitialized = false;
 
-  final _timeLeft = 0.obs;
+  final _timeLeft = (-1).obs;
 
   int get timeLeft => _timeLeft.value;
 
   set timeLeft(int val) => _timeLeft.value = val;
 
-  void startAttendanceTimer() {
-    _attendanceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _timeLeft.value--;
-      if(_timeLeft.value == 0){
-        _attendanceTimer!.cancel();
-      }
-    });
+  void startAttendanceTimer(int dbTimeLeft) {
+    if (!_isATInitialized && dbTimeLeft > 0) {
+      _timeLeft.value = dbTimeLeft;
+      _attendanceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        print('Open Timer : ${timeLeft~/60} : ${timeLeft%60}');
+        _timeLeft.value--;
+        if (_timeLeft.value == 0) {
+          cancelAttendanceTimer();
+        }
+      });
+      _isATInitialized = true;
+    }
+  }
+
+  void cancelAttendanceTimer() {
+    if(_isATInitialized){
+      _attendanceTimer!.cancel();
+      _timeLeft(-1);
+      _isATInitialized = false;
+    }
   }
 }

@@ -114,25 +114,48 @@ class FaceRegisterPage extends StatelessWidget {
               left: 10.0,
               right: 10.0,
               bottom: 10.0,
-              child: SizedBox(
-                width: double.infinity,
-                height: 48.0,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48.0,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await cameraServiceController.toggleCameraDirection();
+                        },
+                        child: const Text('Toggle'),
+                      ),
                     ),
                   ),
-                  onPressed: () async {
-                    final registerSuccess = await userDatabaseController
-                        .registerNewUserToFirestore(user);
-                    if (registerSuccess) {
-                      Get.to(() => const AuthPage());
-                    }
-                  },
-                  child: const Text('Take Picture'),
-                ),
+                  const SizedBox(width: 10,),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48.0,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final registerSuccess = await userDatabaseController
+                              .registerNewUserToFirestore(user);
+                          if (registerSuccess) {
+                            Get.to(() => const AuthPage());
+                          }
+                        },
+                        child: const Text('Take Picture'),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

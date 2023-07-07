@@ -16,16 +16,15 @@ class CreateEditClassroomPage extends StatelessWidget {
   const CreateEditClassroomPage({
     super.key,
     this.isEdit = false,
-    this.classroom,
     this.userRole = 'Teacher',
   });
 
   final bool isEdit;
-  final ClassroomModel? classroom;
   final String userRole;
 
   @override
   Widget build(BuildContext context) {
+    final classroom = Get.find<AttendanceController>().classroomData;
     final courseCodeController = TextEditingController();
     final courseTitleController = TextEditingController();
     final sectionController = TextEditingController();
@@ -34,21 +33,20 @@ class CreateEditClassroomPage extends StatelessWidget {
         List.generate(7, (index) => TextEditingController());
 
     final classroomController = Get.find<ClassroomController>();
-
     final currentUser = Get.find<CloudFirestoreController>().currentUser;
 
     final height = Get.height;
 
-    if (isEdit && classroom != null) {
-      courseTitleController.text = classroom!.courseTitle;
-      courseCodeController.text = classroom!.courseCode;
-      sectionController.text = classroom!.section;
-      sessionController.text = classroom!.session;
+    if (isEdit) {
+      courseTitleController.text = classroom.courseTitle;
+      courseCodeController.text = classroom.courseCode;
+      sectionController.text = classroom.section;
+      sessionController.text = classroom.session;
       final weekDays = classroomController.weekDays;
       for (int i = 0; i < weekDays.length; i++) {
-        final dbWeekStartTime = classroom!.weekTimes[weekDays[i]]['startTime'];
-        final dbWeekEndTime = classroom!.weekTimes[weekDays[i]]['endTime'];
-        final dbWeekRoomNo = classroom!.weekTimes[weekDays[i]]['room'];
+        final dbWeekStartTime = classroom.weekTimes[weekDays[i]]['startTime'];
+        final dbWeekEndTime = classroom.weekTimes[weekDays[i]]['endTime'];
+        final dbWeekRoomNo = classroom.weekTimes[weekDays[i]]['room'];
         if (dbWeekStartTime != 'Off Day') {
           //getting the database time and setting the variables
           classroomController.selectedStartTimes[i] = dbWeekStartTime;
@@ -75,17 +73,16 @@ class CreateEditClassroomPage extends StatelessWidget {
           style: Get.textTheme.bodyLarge,
         ),
         actions: [
-          if (isEdit && currentUser.authUid == classroom!.teachers[0]['authUid'])
+          if (isEdit && currentUser.authUid == classroom.teachers[0]['authUid'])
             Padding(
               padding: const EdgeInsets.only(right: kMedium, top: kVerySmall),
               child: GestureDetector(
-                onTap: () => _handleClassDelete(context,
-                    classroom: classroom!,
+                onTap: () => _handleClassArchive(context,
                     courseTitle: courseTitleController.text),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(100),
-                    color: Get.theme.colorScheme.error,
+                    color: Get.theme.colorScheme.secondaryContainer,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -95,7 +92,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                     child: Text(
                       'Archive',
                       style: Get.textTheme.bodySmall!.copyWith(
-                        color: Get.theme.colorScheme.onError,
+                        color: Get.theme.colorScheme.onSecondaryContainer,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -112,7 +109,7 @@ class CreateEditClassroomPage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              readOnly: userRole == 'Teacher' ? false : true,
+              enabled: isEdit && userRole == 'CR'? false: true,
               controller: courseCodeController,
               decoration: InputDecoration(
                 labelText: 'Course Code (e.g. CSE-4800) *',
@@ -123,7 +120,7 @@ class CreateEditClassroomPage extends StatelessWidget {
             ),
             verticalGap(height * percentGapVerySmall),
             TextField(
-              readOnly: userRole == 'Teacher' ? false : true,
+              enabled: isEdit && userRole == 'CR'? false: true,
               controller: courseTitleController,
               decoration: InputDecoration(
                 labelText: 'Course Title (e.g. Project / Thesis) *',
@@ -181,17 +178,17 @@ class CreateEditClassroomPage extends StatelessWidget {
                   if (courseTitle.isEmpty || courseTitle.isEmpty) {
                     return;
                   }
-                  if (isEdit && classroom != null) {
-                    classroom!.courseCode = courseCodeController.text.trim();
-                    classroom!.courseTitle = courseTitleController.text.trim();
-                    classroom!.session = sessionController.text.trim();
-                    classroom!.section = sectionController.text.trim();
-                    classroom!.weekTimes =
+                  if (isEdit) {
+                    classroom.courseCode = courseCodeController.text.trim();
+                    classroom.courseTitle = courseTitleController.text.trim();
+                    classroom.session = sessionController.text.trim();
+                    classroom.section = sectionController.text.trim();
+                    classroom.weekTimes =
                         classroomController.selectedWeekTimes;
-                    await classroomController.updateClassroom(classroom!);
+                    await classroomController.updateClassroom(classroom);
                     Get.back();
                     Get.back();
-                    Get.to(() => DetailedClassroomPage(classroomData: classroom!));
+                    Get.to(() => DetailedClassroomPage(classroomData: classroom));
                   } else if (!isEdit) {
                     await classroomController.createNewClassroom(
                       courseCode: courseCode,
@@ -211,13 +208,13 @@ class CreateEditClassroomPage extends StatelessWidget {
   }
 }
 
-void _handleClassDelete(
+void _handleClassArchive(
   BuildContext context, {
-  required ClassroomModel classroom,
   required String courseTitle,
 }) {
   final deleteController = TextEditingController();
   final classroomController = Get.find<ClassroomController>();
+  final classroom = Get.find<AttendanceController>().classroomData;
   showDialog(
     context: context,
     builder: (context) {

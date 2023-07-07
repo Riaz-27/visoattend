@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:visoattend/controller/classroom_controller.dart';
 import 'package:visoattend/controller/navigation_controller.dart';
 import 'package:visoattend/helper/constants.dart';
+import 'package:visoattend/helper/functions.dart';
 import 'package:visoattend/views/pages/classroom_pages/leave_request_page.dart';
 import 'package:visoattend/views/pages/classroom_pages/people_page.dart';
 import 'package:visoattend/views/pages/create_edit_classroom_page.dart';
@@ -23,8 +25,8 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         .then((_) => attendanceController.getStudentsData());
 
     final navigationPages = [
-      ClassroomPage(classroomData: classroomData),
-      PeoplePage(classroom: classroomData),
+      const ClassroomPage(),
+      const PeoplePage(),
       const LeaveRequestPage(),
     ];
 
@@ -36,19 +38,33 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         ),
         forceMaterialTransparency: true,
         actions: [
-            Obx(
-              () {
-                return attendanceController.currentUserRole != 'Student'?  IconButton(
-                  onPressed: () {
-                    Get.to(() => CreateEditClassroomPage(
-                          isEdit: true,
-                          classroom: classroomData,
-                        ));
-                  },
-                  icon: const Icon(Icons.settings),
-                ) : const SizedBox();
-              }
-            )
+          Obx(() {
+            final userRole = attendanceController.currentUserRole;
+            if (userRole == 'Student') {
+              return IconButton(
+                onPressed: () {
+                  _handleLeaveClass(context);
+                },
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red,
+                ),
+              );
+            } else {
+              return IconButton(
+                onPressed: () {
+                  Get.to(
+                    () => CreateEditClassroomPage(
+                      isEdit: true,
+                      userRole: userRole,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+              );
+            }
+            return const SizedBox();
+          })
         ],
       ),
       body: Obx(() {
@@ -79,5 +95,62 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         );
       }),
     );
+  }
+
+  void _handleLeaveClass(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              'Leave Classroom',
+              style: Get.textTheme.titleMedium!
+                  .copyWith(fontWeight: FontWeight.bold),
+            ),
+            content: SizedBox(
+              width: Get.width,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Do you really want to leave this classroom?',
+                    style: Get.textTheme.bodyMedium,
+                  ),
+                  verticalGap(20),
+                  Row(
+                    children: [
+                      Text(
+                        'Course Title: ',
+                        style: Get.textTheme.bodySmall!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        classroomData.courseTitle,
+                        style: Get.textTheme.bodyMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await Get.find<ClassroomController>()
+                      .leaveClassroom(classroomData);
+                  Get.back();
+                  Get.back();
+                },
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        });
   }
 }
