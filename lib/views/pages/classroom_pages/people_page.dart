@@ -24,6 +24,9 @@ class PeoplePage extends GetView<AttendanceController> {
 
     final currentUserRole = controller.currentUserRole;
 
+    final studentsList = classroom.students
+      ..sort((a, b) => a['userId'].compareTo(b['userId']));
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -134,15 +137,15 @@ class PeoplePage extends GetView<AttendanceController> {
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: classroom.students.length,
+                  itemCount: studentsList.length,
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
                         _buildUsersList(
-                          classroom.students[index],
+                          studentsList[index],
                           userRole: 'Student',
                         ),
-                        if (classroom.students.length > 1)
+                        if (studentsList.length > 1)
                           const Divider(
                             thickness: 0.3,
                           )
@@ -177,7 +180,7 @@ class PeoplePage extends GetView<AttendanceController> {
     final currentUserAuthUid =
         Get.find<CloudFirestoreController>().currentUser.authUid;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         if (!isTeacher ||
             currentUserAuthUid == user['authUid'] ||
@@ -190,8 +193,7 @@ class PeoplePage extends GetView<AttendanceController> {
       child: Container(
         color: colorScheme.surface,
         child: Obx(() {
-          final percent =
-              controller.getUserAttendancePercent(user['authUid']);
+          final percent = controller.getUserAttendancePercent(user['authUid']);
           Color color = colorScheme.primary;
           String status = 'Collegiate';
           if (percent < 0.6) {
@@ -288,99 +290,100 @@ class PeoplePage extends GetView<AttendanceController> {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     Get.bottomSheet(
-        backgroundColor: Get.theme.colorScheme.surface,
-        enableDrag: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(15),
-            topRight: Radius.circular(15),
-          ),
+      backgroundColor: colorScheme.surface,
+      enableDrag: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
         ),
-        Padding(
-          padding: EdgeInsets.all(height * percentGapMedium),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${user['name']}',
-                style: textTheme.titleLarge,
-              ),
-              Text(
-                '${user['userId']}',
-                style: textTheme.titleSmall,
-              ),
-              verticalGap(height * percentGapMedium),
-              Text(
-                'Set Role',
-                style: textTheme.bodySmall,
-              ),
-              Obx(() {
-                return Column(
-                  children: [
-                    RadioListTile.adaptive(
-                      contentPadding: const EdgeInsets.all(0),
-                      value: 'Teacher',
-                      groupValue: cloudFirestoreController.selectedUserRole,
-                      onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
-                      },
-                      title: const Text('Teacher'),
-                    ),
-                    RadioListTile.adaptive(
-                      contentPadding: const EdgeInsets.all(0),
-                      value: 'CR',
-                      groupValue: cloudFirestoreController.selectedUserRole,
-                      onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
-                      },
-                      title: const Text('CR'),
-                    ),
-                    RadioListTile.adaptive(
-                      contentPadding: const EdgeInsets.all(0),
-                      value: 'Student',
-                      groupValue: cloudFirestoreController.selectedUserRole,
-                      onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
-                      },
-                      title: const Text('Student'),
-                    ),
-                  ],
-                );
-              }),
-              verticalGap(height * percentGapMedium),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
+      Padding(
+        padding: EdgeInsets.all(height * percentGapMedium),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${user['name']}',
+              style: textTheme.titleLarge,
+            ),
+            Text(
+              '${user['userId']}',
+              style: textTheme.titleSmall,
+            ),
+            verticalGap(height * percentGapMedium),
+            Text(
+              'Set Role',
+              style: textTheme.bodySmall,
+            ),
+            Obx(() {
+              return Column(
                 children: [
-                  CustomButton(
-                    height: height * 0.05,
-                    width: width * 0.4,
-                    backgroundColor: colorScheme.onSurface,
-                    textColor: colorScheme.surface,
-                    text: 'Cancel',
-                    onPressed: () {
-                      Get.back();
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'Teacher',
+                    groupValue: cloudFirestoreController.selectedUserRole,
+                    onChanged: (value) {
+                      cloudFirestoreController.selectedUserRole = value!;
                     },
+                    title: const Text('Teacher'),
                   ),
-                  CustomButton(
-                    height: height * 0.05,
-                    width: width * 0.4,
-                    text: 'Confirm',
-                    onPressed: () async {
-                      await cloudFirestoreController.changeUserRole(
-                        user: user,
-                        classroom: controller.classroomData,
-                        currentRole: userRole,
-                      );
-                      Get.back();
-                      Get.find<NavigationController>().changeIndex(0);
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'CR',
+                    groupValue: cloudFirestoreController.selectedUserRole,
+                    onChanged: (value) {
+                      cloudFirestoreController.selectedUserRole = value!;
                     },
+                    title: const Text('CR'),
+                  ),
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'Student',
+                    groupValue: cloudFirestoreController.selectedUserRole,
+                    onChanged: (value) {
+                      cloudFirestoreController.selectedUserRole = value!;
+                    },
+                    title: const Text('Student'),
                   ),
                 ],
-              )
-            ],
-          ),
-        ));
+              );
+            }),
+            verticalGap(height * percentGapMedium),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CustomButton(
+                  height: height * 0.05,
+                  width: width * 0.4,
+                  backgroundColor: colorScheme.onSurface,
+                  textColor: colorScheme.surface,
+                  text: 'Cancel',
+                  onPressed: () {
+                    Get.back();
+                  },
+                ),
+                CustomButton(
+                  height: height * 0.05,
+                  width: width * 0.4,
+                  text: 'Confirm',
+                  onPressed: () async {
+                    await cloudFirestoreController.changeUserRole(
+                      user: user,
+                      classroom: controller.classroomData,
+                      currentRole: userRole,
+                    );
+                    Get.back();
+                    Get.find<NavigationController>().changeIndex(0);
+                  },
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
   }
 }

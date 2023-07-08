@@ -40,6 +40,9 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         actions: [
           Obx(() {
             final userRole = attendanceController.currentUserRole;
+            if(userRole == ''){
+              return const SizedBox();
+            }
             if (userRole == 'Student') {
               return IconButton(
                 onPressed: () {
@@ -63,7 +66,6 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                 icon: const Icon(Icons.settings),
               );
             }
-            return const SizedBox();
           })
         ],
       ),

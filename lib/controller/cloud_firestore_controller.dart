@@ -72,6 +72,7 @@ class CloudFirestoreController extends GetxController {
     _isLoading(false);
     _currentUser(UserModel.empty());
     _classrooms([]);
+    _isHoliday(true);
     homeClassId = '';
   }
 
@@ -428,7 +429,7 @@ class CloudFirestoreController extends GetxController {
 
   String homeClassId = '';
 
-  Stream<List<AttendanceModel>> attendancesStream(String classroomId){
+  Stream<List<AttendanceModel>> attendancesStream(String classroomId) {
     return _firestoreInstance
         .collection(classroomsCollection)
         .doc(classroomId)
@@ -457,16 +458,18 @@ class CloudFirestoreController extends GetxController {
         .toList();
   }
 
-  Future<void> saveAttendanceData(
+  Future<AttendanceModel> saveAttendanceData(
     String classroomId,
     AttendanceModel attendanceData,
   ) async {
-    await _firestoreInstance
+    final docRef = _firestoreInstance
         .collection(classroomsCollection)
         .doc(classroomId)
         .collection(attendanceCollection)
-        .doc()
-        .set(attendanceData.toJson());
+        .doc();
+    attendanceData.attendanceId = docRef.id;
+    await docRef.set(attendanceData.toJson());
+    return attendanceData;
   }
 
   Future<void> calculateHomeClassAttendance(String classroomId) async {
@@ -488,6 +491,23 @@ class CloudFirestoreController extends GetxController {
       }
     }
     _homeMissedClasses.value = missedClass;
+  }
+
+  Future<void> changeStudentAttendanceStatus({
+    required String classroomId,
+    required String attendanceId,
+    required Map<String, dynamic> studentData,
+  }) async {
+    try {
+      _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroomId)
+          .collection(attendanceCollection)
+          .doc(attendanceId)
+          .update({'studentsData': studentData});
+    } catch (e) {
+      dev.log(e.toString());
+    }
   }
 
   /// Control selected user role

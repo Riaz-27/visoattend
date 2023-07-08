@@ -354,7 +354,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
             CustomButton(
-              height: height*0.055,
+              height: height * 0.055,
               text: 'Join Class',
               onPressed: () async {
                 await Get.find<ClassroomController>()
@@ -376,136 +376,134 @@ class HomePage extends StatelessWidget {
 
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
-    return Container(
-      height: height * 0.23,
-      width: width,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
-      ),
-      padding: const EdgeInsets.all(kSmall),
-      child: Row(
-        children: [
-          horizontalGap(width * percentGapSmall),
-          Obx(() {
-            final isTeacher =
-                cloudFirestoreController.homeClassUserRole == 'Teacher';
-            //Home class missing information
-            final totalClasses = cloudFirestoreController.homeClassAttendances;
-            final missedClasses = cloudFirestoreController.homeMissedClasses;
-            final percent = totalClasses > 0
-                ? (totalClasses - missedClasses) / totalClasses
-                : 0.0;
-            String percentText = totalClasses > 0
-                ? '${(percent * 100).toStringAsFixed(0)}%'
-                : 'N/A';
-            String status = 'Collegiate';
-            Color color = Get.theme.colorScheme.primary;
-            if (percent < 0.6) {
-              color = Get.theme.colorScheme.error;
-              status = 'Dis-Collegiate';
-            } else if (percent < 0.7) {
-              color = Colors.orange;
-              status = 'Non-Collegiate';
-            }
-            if (isTeacher) {
-              percentText = totalClasses.toString();
-              status = 'classes taken';
-              color = Get.theme.colorScheme.secondary;
-            }
+    return Obx(() {
+      /// Data for circular percent indication
+      final isTeacher = cloudFirestoreController.homeClassUserRole == 'Teacher';
+      //Home class missing information
+      final totalClasses = cloudFirestoreController.homeClassAttendances;
+      final missedClasses = cloudFirestoreController.homeMissedClasses;
+      final percent = totalClasses > 0
+          ? (totalClasses - missedClasses) / totalClasses
+          : 0.0;
+      String percentText =
+          totalClasses > 0 ? '${(percent * 100).toStringAsFixed(0)}%' : 'N/A';
+      String status = 'Collegiate';
+      Color color = Get.theme.colorScheme.primary;
+      if (percent < 0.6) {
+        color = Get.theme.colorScheme.error;
+        status = 'Dis-Collegiate';
+      } else if (percent < 0.7) {
+        color = Colors.orange;
+        status = 'Non-Collegiate';
+      }
+      if (isTeacher) {
+        percentText = totalClasses.toString();
+        status = 'classes taken';
+        color = Get.theme.colorScheme.secondary;
+      }
 
-            return CircularPercentIndicator(
-              radius: height * 0.07,
-              lineWidth: 12,
-              percent: percent,
-              circularStrokeCap: CircularStrokeCap.round,
-              progressColor: color,
-              backgroundColor: Get.theme.colorScheme.onBackground.withAlpha(15),
-              animation: true,
-              center: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    percentText,
-                    style: Get.textTheme.titleLarge,
-                  ),
-                  Text(
-                    status,
-                    style: Get.textTheme.labelSmall!.copyWith(color: color),
-                  ),
-                ],
+      /// data for Home class details
+      final classroom =
+          classroomList.isNotEmpty ? classroomList[0] : ClassroomModel.empty();
+      final startTime = classroomList.isEmpty
+          ? ''
+          : DateFormat.jm().format(DateTime.parse(
+              classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]
+                  ['startTime']));
+      final endTime = classroomList.isEmpty
+          ? ''
+          : DateFormat.jm().format(DateTime.parse(
+              classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]
+                  ['endTime']));
+      final roomNo = classroomList.isEmpty
+          ? ''
+          : classroom.weekTimes[DateFormat('EEEE').format(DateTime.now())]
+              ['room'];
+      final timeLeftToStart = cloudFirestoreController.timeLeftToStart;
+      final timeLeftToEnd = cloudFirestoreController.timeLeftToEnd;
+      final isRunning = timeLeftToStart.isNotEmpty
+          ? timeLeftToStart.first < 1
+              ? true
+              : false
+          : false;
+      print(timeLeftToStart);
+      print(timeLeftToEnd);
+      String startTimeLeftText = '';
+      String endTimeLeftText = 'Not Started';
+      Color startTextColor = Get.theme.colorScheme.primary;
+      Color endTextColor = Get.theme.colorScheme.primary;
+      if (timeLeftToStart.isNotEmpty) {
+        if (timeLeftToStart.first > 0) {
+          final timeLeft = timeLeftToStart.first;
+          final timeLeftHour = (timeLeft / 60).floor();
+          final timeLeftMin = timeLeft % 60;
+          if (timeLeftHour > 0) {
+            startTimeLeftText += '${timeLeftHour}h ';
+          }
+          startTimeLeftText += '${timeLeftMin}m Left';
+          if (timeLeftHour == 0 && timeLeftMin <= 5) {
+            startTextColor = Get.theme.colorScheme.error;
+          } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+            startTextColor = Colors.orange;
+          }
+        } else {
+          startTimeLeftText = 'Running';
+          startTextColor = Get.theme.colorScheme.primary;
+          endTimeLeftText = '';
+          if (timeLeftToEnd.first < 0) {
+            final timeLeft = timeLeftToEnd.first * -1;
+            final timeLeftHour = (timeLeft ~/ 60);
+            final timeLeftMin = timeLeft % 60;
+            if (timeLeftHour > 0) {
+              endTimeLeftText += '${timeLeftHour}h ';
+            }
+            endTimeLeftText += '${timeLeftMin}m Left';
+            if (timeLeftHour == 0 && timeLeftMin <= 5) {
+              endTextColor = Get.theme.colorScheme.error;
+            } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+              endTextColor = Colors.orange;
+            }
+          }
+        }
+      }
+      return Container(
+        height: height * 0.23,
+        width: width,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        ),
+        padding: const EdgeInsets.all(kSmall),
+        child: Row(
+          children: [
+            horizontalGap(width * percentGapSmall),
+            if (!cloudFirestoreController.isHoliday && classroomList.isNotEmpty)
+              CircularPercentIndicator(
+                radius: height * 0.07,
+                lineWidth: 12,
+                percent: percent,
+                circularStrokeCap: CircularStrokeCap.round,
+                progressColor: color,
+                backgroundColor:
+                    Get.theme.colorScheme.onBackground.withAlpha(15),
+                animation: true,
+                center: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      percentText,
+                      style: Get.textTheme.titleLarge,
+                    ),
+                    Text(
+                      status,
+                      style: Get.textTheme.labelSmall!.copyWith(color: color),
+                    ),
+                  ],
+                ),
               ),
-            );
-          }),
-          horizontalGap(width * 0.05),
-          Expanded(
-            child: Obx(() {
-              final classroom = classroomList.isNotEmpty
-                  ? classroomList[0]
-                  : ClassroomModel.empty();
-              final startTime = classroomList.isEmpty
-                  ? ''
-                  : DateFormat.jm().format(DateTime.parse(classroom
-                          .weekTimes[DateFormat('EEEE').format(DateTime.now())]
-                      ['startTime']));
-              final endTime = classroomList.isEmpty
-                  ? ''
-                  : DateFormat.jm().format(DateTime.parse(classroom
-                          .weekTimes[DateFormat('EEEE').format(DateTime.now())]
-                      ['endTime']));
-              final roomNo = classroomList.isEmpty
-                  ? ''
-                  : classroom
-                          .weekTimes[DateFormat('EEEE').format(DateTime.now())]
-                      ['room'];
-              final timeLeftToStart = cloudFirestoreController.timeLeftToStart;
-              final timeLeftToEnd = cloudFirestoreController.timeLeftToEnd;
-              final isRunning = timeLeftToStart.isNotEmpty
-                  ? timeLeftToStart.first < 1
-                      ? true
-                      : false
-                  : false;
-              print(timeLeftToStart);
-              print(timeLeftToEnd);
-              String startTimeLeftText = '';
-              String endTimeLeftText = 'Not Started';
-              Color startTextColor = Get.theme.colorScheme.primary;
-              Color endTextColor = Get.theme.colorScheme.primary;
-              if (timeLeftToStart.isNotEmpty) {
-                if (timeLeftToStart.first > 0) {
-                  final timeLeft = timeLeftToStart.first;
-                  final timeLeftHour = (timeLeft / 60).floor();
-                  final timeLeftMin = timeLeft % 60;
-                  if (timeLeftHour > 0) {
-                    startTimeLeftText += '${timeLeftHour}h ';
-                  }
-                  startTimeLeftText += '${timeLeftMin}m Left';
-                  if (timeLeftHour == 0 && timeLeftMin <= 5) {
-                    startTextColor = Get.theme.colorScheme.error;
-                  } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
-                    startTextColor = Colors.orange;
-                  }
-                } else {
-                  startTimeLeftText = 'Running';
-                  startTextColor = Get.theme.colorScheme.primary;
-                  endTimeLeftText = '';
-                  if (timeLeftToEnd.first < 0) {
-                    final timeLeft = timeLeftToEnd.first * -1;
-                    final timeLeftHour = (timeLeft / 60).floor();
-                    final timeLeftMin = timeLeft % 60;
-                    if (timeLeftHour > 0) {
-                      endTimeLeftText += '${timeLeftHour}h ';
-                    }
-                    endTimeLeftText += '${timeLeftMin}m Left';
-                    if (timeLeftHour == 0 && timeLeftMin <= 5) {
-                      endTextColor = Get.theme.colorScheme.error;
-                    } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
-                      endTextColor = Colors.orange;
-                    }
-                  }
-                }
-              }
-              return Column(
+            horizontalGap(width * 0.05),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   verticalGap(height * percentGapSmall),
@@ -568,6 +566,7 @@ class HomePage extends StatelessWidget {
                     verticalGap(height * percentGapSmall),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,7 +591,6 @@ class HomePage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        horizontalGap(width * 0.12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -620,11 +618,11 @@ class HomePage extends StatelessWidget {
                     )
                   ]
                 ],
-              );
-            }),
-          )
-        ],
-      ),
-    );
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

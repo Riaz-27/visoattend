@@ -13,6 +13,7 @@ import '../../../helper/functions.dart';
 import '../../../models/classroom_model.dart';
 import '../../widgets/custom_button.dart';
 import '../attendance_record_page.dart';
+import 'selected_attendance_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
   const ClassroomPage({
@@ -77,59 +78,67 @@ class ClassroomPage extends GetView<AttendanceController> {
         ? Get.theme.colorScheme.error
         : Get.theme.colorScheme.primary;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(kSmall),
-        child: Row(
-          children: [
-            Text(
-              DateFormat('dd').format(dateTime),
-              style: Get.textTheme.displaySmall!
-                  .copyWith(color: Get.theme.colorScheme.onBackground),
-            ),
-            horizontalGap(width * percentGapSmall),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat('MMMM y').format(dateTime),
-                  style: Get.textTheme.titleSmall,
-                ),
-                Text(
-                  DateFormat.jm().format(dateTime),
-                  style: Get.textTheme.bodySmall,
-                ),
-              ],
-            ),
-            const Spacer(),
-            if (userRole == 'Student' || userRole == 'CR')
+    return GestureDetector(
+      onTap: (){
+        final openAttendance = controller.classroomData.openAttendance;
+        if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
+          Get.to(() => SelectedAttendancePage(attendance: attendance));
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: height * percentGapSmall),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(kSmall),
+          child: Row(
+            children: [
+              Text(
+                DateFormat('dd').format(dateTime),
+                style: Get.textTheme.displaySmall!
+                    .copyWith(color: Get.theme.colorScheme.onBackground),
+              ),
+              horizontalGap(width * percentGapSmall),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    presentStatus ?? 'Missing',
-                    style: Get.textTheme.titleSmall!.copyWith(color: color),
+                    DateFormat('MMMM y').format(dateTime),
+                    style: Get.textTheme.titleSmall,
                   ),
                   Text(
-                    'by ${attendance.takenBy['name']}',
+                    DateFormat.jm().format(dateTime),
                     style: Get.textTheme.bodySmall,
                   ),
                 ],
               ),
-            Obx((){
-              final openAttendance = controller.classroomData.openAttendance;
-              if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
-                return const Icon(Icons.chevron_right);
-              }
-              return const SizedBox();
-            })
-          ],
+              const Spacer(),
+              if (userRole == 'Student' || userRole == 'CR')
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      presentStatus ?? 'Missing',
+                      style: Get.textTheme.titleSmall!.copyWith(color: color),
+                    ),
+                    Text(
+                      'by ${attendance.takenBy['name']}',
+                      style: Get.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              Obx((){
+                final openAttendance = controller.classroomData.openAttendance;
+                if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
+                  return const Icon(Icons.chevron_right);
+                }
+                return const SizedBox();
+              })
+            ],
+          ),
         ),
       ),
     );
