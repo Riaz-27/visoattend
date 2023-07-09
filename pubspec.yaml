@@ -60,7 +60,9 @@ dependencies:
   intl: ^0.18.1
   firebase_storage: ^11.2.3
   percent_indicator: ^4.2.3
-
+  pdf: ^3.8.4
+  open_file_plus: ^3.4.1
+  permission_handler:
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/controller/attendance_controller.dart';
 
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
@@ -478,16 +479,23 @@ class CloudFirestoreController extends GetxController {
     }
     homeClassId = classroomId;
     _homeClassUserRole.value = currentUser.classrooms[classroomId];
+    final attendanceController = Get.find<AttendanceController>();
+    attendanceController.updateValues(_classesOfToday[0], forLive: true);
 
-    final attendances = await getClassroomAttendances(classroomId);
+    final attendances = attendanceController.attendances;
     _homeClassAttendances.value = attendances.length;
 
     print('CAL HOME CLASS');
 
     int missedClass = 0;
-    for (AttendanceModel attendance in attendances) {
-      if (attendance.studentsData[currentUser.authUid] == 'Absent') {
-        missedClass++;
+    if (_homeClassUserRole.value == 'Teacher') {
+      missedClass = attendances.length;
+    } else {
+      for (AttendanceModel attendance in attendances) {
+        if (attendance.studentsData[currentUser.authUid] == 'Absent' ||
+            attendance.studentsData[currentUser.authUid] == null) {
+          missedClass++;
+        }
       }
     }
     _homeMissedClasses.value = missedClass;

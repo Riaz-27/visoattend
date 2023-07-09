@@ -40,6 +40,7 @@ class AttendanceController extends GetxController {
   onInit() {
     ever(_attendances, (_) => calculateMissedClass());
     ever(_selectedAttendance, (_) => fetchStudentsStatus());
+    ever(_classroomData, (_) => updateRootClassesValue());
     super.onInit();
   }
 
@@ -55,7 +56,16 @@ class AttendanceController extends GetxController {
     return super.onDelete;
   }
 
-  Future<void> updateValues(ClassroomModel classroom) async {
+  void updateRootClassesValue() {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    final classIndex = cloudFirestoreController.classrooms.indexWhere(
+        (classroom) => classroom.classroomId == classroomData.classroomId);
+    cloudFirestoreController.classrooms[classIndex] = classroomData;
+    cloudFirestoreController.filterClassesOfToday();
+  }
+
+  Future<void> updateValues(ClassroomModel classroom, {bool forLive = false}) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     _classroomData.bindStream(
         cloudFirestoreController.classroomStream(classroom.classroomId));
@@ -69,7 +79,9 @@ class AttendanceController extends GetxController {
         'The current user is : ${cloudFirestoreController.currentUser.authUid}');
     print('The current user is : $currentUserRole');
     print('The clasroom Data : ${classroomData.openAttendance}');
-
+    if(forLive){
+      return;
+    }
     if (currentUserRole == 'Student') {
       return;
     }

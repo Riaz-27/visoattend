@@ -4,6 +4,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/controller/navigation_controller.dart';
 import 'package:visoattend/helper/constants.dart';
+import 'package:visoattend/services/report_generate_service.dart';
 import 'package:visoattend/views/widgets/custom_button.dart';
 
 import '../../../controller/attendance_controller.dart';
@@ -158,6 +159,16 @@ class PeoplePage extends GetView<AttendanceController> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            final reportGenerateService = ReportGenerateService(
+              classroomData: classroom,
+              attendances: controller.attendances,
+            );
+            final data = await reportGenerateService.generateReport();
+            reportGenerateService.savePdfFile('Testing', data);
+          },
+          label: const Text('Generate Report')),
     );
   }
 
