@@ -20,21 +20,37 @@ class ReportGenerateService {
   });
 
   Future<Uint8List> generateReport() async {
+    List<List<AttendanceModel>> attendancesChunks = [];
+    for (int i = 0; i < attendances.length; i += 9) {
+      final sublist = attendances.reversed.toList().sublist(
+          i, i + 9 > attendances.length ? attendances.length : i + 9);
+      attendancesChunks.add(sublist);
+    }
+    final lastChunk = attendancesChunks[attendancesChunks.length-1];
+    final lastChunkLen = 9-lastChunk.length;
+    for(int i=0; i<lastChunkLen; i++){
+      lastChunk.add(AttendanceModel.empty());
+    }
+
     final pdf = pw.Document();
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4.copyWith(
-            marginTop: 40, marginLeft: 15, marginRight: 15, marginBottom: 15),
-        build: (pw.Context context) => [
-          _buildTitle(
-            'International Islamic University Chittagong',
-            'Department of Computer Science and Engineering',
-          ),
-          _buildCourseInfo(classroomData),
-          _buildAttendanceDetails(classroomData, attendances),
-        ],
-      ),
-    );
+    for(int i=0; i<attendancesChunks.length;i++){
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4.copyWith(
+              marginTop: 40, marginLeft: 18, marginRight: 18, marginBottom: 5),
+          build: (pw.Context context) => [
+            _buildTitle(
+              'International Islamic University Chittagong',
+              'Department of Computer Science and Engineering',
+            ),
+            pw.SizedBox(height: 5),
+            _buildCourseInfo(classroomData),
+            pw.SizedBox(height: 8),
+            _buildAttendanceDetails(classroomData, attendancesChunks[i]),
+          ],
+        ),
+      );
+    }
     return pdf.save();
   }
 
@@ -81,8 +97,11 @@ class ReportGenerateService {
           children: [
             pw.Expanded(
               flex: 4,
-              child: customText(
-                  text: 'Course Code: $courseCode', bold: true, fontSize: 10),
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 8),
+                child: customText(
+                    text: 'Course Code: $courseCode', bold: true, fontSize: 10),
+              ),
             ),
             pw.Expanded(
               flex: 6,
@@ -91,12 +110,16 @@ class ReportGenerateService {
             ),
           ],
         ),
+        pw.SizedBox(height: 2),
         pw.Row(
           children: [
             pw.Expanded(
               flex: 4,
-              child: customText(
-                  text: 'Session: $session', bold: true, fontSize: 10),
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 8),
+                child: customText(
+                    text: 'Session: $session', bold: true, fontSize: 10),
+              ),
             ),
             pw.Expanded(
               flex: 2,
@@ -131,8 +154,10 @@ class ReportGenerateService {
     final totalStudents = classroom.cRs + classroom.students;
     totalStudents.sort((a, b) => a['userId'].compareTo(b['userId']));
 
-    for (int i = 0; i < 45; i++) {
-      List<String> perRow = ['${i+1}'];
+    final lengthForLoop =totalStudents.length > 45? totalStudents.length:45;
+
+    for (int i = 0; i < lengthForLoop; i++) {
+      List<String> perRow = ['${i + 1}'];
       if (i < totalStudents.length) {
         perRow.add(totalStudents[i]['userId']);
         perRow.add(totalStudents[i]['name']);
@@ -140,7 +165,7 @@ class ReportGenerateService {
           final studentsStatus =
               attendances[j].studentsData[totalStudents[i]['authUid']];
           if (studentsStatus == 'Absent' || studentsStatus == null) {
-            perRow.add('----');
+            perRow.add('------');
           } else {
             perRow.add('P');
           }
@@ -150,31 +175,40 @@ class ReportGenerateService {
     }
 
     return pw.Table.fromTextArray(
-      border: pw.TableBorder.symmetric(
-        inside: const pw.BorderSide(width: 0.3),
-        outside: const pw.BorderSide(width: 0.3),
-      ),
-      headers: headers,
-      headerStyle: pw.TextStyle(
-        fontWeight: pw.FontWeight.bold,
-        fontSize: 8,
-      ),
-      headerAlignment: pw.Alignment.center,
-      data: data,
-      cellStyle: const pw.TextStyle(
-        fontSize: 8,
-      ),
-      cellPadding: const pw.EdgeInsets.symmetric(
-        vertical: 2.5,
-        horizontal: 5,
-      ),
-      cellAlignment: pw.Alignment.center,
-      cellAlignments: {
-        0: pw.Alignment.centerLeft,
-        1: pw.Alignment.centerLeft,
-        2: pw.Alignment.centerLeft,
-      }
-    );
+        border: pw.TableBorder.symmetric(
+          inside: const pw.BorderSide(width: 0.3),
+          outside: const pw.BorderSide(width: 0.3),
+        ),
+        headers: headers,
+        headerCount: 1,
+        headerStyle: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold,
+          fontSize: 8,
+        ),
+        headerAlignments: {
+          0: pw.Alignment.center,
+          1: pw.Alignment.center,
+          2: pw.Alignment.center,
+        },
+        data: data,
+        cellStyle: const pw.TextStyle(
+          fontSize: 8,
+        ),
+        cellPadding: const pw.EdgeInsets.symmetric(
+          vertical: 2.5,
+          horizontal: 5,
+        ),
+        cellAlignment: pw.Alignment.center,
+        cellAlignments: {
+          0: pw.Alignment.centerLeft,
+          1: pw.Alignment.centerLeft,
+          2: pw.Alignment.centerLeft,
+        },
+        cellDecoration: (colNum, data, rowNum) {
+          return data == '------'
+              ? const pw.BoxDecoration(color: PdfColors.red100)
+              : const pw.BoxDecoration();
+        });
   }
 
   static pw.Widget customText({

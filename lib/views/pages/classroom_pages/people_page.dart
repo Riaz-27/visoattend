@@ -159,16 +159,6 @@ class PeoplePage extends GetView<AttendanceController> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () async {
-            final reportGenerateService = ReportGenerateService(
-              classroomData: classroom,
-              attendances: controller.attendances,
-            );
-            final data = await reportGenerateService.generateReport();
-            reportGenerateService.savePdfFile('Testing', data);
-          },
-          label: const Text('Generate Report')),
     );
   }
 

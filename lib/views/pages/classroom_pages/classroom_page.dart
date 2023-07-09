@@ -11,6 +11,7 @@ import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
 import '../../../models/classroom_model.dart';
+import '../../../services/report_generate_service.dart';
 import '../../widgets/custom_button.dart';
 import '../attendance_record_page.dart';
 import 'selected_attendance_page.dart';
@@ -36,10 +37,55 @@ class ClassroomPage extends GetView<AttendanceController> {
             children: [
               _topView(context: context),
               verticalGap(height * percentGapSmall),
-              Text(
-                "Attendance History",
-                style: Get.textTheme.titleMedium!
-                    .copyWith(fontWeight: FontWeight.bold),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Attendance History",
+                    style: Get.textTheme.titleSmall!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Obx(() {
+                    return controller.currentUserRole == 'Teacher' ||
+                            (controller.currentUserRole == 'CR' &&
+                                controller.classroomData.openAttendance !=
+                                    'off')
+                        ? GestureDetector(
+                            onTap: () async {
+                              final classroomData = controller.classroomData;
+                              final attendances = controller.attendances;
+                              final reportGenerateService =
+                                  ReportGenerateService(
+                                classroomData: classroomData,
+                                attendances: attendances,
+                              );
+                              final pdfData =
+                                  await reportGenerateService.generateReport();
+                              final dateTimeNow = DateFormat('ddMMy_hhmmss')
+                                  .format(DateTime.now());
+                              print('The date string : $dateTimeNow');
+                              reportGenerateService.savePdfFile(
+                                  '${classroomData.courseCode}_$dateTimeNow',
+                                  pdfData);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: kSmall, vertical: kVerySmall),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  color:
+                                      Get.theme.colorScheme.secondaryContainer),
+                              child: Text(
+                                "Generate Report",
+                                style: Get.textTheme.bodySmall!.copyWith(
+                                    color: Get.theme.colorScheme.secondary,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          )
+                        : const SizedBox();
+                  }),
+                ],
               ),
               verticalGap(height * percentGapSmall),
               Flexible(
@@ -79,9 +125,10 @@ class ClassroomPage extends GetView<AttendanceController> {
         : Get.theme.colorScheme.primary;
 
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         final openAttendance = controller.classroomData.openAttendance;
-        if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
+        if (userRole == 'Teacher' ||
+            (userRole == 'CR' && isToday && openAttendance != 'off')) {
           Get.to(() => SelectedAttendancePage(attendance: attendance));
         }
       },
@@ -130,9 +177,10 @@ class ClassroomPage extends GetView<AttendanceController> {
                     ),
                   ],
                 ),
-              Obx((){
+              Obx(() {
                 final openAttendance = controller.classroomData.openAttendance;
-                if (userRole == 'Teacher' || (userRole == 'CR' && isToday && openAttendance != 'off')){
+                if (userRole == 'Teacher' ||
+                    (userRole == 'CR' && isToday && openAttendance != 'off')) {
                   return const Icon(Icons.chevron_right);
                 }
                 return const SizedBox();
@@ -568,10 +616,10 @@ class ClassroomPage extends GetView<AttendanceController> {
       if (userRole == 'CR' && openAttendance != 'off') {
         controller.checkOpenCloseAttendance(openAttendance);
         final timeLeft = timerController.timeLeft;
-        final timeMin = timeLeft~/60;
-        final timeSec = timeLeft%60;
+        final timeMin = timeLeft ~/ 60;
+        final timeSec = timeLeft % 60;
         String timeText = 'Take Attendance';
-        if(timeMin > 0){
+        if (timeMin > 0) {
           timeText += ' (${timeMin}m ${timeSec}s)';
         } else {
           timeText += ' (${timeSec}s)';
@@ -582,7 +630,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           },
           label: Text(timeText),
         );
-      } else if (userRole == 'CR' && openAttendance == 'off'){
+      } else if (userRole == 'CR' && openAttendance == 'off') {
         timerController.cancelAttendanceTimer();
       }
 
