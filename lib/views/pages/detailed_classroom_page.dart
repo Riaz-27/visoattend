@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:visoattend/controller/classroom_controller.dart';
 import 'package:visoattend/controller/navigation_controller.dart';
-import 'package:visoattend/helper/constants.dart';
 import 'package:visoattend/helper/functions.dart';
 import 'package:visoattend/views/pages/classroom_pages/leave_request_page.dart';
 import 'package:visoattend/views/pages/classroom_pages/people_page.dart';
@@ -30,72 +29,82 @@ class DetailedClassroomPage extends GetView<NavigationController> {
       const LeaveRequestPage(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          classroomData.courseTitle,
-          style: Get.textTheme.bodyLarge,
-        ),
-        forceMaterialTransparency: true,
-        actions: [
-          Obx(() {
-            final userRole = attendanceController.currentUserRole;
-            if(userRole == ''){
-              return const SizedBox();
-            }
-            if (userRole == 'Student') {
-              return IconButton(
-                onPressed: () {
-                  _handleLeaveClass(context);
-                },
-                icon: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red,
-                ),
-              );
-            } else {
-              return IconButton(
-                onPressed: () {
-                  Get.to(
-                    () => CreateEditClassroomPage(
-                      isEdit: true,
-                      userRole: userRole,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.settings),
-              );
-            }
-          })
-        ],
-      ),
-      body: Obx(() {
-        return navigationPages[controller.selectedIndex];
-      }),
-      bottomNavigationBar: Obx(() {
-        return NavigationBar(
-          selectedIndex: controller.selectedIndex,
-          onDestinationSelected: (index) => controller.changeIndex(index),
-          height: 65,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.class_outlined),
-              selectedIcon: Icon(Icons.class_rounded),
-              label: 'Classroom',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.people_alt_outlined),
-              selectedIcon: Icon(Icons.people_alt),
-              label: 'People',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.mail_outline_rounded),
-              selectedIcon: Icon(Icons.mail),
-              label: 'Leave Request',
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        if(controller.selectedIndex == 0) {
+          return true;
+        }else{
+          controller.changeIndex(0);
+          return false;
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            classroomData.courseTitle,
+            style: Get.textTheme.bodyLarge,
+          ),
+          forceMaterialTransparency: true,
+          actions: [
+            Obx(() {
+              final userRole = attendanceController.currentUserRole;
+              if(userRole == ''){
+                return const SizedBox();
+              }
+              if (userRole == 'Student') {
+                return IconButton(
+                  onPressed: () {
+                    _handleLeaveClass(context);
+                  },
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                  ),
+                );
+              } else {
+                return IconButton(
+                  onPressed: () {
+                    Get.to(
+                      () => CreateEditClassroomPage(
+                        isEdit: true,
+                        userRole: userRole,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.settings),
+                );
+              }
+            })
           ],
-        );
-      }),
+        ),
+        body: Obx(() {
+          return navigationPages[controller.selectedIndex];
+        }),
+        bottomNavigationBar: Obx(() {
+          return NavigationBar(
+            selectedIndex: controller.selectedIndex,
+            onDestinationSelected: (index) => controller.changeIndex(index),
+            height: 65,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.class_outlined),
+                selectedIcon: Icon(Icons.class_rounded),
+                label: 'Classroom',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.people_alt_outlined),
+                selectedIcon: Icon(Icons.people_alt),
+                label: 'People',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.mail_outline_rounded),
+                selectedIcon: Icon(Icons.mail),
+                label: 'Leave Request',
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 

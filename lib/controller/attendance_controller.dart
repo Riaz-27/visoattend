@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:visoattend/controller/user_database_controller.dart';
 
 import '../models/attendance_model.dart';
@@ -15,6 +16,10 @@ class AttendanceController extends GetxController {
   final _attendances = <AttendanceModel>[].obs;
 
   List<AttendanceModel> get attendances => _attendances;
+
+  final _filteredAttendances = <AttendanceModel>[].obs;
+
+  List<AttendanceModel> get filteredAttendances => _filteredAttendances;
 
   final _classroomData = ClassroomModel.empty().obs;
 
@@ -65,7 +70,8 @@ class AttendanceController extends GetxController {
     cloudFirestoreController.filterClassesOfToday();
   }
 
-  Future<void> updateValues(ClassroomModel classroom, {bool forLive = false}) async {
+  Future<void> updateValues(ClassroomModel classroom,
+      {bool forLive = false}) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     _classroomData.bindStream(
         cloudFirestoreController.classroomStream(classroom.classroomId));
@@ -75,11 +81,12 @@ class AttendanceController extends GetxController {
     _currentUserRole.value = cloudFirestoreController
         .currentUser.classrooms[_classroomData.value.classroomId];
 
+    _filteredAttendances.value = _attendances;
     print(
         'The current user is : ${cloudFirestoreController.currentUser.authUid}');
     print('The current user is : $currentUserRole');
     print('The clasroom Data : ${classroomData.openAttendance}');
-    if(forLive){
+    if (forLive) {
       return;
     }
     if (currentUserRole == 'Student') {
@@ -91,6 +98,14 @@ class AttendanceController extends GetxController {
     if (dbOpenAttendance != 'off') {
       await checkOpenCloseAttendance(dbOpenAttendance);
     }
+  }
+
+  void filterAttendances(String value) {
+    _filteredAttendances.value = _attendances.where((attendance) {
+      final attendanceDate = DateFormat('dd MMMM y')
+          .format(DateTime.fromMillisecondsSinceEpoch(attendance.dateTime));
+      return attendanceDate.toLowerCase().contains(value.toLowerCase());
+    }).toList();
   }
 
   Future<void> checkOpenCloseAttendance(String dbOpenAttendance) async {
@@ -215,13 +230,9 @@ class AttendanceController extends GetxController {
   set selectedAttendance(AttendanceModel value) =>
       _selectedAttendance.value = value;
 
-  final _presentStudents = <Map<String, dynamic>>[].obs;
+  final _allStudents = <Map<String, dynamic>>[].obs;
 
-  List<Map<String, dynamic>> get presentStudents => _presentStudents;
-
-  final _absentStudents = <Map<String, dynamic>>[].obs;
-
-  List<Map<String, dynamic>> get absentStudents => _absentStudents;
+  List<Map<String, dynamic>> get allStudents => _allStudents;
 
   final _filteredStudents = <Map<String, dynamic>>[].obs;
 
@@ -234,29 +245,27 @@ class AttendanceController extends GetxController {
   set selectedAttendanceStatus(String value) =>
       _selectedAttendanceStatus.value = value;
 
+  final _selectedCategory = ''.obs;
+
+  String get selectedCategory => _selectedCategory.value;
+
+  set selectedCategory(String val) => _selectedCategory.value = val;
+
   void fetchStudentsStatus() {
     if (selectedAttendance == AttendanceModel.empty()) {
       return;
     }
-    List<Map<String, dynamic>> tempPresents = [];
-    List<Map<String, dynamic>> tempAbsent = [];
+    List<Map<String, dynamic>> tempStudents = [];
     for (var student in classroomData.cRs + classroomData.students) {
-      if (selectedAttendance.studentsData[student['authUid']] == 'Present') {
-        tempPresents.add(student);
-      } else {
-        tempAbsent.add(student);
-      }
+      tempStudents.add(student);
     }
 
-    tempPresents.sort((a, b) {
-      return a['userId'].compareTo(b['userId']);
-    });
-    tempAbsent.sort((a, b) {
+    tempStudents.sort((a, b) {
       return a['userId'].compareTo(b['userId']);
     });
 
-    _presentStudents.value = tempPresents;
-    _absentStudents.value = tempAbsent;
+    _allStudents.value = tempStudents;
+    _filteredStudents.value = _allStudents;
   }
 
   Future<void> changeStudentAttendanceStatus({
@@ -271,22 +280,37 @@ class AttendanceController extends GetxController {
       attendanceId: selectedAttendance.attendanceId,
       studentData: selectedAttendance.studentsData,
     );
+
+    selectedCategoryResult(forceUpdate: true);
   }
 
   //filtering classroom for the search result
-  void filterSearchResult(String value, bool isPresent) {
-    _filteredStudents.value = [];
-    final studentData = isPresent ? presentStudents : absentStudents;
+  String _searchedValue = '';
 
-    if (value.isEmpty) {
-      _filteredStudents.value = studentData;
-    } else {
-      value = value.toLowerCase();
-      _filteredStudents.value = studentData
-          .where((student) =>
-              student['name'].toLowerCase().contains(value) ||
-              student['userId'].toLowerCase().contains(value))
-          .toList();
+  void filterSearchResult(String value) {
+    _searchedValue = value;
+    _filteredStudents.value = _allStudents;
+    value = value.toLowerCase();
+    _filteredStudents.value = _allStudents
+        .where((student) =>
+            student['name'].toLowerCase().contains(value.toLowerCase()) ||
+            student['userId'].toLowerCase().contains(value.toLowerCase()))
+        .toList();
+  }
+
+  void selectedCategoryResult({bool forceUpdate = false}) {
+    if (forceUpdate) {
+      filterSearchResult(_searchedValue);
     }
+    _selectedCategory.listen((_) => filterSearchResult(_searchedValue));
+    if (selectedCategory == '') {
+      return;
+    }
+
+    _filteredStudents.value = _filteredStudents
+        .where((student) =>
+            _selectedAttendance.value.studentsData[student['authUid']] ==
+            selectedCategory)
+        .toList();
   }
 }

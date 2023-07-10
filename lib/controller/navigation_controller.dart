@@ -9,11 +9,12 @@ class NavigationController extends GetxController{
     _selectedIndex.value = index;
   }
 
-  /// For selected attendance pages
-  final _selectedAttendanceIndex = 0.obs;
-  int get selectedAttendanceIndex => _selectedAttendanceIndex.value;
+  /// For selected home pages
+  final _selectedHomeIndex = 0.obs;
+  int get selectedHomeIndex => _selectedHomeIndex.value;
 
-  void changeAttendanceIndex(int index){
-    _selectedAttendanceIndex.value = index;
+  void changeHomeIndex(int index){
+    _selectedHomeIndex.value = index;
   }
+
 }

@@ -22,18 +22,14 @@ class ReportGenerateService {
   Future<Uint8List> generateReport() async {
     List<List<AttendanceModel>> attendancesChunks = [];
     for (int i = 0; i < attendances.length; i += 9) {
-      final sublist = attendances.reversed.toList().sublist(
-          i, i + 9 > attendances.length ? attendances.length : i + 9);
+      final sublist = attendances.reversed
+          .toList()
+          .sublist(i, i + 9 > attendances.length ? attendances.length : i + 9);
       attendancesChunks.add(sublist);
-    }
-    final lastChunk = attendancesChunks[attendancesChunks.length-1];
-    final lastChunkLen = 9-lastChunk.length;
-    for(int i=0; i<lastChunkLen; i++){
-      lastChunk.add(AttendanceModel.empty());
     }
 
     final pdf = pw.Document();
-    for(int i=0; i<attendancesChunks.length;i++){
+    for (int i = 0; i < attendancesChunks.length; i++) {
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4.copyWith(
@@ -154,14 +150,15 @@ class ReportGenerateService {
     final totalStudents = classroom.cRs + classroom.students;
     totalStudents.sort((a, b) => a['userId'].compareTo(b['userId']));
 
-    final lengthForLoop =totalStudents.length > 45? totalStudents.length:45;
+    final lengthForLoop = totalStudents.length > 45 ? totalStudents.length : 45;
 
     for (int i = 0; i < lengthForLoop; i++) {
       List<String> perRow = ['${i + 1}'];
+      int j;
       if (i < totalStudents.length) {
         perRow.add(totalStudents[i]['userId']);
         perRow.add(totalStudents[i]['name']);
-        for (int j = 0; j < attendances.length; j++) {
+        for (j = 0; j < attendances.length; j++) {
           final studentsStatus =
               attendances[j].studentsData[totalStudents[i]['authUid']];
           if (studentsStatus == 'Absent' || studentsStatus == null) {
@@ -170,45 +167,63 @@ class ReportGenerateService {
             perRow.add('P');
           }
         }
+        for (j = j; j < 9; j++) {
+          perRow.add('');
+        }
       }
       data.add(perRow);
     }
 
     return pw.Table.fromTextArray(
-        border: pw.TableBorder.symmetric(
-          inside: const pw.BorderSide(width: 0.3),
-          outside: const pw.BorderSide(width: 0.3),
-        ),
-        headers: headers,
-        headerCount: 1,
-        headerStyle: pw.TextStyle(
-          fontWeight: pw.FontWeight.bold,
-          fontSize: 8,
-        ),
-        headerAlignments: {
-          0: pw.Alignment.center,
-          1: pw.Alignment.center,
-          2: pw.Alignment.center,
-        },
-        data: data,
-        cellStyle: const pw.TextStyle(
-          fontSize: 8,
-        ),
-        cellPadding: const pw.EdgeInsets.symmetric(
-          vertical: 2.5,
-          horizontal: 5,
-        ),
-        cellAlignment: pw.Alignment.center,
-        cellAlignments: {
-          0: pw.Alignment.centerLeft,
-          1: pw.Alignment.centerLeft,
-          2: pw.Alignment.centerLeft,
-        },
-        cellDecoration: (colNum, data, rowNum) {
-          return data == '------'
-              ? const pw.BoxDecoration(color: PdfColors.red100)
-              : const pw.BoxDecoration();
-        });
+      border: pw.TableBorder.symmetric(
+        inside: const pw.BorderSide(width: 0.3),
+        outside: const pw.BorderSide(width: 0.3),
+      ),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(1),
+        1: const pw.FlexColumnWidth(2.5),
+        2: const pw.FlexColumnWidth(7),
+        3: const pw.FlexColumnWidth(2),
+        4: const pw.FlexColumnWidth(2),
+        5: const pw.FlexColumnWidth(2),
+        6: const pw.FlexColumnWidth(2),
+        7: const pw.FlexColumnWidth(2),
+        8: const pw.FlexColumnWidth(2),
+        9: const pw.FlexColumnWidth(2),
+        10: const pw.FlexColumnWidth(2),
+        11: const pw.FlexColumnWidth(2),
+      },
+      headers: headers,
+      headerCount: 1,
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        fontSize: 8,
+      ),
+      headerAlignments: {
+        0: pw.Alignment.center,
+        1: pw.Alignment.center,
+        2: pw.Alignment.center,
+      },
+      data: data,
+      cellStyle: const pw.TextStyle(
+        fontSize: 8,
+      ),
+      cellPadding: const pw.EdgeInsets.symmetric(
+        vertical: 2.5,
+        horizontal: 3,
+      ),
+      cellAlignment: pw.Alignment.center,
+      cellAlignments: {
+        0: pw.Alignment.centerLeft,
+        1: pw.Alignment.centerLeft,
+        2: pw.Alignment.centerLeft,
+      },
+      cellDecoration: (colNum, data, rowNum) {
+        return data == '------'
+            ? const pw.BoxDecoration(color: PdfColors.red100)
+            : const pw.BoxDecoration();
+      },
+    );
   }
 
   static pw.Widget customText({

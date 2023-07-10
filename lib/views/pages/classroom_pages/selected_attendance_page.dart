@@ -1,40 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/models/attendance_model.dart';
-import 'package:visoattend/views/pages/classroom_pages/present_absent_students_page.dart';
 
-import '../../../controller/navigation_controller.dart';
+import '../../../controller/attendance_controller.dart';
 import '../../../helper/constants.dart';
+import '../../../helper/functions.dart';
+import '../../../models/attendance_model.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
 
-class SelectedAttendancePage extends GetView<NavigationController> {
+class SelectedAttendancePage extends GetView<AttendanceController> {
   const SelectedAttendancePage({super.key, required this.attendance});
 
   final AttendanceModel attendance;
 
   @override
   Widget build(BuildContext context) {
+    final height = Get.height;
     final width = Get.width;
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
+    final textTheme = Get.textTheme;
 
-    final attendanceController = Get.find<AttendanceController>();
-
-    attendanceController.selectedAttendance = attendance;
+    controller.selectedAttendance = attendance;
+    final studentsData = controller.filteredStudents;
+    final totalStudents = controller.classroomData.cRs.length +
+        controller.classroomData.students.length;
     final attendanceDateTime =
         DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+    final classroomData = controller.classroomData;
 
-    final classroomData = attendanceController.classroomData;
+    final searchController = TextEditingController();
 
-    final navigationPages = [
-      const PresentAbsentStudentsPage(),
-      const PresentAbsentStudentsPage(isPresentDetails: false),
-    ];
+    print(controller.selectedAttendance.attendanceId);
 
     return WillPopScope(
       onWillPop: () async {
-        controller.changeAttendanceIndex(0);
+        controller.selectedCategory = '';
         return true;
       },
       child: Scaffold(
@@ -46,9 +46,21 @@ class SelectedAttendancePage extends GetView<NavigationController> {
                 DateFormat('d MMMM, y').format(attendanceDateTime),
                 style: Get.textTheme.bodyMedium,
               ),
-              Text(
-                DateFormat.jm().format(attendanceDateTime),
-                style: Get.textTheme.bodySmall,
+              Row(
+                children: [
+                  Text(
+                    DateFormat.jm().format(attendanceDateTime),
+                    style: Get.textTheme.bodySmall,
+                  ),
+                  Text(
+                    ' | ${classroomData.courseCode}',
+                    style: Get.textTheme.bodySmall,
+                  ),
+                  Text(
+                    ' | ${classroomData.section}',
+                    style: Get.textTheme.bodySmall,
+                  ),
+                ],
               ),
             ],
           ),
@@ -56,54 +68,259 @@ class SelectedAttendancePage extends GetView<NavigationController> {
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(classroomData.courseTitle, style: textTheme.bodySmall),
-                  Text(' (${classroomData.courseCode})',
-                      style: textTheme.bodySmall),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(classroomData.section, style: textTheme.bodySmall),
-                  Text(' (${classroomData.session})',
-                      style: textTheme.bodySmall),
-                ],
-              ),
-              Expanded(
-                child: Obx(() {
-                  return navigationPages[controller.selectedAttendanceIndex];
-                }),
-              ),
-            ],
-          ),
+          child: Obx(() {
+            final studentsText = controller.selectedCategory =='' ? '$totalStudents Students' : '${studentsData.length}/$totalStudents Students';
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomTextField(
+                  controller: searchController,
+                  style: textTheme.labelLarge,
+                  hintText: 'Search by ID or Name',
+                  onChanged: (value) {
+                    controller.selectedCategory = '';
+                    controller.filterSearchResult(value);
+                  }
+                ),
+                verticalGap(height * percentGapVerySmall),
+                _buildFilterChip(),
+                verticalGap(height * percentGapVerySmall),
+                Text(
+                  studentsText,
+                  style: textTheme.bodySmall,
+                ),
+                verticalGap(height * percentGapMedium),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: studentsData.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          _buildUsersList(studentsData[index]),
+                          if (studentsData.length > 1)
+                            const Divider(thickness: 0.3),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }),
         ),
-        bottomNavigationBar: Obx(() {
-          return NavigationBar(
-            selectedIndex: controller.selectedAttendanceIndex,
-            onDestinationSelected: (index) =>
-                controller.changeAttendanceIndex(index),
-            height: 65,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.check_circle_outline),
-                selectedIcon: Icon(Icons.check_circle),
-                label: 'Present',
+      ),
+    );
+  }
+
+  Widget _buildFilterChip() {
+    final width = Get.width;
+    final colorScheme = Get.theme.colorScheme;
+    final textTheme = Get.theme.textTheme;
+    final selectedCategory = controller.selectedCategory;
+
+    final chipCategories = ['Present', 'Absent'];
+    return Row(
+      children: chipCategories
+          .map(
+            (category) => Row(
+              children: [
+                FilterChip(
+                  showCheckmark: false,
+                  selectedColor: category == 'Present'
+                      ? colorScheme.primary.withOpacity(0.7)
+                      : colorScheme.error.withOpacity(0.7),
+                  backgroundColor: category == 'Present'
+                      ? colorScheme.secondaryContainer.withOpacity(0.8)
+                      : colorScheme.errorContainer.withOpacity(0.8),
+                  side: BorderSide.none,
+                  label: Text(
+                    category,
+                    style: textTheme.labelMedium!.copyWith(
+                        color: selectedCategory == category
+                            ? Colors.white
+                            : colorScheme.onBackground),
+                  ),
+                  selected: selectedCategory == category,
+                  onSelected: (selected) {
+                    if (selected) {
+                      controller.selectedCategory = category;
+                    } else {
+                      controller.selectedCategory = '';
+                    }
+                    controller.selectedCategoryResult();
+                  },
+                ),
+                horizontalGap(width * percentGapMedium),
+              ],
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildUsersList(Map<String, dynamic> student) {
+    final height = Get.height;
+    final width = Get.width;
+    final textTheme = Get.textTheme;
+    final colorScheme = Get.theme.colorScheme;
+
+    String picUrl =
+        'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7';
+
+    final attendance = controller.selectedAttendance;
+    final studentStatus =
+        attendance.studentsData[student['authUid']] ?? 'Absent';
+    return GestureDetector(
+      onTap: () {
+        controller.selectedAttendanceStatus = studentStatus;
+
+        _handleUpdateAttendanceStatus(student);
+      },
+      child: Container(
+        color: colorScheme.surface,
+        child: Row(
+          children: [
+            Container(
+              width: 35,
+              height: 35,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: NetworkImage(picUrl),
+                ),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.do_disturb_on_outlined),
-                selectedIcon: Icon(Icons.do_disturb_on),
-                label: 'Absent',
+            ),
+            horizontalGap(width * percentGapLarge),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  student['name'],
+                  style: textTheme.bodyMedium!,
+                ),
+                Text(
+                  student['userId'],
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: studentStatus[0] == 'P'
+                    ? colorScheme.primary
+                    : colorScheme.error,
               ),
-            ],
-          );
-        }),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleUpdateAttendanceStatus(Map<String, dynamic> student) {
+    final height = Get.height;
+    final width = Get.width;
+    final textTheme = Get.theme.textTheme;
+    final colorScheme = Get.theme.colorScheme;
+
+    Get.bottomSheet(
+      backgroundColor: colorScheme.surface,
+      enableDrag: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(15),
+          topRight: Radius.circular(15),
+        ),
+      ),
+      Padding(
+        padding: EdgeInsets.all(height * percentGapMedium),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${student['name']}',
+              style: textTheme.titleLarge,
+            ),
+            Text(
+              '${student['userId']}',
+              style: textTheme.titleSmall,
+            ),
+            verticalGap(height * percentGapMedium),
+            Text(
+              'Change Attendance',
+              style: textTheme.bodySmall,
+            ),
+            Obx(() {
+              return Column(
+                children: [
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'Present',
+                    groupValue: controller.selectedAttendanceStatus,
+                    onChanged: (value) {
+                      controller.selectedAttendanceStatus = value!;
+                    },
+                    title: Text(
+                      'Present',
+                      style: textTheme.bodyLarge!
+                          .copyWith(color: colorScheme.primary),
+                    ),
+                  ),
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'Absent',
+                    groupValue: controller.selectedAttendanceStatus,
+                    onChanged: (value) {
+                      controller.selectedAttendanceStatus = value!;
+                    },
+                    title: Text(
+                      'Absent',
+                      style: textTheme.bodyLarge!
+                          .copyWith(color: colorScheme.error),
+                    ),
+                    activeColor: colorScheme.error,
+                  ),
+                ],
+              );
+            }),
+            verticalGap(height * percentGapMedium),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CustomButton(
+                  height: height * 0.05,
+                  width: width * 0.4,
+                  backgroundColor: colorScheme.onSurface,
+                  textColor: colorScheme.surface,
+                  text: 'Cancel',
+                  onPressed: () {
+                    Get.back();
+                  },
+                ),
+                CustomButton(
+                  height: height * 0.05,
+                  width: width * 0.4,
+                  text: 'Confirm',
+                  onPressed: () async {
+                    await controller.changeStudentAttendanceStatus(
+                      student: student,
+                    );
+                    Get.back();
+                  },
+                ),
+              ],
+            )
+          ],
+        ),
       ),
     );
   }

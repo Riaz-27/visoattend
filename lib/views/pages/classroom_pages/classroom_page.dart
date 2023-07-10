@@ -3,18 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+
 import 'package:visoattend/controller/timer_controller.dart';
 import 'package:visoattend/models/attendance_model.dart';
-
+import 'package:visoattend/views/pages/classroom_pages/selected_attendance_page.dart';
 import '../../../controller/attendance_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
-import '../../../models/classroom_model.dart';
 import '../../../services/report_generate_service.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
 import '../attendance_record_page.dart';
-import 'selected_attendance_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
   const ClassroomPage({
@@ -24,6 +24,13 @@ class ClassroomPage extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     final height = Get.height;
+    final width = Get.width;
+
+    final searchController = TextEditingController();
+
+    final firstDate = DateTime.fromMillisecondsSinceEpoch(
+        controller.attendances.last.dateTime);
+    DateTime selectedDate = DateTime.now();
 
     return Scaffold(
       body: Padding(
@@ -37,13 +44,65 @@ class ClassroomPage extends GetView<AttendanceController> {
             children: [
               _topView(context: context),
               verticalGap(height * percentGapSmall),
+              Obx(
+                () {
+                  return Text(
+                    'Attendances (${controller.filteredAttendances.length})',
+                    style: Get.textTheme.bodySmall!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  );
+                }
+              ),
+              verticalGap(height * percentGapVerySmall),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Attendance History",
-                    style: Get.textTheme.titleSmall!
-                        .copyWith(fontWeight: FontWeight.bold),
+                  Container(
+                    width: width * 0.4,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(color: Get.theme.colorScheme.outline),
+                    ),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: CustomTextField(
+                            controller: searchController,
+                            style: Get.theme.textTheme.bodySmall,
+                            disableBorder: true,
+                            hintText: 'All Times',
+                            onChanged: (value) {
+                              controller.filterAttendances(value);
+                            },
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            final pickedDate = await showDatePicker(
+                              selectableDayPredicate: (dateTime) => true,
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: firstDate,
+                              lastDate: DateTime.now(),
+                            );
+                            selectedDate = pickedDate??DateTime.now();
+                            final dateText =pickedDate != null ? DateFormat('dd MMMM y').format(pickedDate) : '';
+                            searchController.text = dateText;
+                            controller.filterAttendances(dateText);
+                          },
+                          child: Container(
+                            color: Colors.transparent,
+                            height: 28,
+                            width: 40,
+                            child: const Icon(
+                              Icons.date_range,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Obx(() {
                     return controller.currentUserRole == 'Teacher' ||
@@ -75,11 +134,20 @@ class ClassroomPage extends GetView<AttendanceController> {
                                   borderRadius: BorderRadius.circular(50),
                                   color:
                                       Get.theme.colorScheme.secondaryContainer),
-                              child: Text(
-                                "Generate Report",
-                                style: Get.textTheme.bodySmall!.copyWith(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.file_download_outlined,
+                                    size: 16,
                                     color: Get.theme.colorScheme.secondary,
-                                    fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    "Report",
+                                    style: Get.textTheme.bodySmall!.copyWith(
+                                        color: Get.theme.colorScheme.secondary,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
                               ),
                             ),
                           )
@@ -93,10 +161,10 @@ class ClassroomPage extends GetView<AttendanceController> {
                   return ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: controller.attendances.length,
+                    itemCount: controller.filteredAttendances.length,
                     itemBuilder: (context, index) {
                       return _buildAttendanceListView(
-                          attendance: controller.attendances[index]);
+                          attendance: controller.filteredAttendances[index]);
                     },
                   );
                 }),
@@ -123,6 +191,17 @@ class ClassroomPage extends GetView<AttendanceController> {
     final color = presentStatus == 'Absent' || presentStatus == null
         ? Get.theme.colorScheme.error
         : Get.theme.colorScheme.primary;
+    final classroomData = controller.classroomData;
+    int presentStudents = 0;
+    int totalStudents = 0;
+    if (userRole == 'Teacher') {
+      for (var student in classroomData.cRs + classroomData.students) {
+        if (attendance.studentsData[student['authUid']] == 'Present') {
+          presentStudents++;
+        }
+        totalStudents++;
+      }
+    }
 
     return GestureDetector(
       onTap: () {
@@ -173,6 +252,20 @@ class ClassroomPage extends GetView<AttendanceController> {
                     ),
                     Text(
                       'by ${attendance.takenBy['name']}',
+                      style: Get.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              if (userRole == 'Teacher')
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'by ${attendance.takenBy['name'] == currentUser.name ? 'you' : attendance.takenBy['name']}',
+                      style: Get.textTheme.titleSmall,
+                    ),
+                    Text(
+                      '$presentStudents/$totalStudents presents',
                       style: Get.textTheme.bodySmall,
                     ),
                   ],
