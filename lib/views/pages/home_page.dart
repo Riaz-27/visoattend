@@ -46,7 +46,6 @@ class HomePage extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: EdgeInsets.only(
-                top: height * percentGapLarge,
                 right: height * percentGapSmall,
                 left: height * percentGapSmall,
               ),
@@ -54,59 +53,8 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Obx(() {
-                            final userName =
-                                cloudFirestoreController.currentUser.name;
-                            return Text(
-                              'Welcome, $userName',
-                              style: Get.textTheme.titleMedium!
-                                  .copyWith(fontWeight: FontWeight.bold),
-                            );
-                          }),
-                          verticalGap(height * percentGapVerySmall),
-                          Text(
-                            DateFormat('EEE, d MMMM y').format(DateTime.now()),
-                            style: Get.textTheme.bodySmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150)),
-                          ),
-                        ],
-                      ),
 
-                      ///Temporary button
-                      IconButton(
-                        onPressed: () async {
-                          await Get.find<AuthController>().signOut();
-                          cloudFirestoreController.isInitialized = false;
-                          Get.offAll(() => const AuthPage());
-                        },
-                        icon: const Icon(Icons.logout_rounded),
-                      ),
-                      Obx(() {
-                        final picUrl =
-                            Get.find<ProfilePicController>().profilePicUrl;
-                        return Container(
-                          width: 35,
-                          height: 35,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: NetworkImage(picUrl),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(height * percentGapSmall),
                   // Running Class UI
                   Obx(() {
                     final classTimes = cloudFirestoreController.timeLeftToStart;
@@ -174,7 +122,6 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-
     );
   }
 

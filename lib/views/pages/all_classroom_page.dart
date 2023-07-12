@@ -26,13 +26,6 @@ class AllClassroomPage extends StatelessWidget {
     final classroomList = cloudFirestoreController.filteredClassroom;
 
     return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        title: Text(
-          'All Classes',
-          style: Get.textTheme.bodyLarge,
-        ),
-      ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
@@ -42,21 +35,28 @@ class AllClassroomPage extends StatelessWidget {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CustomTextFormField(
                 labelText: 'Search Class',
                 controller: searchController,
-                onChanged: (value) => cloudFirestoreController.filterAllClassesSearchResult(value),
+                onChanged: (value) => cloudFirestoreController
+                    .filterAllClassesSearchResult(value),
               ),
-              verticalGap(height * percentGapMedium),
+              verticalGap(height * percentGapSmall),
+              Text(
+                'All Classes',
+                style: Get.textTheme.bodySmall,
+              ),
+              verticalGap(height * percentGapSmall),
               Expanded(
                 child: Obx(() {
                   return ListView.builder(
                     itemCount: classroomList.length,
                     itemBuilder: (_, index) {
                       return GestureDetector(
-                        onTap: () => Get.to(() =>
-                            DetailedClassroomPage(classroomData: classroomList[index])),
+                        onTap: () => Get.to(() => DetailedClassroomPage(
+                            classroomData: classroomList[index])),
                         child:
                             _buildCustomCard(classroom: classroomList[index]),
                       );

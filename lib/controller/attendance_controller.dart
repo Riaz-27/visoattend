@@ -41,6 +41,12 @@ class AttendanceController extends GetxController {
 
   int openAttendanceTimerSec = 300;
 
+  final _attendanceCount = 1.obs;
+
+  int get attendanceCount => _attendanceCount.value;
+
+  set attendanceCount(int value) => _attendanceCount.value = value;
+
   @override
   onInit() {
     ever(_attendances, (_) => calculateMissedClass());
@@ -148,7 +154,7 @@ class AttendanceController extends GetxController {
     });
   }
 
-  Future<void> saveDataToFirestore({int counts = 1}) async {
+  Future<void> saveDataToFirestore() async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final currentUser = cloudFirestoreController.currentUser;
     final takenBy = {
@@ -159,7 +165,6 @@ class AttendanceController extends GetxController {
     AttendanceModel attendanceData = AttendanceModel(
       attendanceId: '',
       dateTime: DateTime.now().millisecondsSinceEpoch,
-      counts: counts,
       studentsData: {},
       takenBy: takenBy,
     );
@@ -169,10 +174,11 @@ class AttendanceController extends GetxController {
         attendanceData.studentsData[student.authUid] = 'Present';
       }
     }
-
-    await cloudFirestoreController
-        .saveAttendanceData(classroomData.classroomId, attendanceData)
-        .then((attendance) => _attendances.insert(0, attendance));
+    for(int i=0; i<attendanceCount; i++){
+      await cloudFirestoreController
+          .saveAttendanceData(classroomData.classroomId, attendanceData)
+          .then((attendance) => _attendances.insert(0, attendance));
+    }
   }
 
   void calculateMissedClass() {

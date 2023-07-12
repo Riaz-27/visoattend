@@ -170,7 +170,11 @@ class AttendanceRecordPage extends StatelessWidget {
             Expanded(
               flex: 1,
               child: GestureDetector(
-                onTap: () async {},
+                onTap: () {
+                  if(attendanceController.attendanceCount != 1){
+                    attendanceController.attendanceCount--;
+                  }
+                },
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -198,10 +202,15 @@ class AttendanceRecordPage extends StatelessWidget {
                     size: 50,
                     color: Colors.black.withOpacity(0.3),
                   ),
-                  Text(
-                    '1',
-                    style:
-                        Get.textTheme.titleSmall!.copyWith(color: Colors.white),
+                  Obx(
+                    () {
+                      return Text(
+                        attendanceController.attendanceCount.toString(),
+                        style: Get.textTheme.titleSmall!.copyWith(
+                          color: Colors.white,
+                        ),
+                      );
+                    }
                   ),
                 ],
               ),
@@ -209,7 +218,9 @@ class AttendanceRecordPage extends StatelessWidget {
             Expanded(
               flex: 1,
               child: GestureDetector(
-                onTap: () async {},
+                onTap: () {
+                  attendanceController.attendanceCount++;
+                },
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -237,6 +248,7 @@ class AttendanceRecordPage extends StatelessWidget {
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
         cameraServiceController.isStopped = true;
+        attendanceController.attendanceCount = 1;
         final durationMs = faceDetectorController.faces.length * 100 + 500;
         await Future.delayed(Duration(milliseconds: durationMs));
         return true;
