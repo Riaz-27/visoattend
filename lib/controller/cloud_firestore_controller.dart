@@ -289,6 +289,7 @@ class CloudFirestoreController extends GetxController {
       }
     }
     _classrooms.value = classes;
+    _filteredClassroom.value = classes;
     _archivedClassrooms.value = archivedClasses;
     _isInitialized.value = true;
   }
@@ -397,20 +398,15 @@ class CloudFirestoreController extends GetxController {
   }
 
   //filtering classroom for the search result
-  void filterSearchResult(String value) {
-    _filteredClassroom.value = [];
-    if (value.isEmpty) {
-      _filteredClassroom.value = _classrooms;
-    } else {
-      value = value.toLowerCase();
-      _filteredClassroom.value = _classrooms
-          .where((classroom) =>
-              classroom.courseTitle.toLowerCase().contains(value) ||
-              classroom.courseCode.toLowerCase().contains(value) ||
-              classroom.session.toLowerCase().contains(value) ||
-              classroom.section.toLowerCase().contains(value))
-          .toList();
-    }
+  void filterAllClassesSearchResult(String value) {
+    value = value.toLowerCase();
+    _filteredClassroom.value = _classrooms
+        .where((classroom) =>
+            classroom.courseTitle.toLowerCase().contains(value) ||
+            classroom.courseCode.toLowerCase().contains(value) ||
+            classroom.session.toLowerCase().contains(value) ||
+            classroom.section.toLowerCase().contains(value))
+        .toList();
   }
 
   /// Attendance Control

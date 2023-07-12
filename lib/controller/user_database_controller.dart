@@ -125,6 +125,9 @@ class UserDatabaseController extends GetxController {
           await authController.createUserWithEmailAndPassword(
               email: user.email, password: authController.tempPassword);
       if (userCredential != null) {
+        cameraServiceController.isBusy = true;
+        await cameraServiceController.cameraController.stopImageStream();
+        cameraServiceController.isStopped = true;
         user.authUid = userCredential.user!.uid;
         cloudFirestoreController.addUserDataToFirestore(user);
         cloudFirestoreController.currentUser = user;

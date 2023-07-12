@@ -31,9 +31,9 @@ class HomePage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    if (!cloudFirestoreController.isInitialized) {
-      cloudFirestoreController.initialize();
-    }
+    // if (!cloudFirestoreController.isInitialized) {
+    //   cloudFirestoreController.initialize();
+    // }
     final classroomList = cloudFirestoreController.classesOfToday;
 
     return Scaffold(
@@ -133,31 +133,10 @@ class HomePage extends StatelessWidget {
                         context: context, classroomList: classroomList),
                   ),
                   verticalGap(height * percentGapMedium),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Later Today",
-                        style: Get.textTheme.titleSmall!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      GestureDetector(
-                        onTap: () => Get.to(() => const AllClassroomPage()),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: kSmall, vertical: kVerySmall),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: Get.theme.colorScheme.secondaryContainer),
-                          child: Text(
-                            "All Classes",
-                            style: Get.textTheme.bodySmall!.copyWith(
-                                color: Get.theme.colorScheme.secondary,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    "Later Today",
+                    style: Get.textTheme.titleSmall!
+                        .copyWith(fontWeight: FontWeight.bold),
                   ),
                   verticalGap(height * percentGapSmall),
                   Flexible(
@@ -195,54 +174,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 20, right: 10),
-        child: FloatingActionButton(
-          onPressed: () {
-            Get.bottomSheet(
-              backgroundColor: Get.theme.colorScheme.surface,
-              enableDrag: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(15),
-                  topLeft: Radius.circular(15),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: kSmall, vertical: kMedium),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CustomButton(
-                      height: height * 0.055,
-                      backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                      textColor: Get.theme.colorScheme.onSecondaryContainer,
-                      text: 'Join Class',
-                      onPressed: () {
-                        Get.back();
-                        _handleJoinClass();
-                      },
-                    ),
-                    verticalGap(height * percentGapSmall),
-                    CustomButton(
-                      height: height * 0.055,
-                      backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                      textColor: Get.theme.colorScheme.onSecondaryContainer,
-                      text: 'Create Class',
-                      onPressed: () {
-                        Get.to(() => const CreateEditClassroomPage());
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
     );
   }
 
@@ -320,46 +252,6 @@ class HomePage extends StatelessWidget {
                       color: Get.theme.colorScheme.onBackground.withAlpha(150)),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _handleJoinClass() {
-    final TextEditingController classroomIdController = TextEditingController();
-    final height = Get.height;
-    Get.bottomSheet(
-      enableDrag: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(15),
-          topLeft: Radius.circular(15),
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 80,
-              width: double.infinity,
-              child: CustomTextFormField(
-                controller: classroomIdController,
-                labelText: 'Enter Classroom ID',
-              ),
-            ),
-            CustomButton(
-              height: height * 0.055,
-              text: 'Join Class',
-              onPressed: () async {
-                await Get.find<ClassroomController>()
-                    .joinClassroom(classroomIdController.text);
-              },
             ),
           ],
         ),

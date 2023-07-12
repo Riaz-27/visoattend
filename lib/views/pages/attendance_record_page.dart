@@ -23,14 +23,16 @@ class AttendanceRecordPage extends StatelessWidget {
     final recognitionController = Get.find<RecognitionController>();
     final attendanceController = Get.find<AttendanceController>();
 
-    final size = Get.size;
+    final height = Get.height;
+    final width = Get.width;
     List<Widget> stackChildren = [];
     cameraServiceController.isSignUp = false;
 
+    //camera view
     stackChildren.add(
       Positioned(
-        height: size.height,
-        width: size.width,
+        height: height,
+        width: width,
         child: Obx(() {
           return (cameraServiceController.isInitialized)
               ? ClipRect(
@@ -55,12 +57,13 @@ class AttendanceRecordPage extends StatelessWidget {
       ),
     );
 
+    // face painter
     stackChildren.add(
       Positioned(
         top: 0.0,
         left: 0.0,
-        width: size.width,
-        height: size.height,
+        width: width,
+        height: height,
         child: Obx(() {
           final resultOnCurrentFrame = recognitionController.recognitionResults;
           return resultOnCurrentFrame.isNotEmpty
@@ -79,48 +82,148 @@ class AttendanceRecordPage extends StatelessWidget {
       ),
     );
 
+    //bottom capture and rotate button
     stackChildren.add(
       Positioned(
-        left: 10.0,
-        right: 10.0,
-        bottom: 10.0,
-        child: Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 48.0,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  onPressed: () async {
+        left: 0.0,
+        right: 0.0,
+        bottom: 0.0,
+        child: Container(
+          height: 130,
+          color: Colors.black.withOpacity(0.3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () async {
                     await cameraServiceController.toggleCameraDirection();
                   },
-                  child: const Text('Toggle'),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.circle_rounded,
+                        size: 60,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                      const Icon(
+                        Icons.flip_camera_android_sharp,
+                        size: 25,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () async {
+                    await attendanceController.setMatchedStudents().then((_) =>
+                        attendanceController
+                            .saveDataToFirestore()
+                            .then((_) => Navigator.of(context).maybePop()));
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.circle_outlined,
+                        size: 85,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                      const Icon(
+                        Icons.circle_rounded,
+                        size: 70,
+                        color: Colors.white,
+                      ),
+                      Icon(
+                        Icons.cloud_done,
+                        size: 25,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Expanded(
+                flex: 1,
+                child: SizedBox(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    //top count increasing button
+    stackChildren.add(
+      Positioned(
+        left: 0.0,
+        right: 0.0,
+        top: 30.0,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 1,
+              child: GestureDetector(
+                onTap: () async {},
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.circle_rounded,
+                      size: 50,
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                    const Icon(
+                      Icons.remove,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(
-              width: 10,
+            Expanded(
+              flex: 1,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.circle_rounded,
+                    size: 50,
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                  Text(
+                    '1',
+                    style:
+                        Get.textTheme.titleSmall!.copyWith(color: Colors.white),
+                  ),
+                ],
+              ),
             ),
             Expanded(
-              child: SizedBox(
-                height: 48.0,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+              flex: 1,
+              child: GestureDetector(
+                onTap: () async {},
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.circle_rounded,
+                      size: 50,
+                      color: Colors.black.withOpacity(0.3),
                     ),
-                  ),
-                  onPressed: () async {
-                    await attendanceController.setMatchedStudents().then(
-                        (_) => attendanceController.saveDataToFirestore());
-                  },
-                  child: const Text('Record'),
+                    const Icon(
+                      Icons.add,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -134,7 +237,8 @@ class AttendanceRecordPage extends StatelessWidget {
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
         cameraServiceController.isStopped = true;
-        await Future.delayed(const Duration(seconds: 2));
+        final durationMs = faceDetectorController.faces.length * 100 + 500;
+        await Future.delayed(Duration(milliseconds: durationMs));
         return true;
       },
       child: Scaffold(

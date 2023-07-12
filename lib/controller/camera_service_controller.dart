@@ -35,16 +35,17 @@ class CameraServiceController extends GetxController {
   late CameraDescription _cameraDescription;
 
   final _isInitialized = false.obs;
+
+  bool get isInitialized => _isInitialized.value;
+
   bool isBusy = false;
   bool isStopped = false;
   bool isSignUp = false;
 
-  bool get isInitialized => _isInitialized.value;
-
   Future<void> _checkCameras() async {
     _cameras = await availableCameras();
-    _cameraLensDirection = CameraLensDirection.back;
-    _cameraDescription = _cameras[0];
+    _cameraLensDirection = isSignUp ? CameraLensDirection.front :CameraLensDirection.back;
+    _cameraDescription = isSignUp ? _cameras[1] : _cameras[0];
   }
 
   Future<void> _initialize() async {
@@ -83,20 +84,6 @@ class CameraServiceController extends GetxController {
           } else {
             isBusy = false;
           }
-          // });
-          // await lock.synchronized(() async {
-          //   final cameraImage = _cameraImage;
-          //   final faces = faceDetectorController.faces;
-          //   final camDirection =
-          //       _cameraLensDirection;
-          //   final users = await userDatabaseController.getAllUsers();
-          //   await recognitionController.performRecognitionOnIsolate(
-          //     cameraImage: cameraImage,
-          //     faces: faces,
-          //     cameraLensDirection: camDirection,
-          //     users: users,
-          //   );
-          // });
           isBusy = false;
         }
       });
@@ -125,8 +112,9 @@ class CameraServiceController extends GetxController {
   }
 
   Size getImageSize() {
-    assert(_isInitialized.value == true, 'Camera not initialized');
-    assert(_cameraController.value.previewSize != null, 'Preview size is null');
+    if(!_isInitialized.value){
+      return Size.zero;
+    }
     return Size(
       _cameraController.value.previewSize!.height,
       _cameraController.value.previewSize!.width,
@@ -134,7 +122,9 @@ class CameraServiceController extends GetxController {
   }
 
   Future<void> toggleCameraDirection() async {
-    _isInitialized(false);
+    _isInitialized.value = false;
+    await _cameraController.stopImageStream();
+    await _cameraController.dispose();
     if (_cameraLensDirection == CameraLensDirection.back) {
       _cameraLensDirection = CameraLensDirection.front;
       _cameraDescription = _cameras[1];
@@ -142,9 +132,7 @@ class CameraServiceController extends GetxController {
       _cameraLensDirection = CameraLensDirection.back;
       _cameraDescription = _cameras[0];
     }
-    await _cameraController.stopImageStream();
     await _initialize();
-    _isInitialized(true);
   }
 
 // InputImageRotation rotationIntToImageRotation(int rotation) {

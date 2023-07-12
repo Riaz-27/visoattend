@@ -314,6 +314,7 @@ class LoginRegisterPage extends StatelessWidget {
                       TextButton(
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         onPressed: () {
+                          authController.isLoading = false;
                           Get.offAll(
                             () => LoginRegisterPage(
                               isSignUp: !isSignUp,

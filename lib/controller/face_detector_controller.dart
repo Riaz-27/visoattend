@@ -9,10 +9,16 @@ class FaceDetectorController extends GetxController {
   late FaceDetector _faceDetector;
 
   List<Face> _faces = [];
+
   List<Face> get faces => _faces;
 
-  final _faceDetected = 0.obs;
-  int get faceDetected => _faceDetected.value;
+  final _updateDraw = 0.obs;
+
+  int get updateDraw => _updateDraw.value;
+
+  final Rx<double>_faceHeadAngleY = 40.0.obs;
+
+  double get faceHeadAngleY => _faceHeadAngleY.value;
 
   @override
   void onInit() {
@@ -27,19 +33,20 @@ class FaceDetectorController extends GetxController {
   }
 
   void _initialize() {
-    final options =
-    FaceDetectorOptions(performanceMode: FaceDetectorMode.fast, enableTracking: true);
+    final options = FaceDetectorOptions(
+        performanceMode: FaceDetectorMode.fast, enableTracking: true);
     _faceDetector = FaceDetector(options: options);
   }
 
-  Future<void> doFaceDetectionOnFrame(CameraImage image, InputImageRotation rotation) async {
-    _faceDetected.value = 0;
+  Future<void> doFaceDetectionOnFrame(
+      CameraImage image, InputImageRotation rotation) async {
     //convert frame into InputImage format
     var frameImg = _getInputImage(image, rotation);
 
     //Faces Detection
     _faces = await _faceDetector.processImage(frameImg);
-    _faceDetected.value = _faces.length;
+    _updateDraw.value = updateDraw%2 + 1;
+    _faceHeadAngleY.value =faces.isEmpty? 40: faces.first.headEulerAngleY!;
   }
 
   //converting image to InputImage
@@ -50,18 +57,18 @@ class FaceDetectorController extends GetxController {
     }
     final bytes = allBytes.done().buffer.asUint8List();
     final Size imageSize =
-    Size(image.width.toDouble(), image.height.toDouble());
+        Size(image.width.toDouble(), image.height.toDouble());
     // final camera = description;
     // final imageRotation =
     // InputImageRotationValue.fromRawValue(camera.sensorOrientation);
     // if (imageRotation == null) return;
 
     final inputImageFormat =
-    InputImageFormatValue.fromRawValue(image.format.raw);
+        InputImageFormatValue.fromRawValue(image.format.raw);
     // if (inputImageFormat == null) return null;
 
     final planeData = image.planes.map(
-          (Plane plane) {
+      (Plane plane) {
         return InputImagePlaneMetadata(
           bytesPerRow: plane.bytesPerRow,
           height: plane.height,
@@ -78,15 +85,12 @@ class FaceDetectorController extends GetxController {
     );
 
     final inputImage =
-    InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
+        InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
 
     return inputImage;
   }
 
-
-
   _close() async {
     await _faceDetector.close();
   }
-
 }

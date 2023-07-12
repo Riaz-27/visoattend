@@ -62,7 +62,7 @@ dependencies:
   percent_indicator: ^4.2.3
   pdf: ^3.8.4
   open_file_plus: ^3.4.1
-  permission_handler:
+  fluttertoast: ^8.2.2
 
 dev_dependencies:
   flutter_test:

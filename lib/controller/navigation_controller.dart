@@ -12,9 +12,6 @@ class NavigationController extends GetxController{
   /// For selected home pages
   final _selectedHomeIndex = 0.obs;
   int get selectedHomeIndex => _selectedHomeIndex.value;
-
-  void changeHomeIndex(int index){
-    _selectedHomeIndex.value = index;
-  }
+  set selectedHomeIndex(int index) => _selectedHomeIndex.value = index;
 
 }

@@ -27,9 +27,6 @@ class ClassroomPage extends GetView<AttendanceController> {
     final width = Get.width;
 
     final searchController = TextEditingController();
-
-    final firstDate = DateTime.fromMillisecondsSinceEpoch(
-        controller.attendances.last.dateTime);
     DateTime selectedDate = DateTime.now();
 
     return Scaffold(
@@ -44,15 +41,13 @@ class ClassroomPage extends GetView<AttendanceController> {
             children: [
               _topView(context: context),
               verticalGap(height * percentGapSmall),
-              Obx(
-                () {
-                  return Text(
-                    'Attendances (${controller.filteredAttendances.length})',
-                    style: Get.textTheme.bodySmall!
-                        .copyWith(fontWeight: FontWeight.bold),
-                  );
-                }
-              ),
+              Obx(() {
+                return Text(
+                  'Attendances (${controller.filteredAttendances.length})',
+                  style: Get.textTheme.bodySmall!
+                      .copyWith(fontWeight: FontWeight.bold),
+                );
+              }),
               verticalGap(height * percentGapVerySmall),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -79,6 +74,11 @@ class ClassroomPage extends GetView<AttendanceController> {
                         ),
                         GestureDetector(
                           onTap: () async {
+                            final firstDate = controller.attendances.isEmpty
+                                ? DateTime.now()
+                                : DateTime.fromMillisecondsSinceEpoch(
+                                    controller.attendances.last.dateTime);
+
                             final pickedDate = await showDatePicker(
                               selectableDayPredicate: (dateTime) => true,
                               context: context,
@@ -86,8 +86,10 @@ class ClassroomPage extends GetView<AttendanceController> {
                               firstDate: firstDate,
                               lastDate: DateTime.now(),
                             );
-                            selectedDate = pickedDate??DateTime.now();
-                            final dateText =pickedDate != null ? DateFormat('dd MMMM y').format(pickedDate) : '';
+                            selectedDate = pickedDate ?? DateTime.now();
+                            final dateText = pickedDate != null
+                                ? DateFormat('dd MMMM y').format(pickedDate)
+                                : '';
                             searchController.text = dateText;
                             controller.filterAttendances(dateText);
                           },

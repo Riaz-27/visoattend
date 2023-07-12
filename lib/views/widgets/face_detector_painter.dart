@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,86 +24,120 @@ class FaceDetectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final textTheme = Get.theme.textTheme;
+    final colorScheme = Get.theme.colorScheme;
+
     final double scaleX = size.width / imageSize.width;
     final double scaleY = size.height / imageSize.height;
 
     Paint paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
+      ..strokeWidth = 3
       ..color = Colors.red;
 
-    if(recognitionResults == null) {
+    if (recognitionResults == null) {
+      int i = 0;
       for (Face face in faces) {
-        Color color = Get.theme.colorScheme.primary;
-        if(face.headEulerAngleY! > 35 || face.headEulerAngleY! < -35){
-          color = Get.theme.colorScheme.error;
+        i++;
+        Color color = Colors.greenAccent;
+        if (i > 1 ||
+            face.headEulerAngleY! > 35 ||
+            face.headEulerAngleY! < -35) {
+          color = colorScheme.error;
         }
 
-        canvas.drawRRect(
-          RRect.fromLTRBR(
-            camDirection == CameraLensDirection.front
-                ? (imageSize.width - face.boundingBox.right) * scaleX
-                : face.boundingBox.left * scaleX,
-            face.boundingBox.top * scaleY,
-            camDirection == CameraLensDirection.front
-                ? (imageSize.width - face.boundingBox.left) * scaleX
-                : face.boundingBox.right * scaleX,
-            face.boundingBox.bottom * scaleY,
-            const Radius.circular(10),
-          ),
-          paint..color = color,
-        );
+        final path = facePath(face.boundingBox, scaleX, scaleY);
+        canvas.drawPath(path, paint..color = color);
       }
     } else {
-      recognitionResults!.forEach((key, value){
+      recognitionResults!.forEach((key, value) {
         String text = '';
         Color color;
 
         if (value.userOrNot is String) {
-          text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
-          color = Get.theme.colorScheme.error;
+          // text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
+          text = 'Unknown';
+          color = colorScheme.error;
         } else {
-          text = '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
-          color = Get.theme.colorScheme.primary;
+          text = '${value.userOrNot.userId}';
+          color = Colors.green.shade600;
         }
 
         TextSpan span = TextSpan(
-          style: TextStyle(
-            color: Colors.black,
-            backgroundColor: Colors.white.withAlpha(155),
-            fontSize: 15,
+          style: textTheme.labelSmall!.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            backgroundColor: text == 'Unknown'? colorScheme.error.withOpacity(0.4) : Colors.black.withOpacity(0.3),
           ),
           text: text,
         );
         TextPainter tp = TextPainter(
           text: span,
-          textAlign: TextAlign.left,
+          textAlign: TextAlign.center,
           textDirection: TextDirection.ltr,
         );
         tp.layout();
         tp.paint(
-            canvas, Offset(value.position.left * scaleX, value.position.top * scaleY));
+            canvas,
+            Offset(
+                value.position.left * scaleX, value.position.bottom * scaleY-5));
 
-        canvas.drawRRect(
-          RRect.fromLTRBR(
-            camDirection == CameraLensDirection.front
-                ? (imageSize.width - value.position.right) * scaleX
-                : value.position.left * scaleX,
-            value.position.top * scaleY,
-            camDirection == CameraLensDirection.front
-                ? (imageSize.width - value.position.left) * scaleX
-                : value.position.right * scaleX,
-            value.position.bottom * scaleY,
-            const Radius.circular(10),
-          ),
-          paint..color = color,
-        );
+        final path = facePath(value.position, scaleX, scaleY);
+        canvas.drawPath(path, paint..color = color);
       });
     }
+  }
+
+  Path facePath(Rect rect, double scaleX, double scaleY) {
+    final rectWidth = rect.right * scaleX - rect.left * scaleX;
+    final radius = rectWidth * 0.07;
+    final extend = radius * 2.5;
+    final arcSize = Size.square(radius * 2);
+
+    // canvas.translate(
+    //     face.boundingBox.left * scaleX, face.boundingBox.top * scaleY);
+    final path = Path();
+    Path singlePath = Path();
+    for (var i = 0; i < 4; i++) {
+      final l = i & 1 == 0;
+      final t = i & 2 == 0;
+      singlePath
+        ..moveTo(l ? 0 : rectWidth, t ? extend : rectWidth - extend)
+        ..arcTo(
+            Offset(l ? 0 : rectWidth - arcSize.width,
+                    t ? 0 : rectWidth - arcSize.width) &
+                arcSize,
+            l ? pi : pi * 2,
+            l == t ? pi / 2 : -pi / 2,
+            false)
+        ..lineTo(l ? extend : rectWidth - extend, t ? 0 : rectWidth);
+    }
+    path.addPath(
+      singlePath,
+      Offset(rect.left * scaleX, rect.top * scaleY),
+    );
+
+    return path;
   }
 
   @override
   bool shouldRepaint(FaceDetectorPainter oldDelegate) {
     return true;
   }
+
+  /// OLD RECTANGLE CODE
+// canvas.drawRRect(
+//   RRect.fromLTRBR(
+//     camDirection == CameraLensDirection.front
+//         ? (imageSize.width - face.boundingBox.right) * scaleX
+//         : face.boundingBox.left * scaleX,
+//     face.boundingBox.top * scaleY,
+//     camDirection == CameraLensDirection.front
+//         ? (imageSize.width - face.boundingBox.left) * scaleX
+//         : face.boundingBox.right * scaleX,
+//     face.boundingBox.bottom * scaleY,
+//     const Radius.circular(10),
+//   ),
+//   paint..color = color,
+// );
 }

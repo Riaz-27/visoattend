@@ -6,9 +6,12 @@ import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
 import 'package:visoattend/views/pages/detailed_classroom_page.dart';
 import 'package:visoattend/views/widgets/custom_text_form_field.dart';
 
+import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
 import '../../models/classroom_model.dart';
+import '../widgets/custom_button.dart';
+import 'create_edit_classroom_page.dart';
 
 class AllClassroomPage extends StatelessWidget {
   const AllClassroomPage({super.key});
@@ -18,7 +21,7 @@ class AllClassroomPage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
     final searchController = TextEditingController();
-    final cloudFirestoreController = Get.find<CloudFirestoreController>()..filterSearchResult('');
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     final classroomList = cloudFirestoreController.filteredClassroom;
 
@@ -43,7 +46,7 @@ class AllClassroomPage extends StatelessWidget {
               CustomTextFormField(
                 labelText: 'Search Class',
                 controller: searchController,
-                onChanged: (value) => cloudFirestoreController.filterSearchResult(value),
+                onChanged: (value) => cloudFirestoreController.filterAllClassesSearchResult(value),
               ),
               verticalGap(height * percentGapMedium),
               Expanded(
@@ -67,62 +70,62 @@ class AllClassroomPage extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget _buildCustomCard({
-  required ClassroomModel classroom,
-}) {
-  final height = Get.height;
-  final width = Get.width;
+  Widget _buildCustomCard({
+    required ClassroomModel classroom,
+  }) {
+    final height = Get.height;
+    final width = Get.width;
 
-  return Container(
-    margin: EdgeInsets.only(bottom: height * percentGapSmall),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(15),
-      color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(15.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    classroom.courseTitle,
+                    style: Get.textTheme.titleSmall!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    classroom.courseCode,
+                    style: Get.textTheme.titleSmall!.copyWith(
+                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            horizontalGap(width * percentGapVerySmall),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  classroom.courseTitle,
+                  classroom.section,
                   style: Get.textTheme.titleSmall!
                       .copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  classroom.courseCode,
+                  classroom.session,
                   style: Get.textTheme.titleSmall!.copyWith(
                     color: Get.theme.colorScheme.onBackground.withAlpha(150),
                   ),
                 ),
               ],
             ),
-          ),
-          horizontalGap(width * percentGapVerySmall),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                classroom.section,
-                style: Get.textTheme.titleSmall!
-                    .copyWith(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                classroom.session,
-                style: Get.textTheme.titleSmall!.copyWith(
-                  color: Get.theme.colorScheme.onBackground.withAlpha(150),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
