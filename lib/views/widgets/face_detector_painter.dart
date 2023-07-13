@@ -40,9 +40,10 @@ class FaceDetectorPainter extends CustomPainter {
       for (Face face in faces) {
         i++;
         Color color = Colors.greenAccent;
+        final faceAngle = face.headEulerAngleY!;
         if (i > 1 ||
-            face.headEulerAngleY! > 35 ||
-            face.headEulerAngleY! < -35) {
+            faceAngle > 35 ||
+            faceAngle < -35 || (faceAngle > -15 && faceAngle <-10) || (faceAngle < 15 && faceAngle >10) ) {
           color = colorScheme.error;
         }
 

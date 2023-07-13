@@ -28,6 +28,19 @@ class PeoplePage extends GetView<AttendanceController> {
     final studentsList = classroom.students
       ..sort((a, b) => a['userId'].compareTo(b['userId']));
 
+    final studentImageLinks = studentsList
+        .map((user) async => await Get.find<ProfilePicController>()
+            .getUserProfilePic(userAuthUid: user['authUid']))
+        .toList();
+    final cRImageLinks = classroom.cRs
+        .map((user) async => await Get.find<ProfilePicController>()
+            .getUserProfilePic(userAuthUid: user['authUid']))
+        .toList();
+    final teacherImageLinks = classroom.teachers
+        .map((user) async => await Get.find<ProfilePicController>()
+            .getUserProfilePic(userAuthUid: user['authUid']))
+        .toList();
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
@@ -145,6 +158,7 @@ class PeoplePage extends GetView<AttendanceController> {
                         _buildUsersList(
                           studentsList[index],
                           userRole: 'Student',
+                          studentImageLinks[index]
                         ),
                         if (studentsList.length > 1)
                           const Divider(
@@ -165,6 +179,7 @@ class PeoplePage extends GetView<AttendanceController> {
   Widget _buildUsersList(
     Map<String, dynamic> user, {
     required String userRole,
+    required String picUrl,
     bool forTeacher = false,
   }) {
     final classroom = controller.classroomData;
@@ -172,9 +187,6 @@ class PeoplePage extends GetView<AttendanceController> {
     final width = Get.width;
     final textTheme = Get.textTheme;
     final colorScheme = Get.theme.colorScheme;
-
-    String picUrl =
-        'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7';
 
     final isTeacher = controller.currentUserRole == 'Teacher';
 

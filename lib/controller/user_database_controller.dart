@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
+import 'package:visoattend/controller/profile_pic_controller.dart';
 import 'package:visoattend/models/user_model.dart';
 
 import '../services/isar_service.dart';
@@ -22,6 +23,12 @@ class UserDatabaseController extends GetxController {
   final _isLeft = false.obs;
 
   bool get isLeft => _isLeft.value;
+
+  void resetValues(){
+    _isFront(false);
+    _isRight(false);
+    _isLeft(false);
+  }
 
   Future<bool> saveUser(IsarUser newUser) async {
     final isar = await isarService.db;
@@ -90,19 +97,20 @@ class UserDatabaseController extends GetxController {
     }
   }
 
-  Future<bool> registerNewUserToFirestore(UserModel user) async {
+  Future<bool> registerRetrainUserToFirestore(UserModel user, {bool retrainModel = false}) async {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final authController = Get.find<AuthController>();
+    final profilePicController = Get.find<ProfilePicController>();
 
-    await faceDetectorController.doFaceDetectionOnFrame(
-      cameraServiceController.cameraImage,
-      cameraServiceController.cameraRotation!,
-    );
+    // await faceDetectorController.doFaceDetectionOnFrame(
+    //   cameraServiceController.cameraImage,
+    //   cameraServiceController.cameraRotation!,
+    // );
     final faceAngle = faceDetectorController.faces[0].headEulerAngleY!;
-    final emb = await recognitionController.performRecognitionOnIsolate(
+    final emb = await recognitionController.performRecognitionOnIsolateFirestore(
       cameraImage: cameraServiceController.cameraImage,
       faces: faceDetectorController.faces,
       cameraLensDirection: cameraServiceController.cameraLensDirection,
@@ -121,17 +129,24 @@ class UserDatabaseController extends GetxController {
     }
 
     if (_isFront.value && _isLeft.value && _isRight.value) {
-      final userCredential =
-          await authController.createUserWithEmailAndPassword(
-              email: user.email, password: authController.tempPassword);
-      if (userCredential != null) {
-        cameraServiceController.isBusy = true;
-        await cameraServiceController.cameraController.stopImageStream();
-        cameraServiceController.isStopped = true;
-        user.authUid = userCredential.user!.uid;
-        cloudFirestoreController.addUserDataToFirestore(user);
-        cloudFirestoreController.currentUser = user;
-        authController.tempPassword = '';
+      //Stopping camera service
+      cameraServiceController.isBusy = true;
+      await cameraServiceController.cameraController.stopImageStream();
+      cameraServiceController.isStopped = true;
+
+      if(retrainModel){
+        await cloudFirestoreController.updateUserData(user);
+      } else {
+        final userCredential =
+            await authController.createUserWithEmailAndPassword(
+                email: user.email, password: authController.tempPassword);
+        if (userCredential != null) {
+          user.authUid = userCredential.user!.uid;
+          user.profilePic = await profilePicController.uploadDefaultImage(userCredential.user!.uid);
+          await cloudFirestoreController.addUserDataToFirestore(user);
+          authController.tempPassword = '';
+          cloudFirestoreController.initialize();
+        }
       }
       return true;
     }

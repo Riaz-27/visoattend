@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:visoattend/helper/functions.dart';
+import 'package:visoattend/views/pages/profile_pages/account_details_page.dart';
+import 'package:visoattend/views/pages/profile_pages/change_password_page.dart';
 
 import '../../../controller/auth_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../controller/profile_pic_controller.dart';
 import '../../../helper/constants.dart';
 import '../auth_page.dart';
+import '../face_register_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -21,7 +25,6 @@ class ProfilePage extends StatelessWidget {
     final profilePicController = Get.find<ProfilePicController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
-    final picUrl = profilePicController.profilePicUrl;
     final currentUser = cloudFirestoreController.currentUser;
 
     return Scaffold(
@@ -39,110 +42,165 @@ class ProfilePage extends StatelessWidget {
             right: height * percentGapSmall,
             left: height * percentGapSmall,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              verticalGap(height * percentGapLarge),
-              //Center photo
-              Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: 102,
-                      height: 102,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: colorScheme.surfaceTint, width: 3),
-                      ),
-                    ),
-                    Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          fit: BoxFit.cover,
-                          image: NetworkImage(picUrl),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                verticalGap(height * percentGapLarge),
+                //Center photo
+                Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 102,
+                        height: 102,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: colorScheme.surfaceTint, width: 3),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: -3,
-                      right: -3,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Icon(
-                            Icons.circle_rounded,
-                            color: colorScheme.secondary,
-                            size: 45,
+                      Obx(() {
+                        final picUrl = profilePicController.profilePicUrl;
+                        return Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(picUrl),
+                            ),
                           ),
-                          Icon(
-                            Icons.add_a_photo_outlined,
-                            color: colorScheme.surface,
-                            size: 20,
-                          ),
-                        ],
+                        );
+                      }),
+                      _handleImageChangeButton(),
+                    ],
+                  ),
+                ),
+                verticalGap(height * percentGapSmall),
+                Text(
+                  currentUser.name,
+                  textAlign: TextAlign.center,
+                  style: textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Text(
+                  currentUser.userId,
+                  textAlign: TextAlign.center,
+                  style: textTheme.titleSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                    color: textTheme.bodySmall!.color,
+                  ),
+                ),
+                verticalGap(height * percentGapMedium),
+                Divider(
+                  height: 0,
+                  color: colorScheme.outline.withOpacity(0.4),
+                  thickness: 0.5,
+                ),
+                verticalGap(height * percentGapSmall),
+                _optionsWidget(
+                  onTap: () {
+                    Get.to(
+                      () => FaceRegisterPage(
+                        user: currentUser,
+                        retrainModel: true,
                       ),
-                    ),
-                  ],
+                    );
+                  },
+                  Icons.face_retouching_natural_outlined,
+                  'Retrain Face Model',
                 ),
-              ),
-              verticalGap(height * percentGapSmall),
-              Text(
-                currentUser.name,
-                textAlign: TextAlign.center,
-                style: textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                verticalGap(height * percentGapSmall),
+                _optionsWidget(
+                  onTap: () => Get.to(() => const AccountDetailsPage()),
+                  Icons.account_circle_rounded,
+                  'Account Details',
                 ),
-              ),
-              Text(
-                currentUser.userId,
-                textAlign: TextAlign.center,
-                style: textTheme.titleSmall!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                  color: textTheme.bodySmall!.color,
+                verticalGap(height * percentGapSmall),
+                _optionsWidget(
+                  onTap: () => Get.to(() => const ChangePasswordPage()),
+                  Icons.lock_outline_rounded,
+                  'Change Password',
                 ),
-              ),
-              verticalGap(height * percentGapMedium),
-              Divider(
-                height: 0,
-                color: colorScheme.outline.withOpacity(0.4),
-                thickness: 0.5,
-              ),
-              verticalGap(height * percentGapSmall),
-              _optionsWidget(
-                Icons.face_retouching_natural_outlined,
-                'Retrain Face Model',
-              ),
-              verticalGap(height * percentGapSmall),
-              _optionsWidget(
-                Icons.account_circle_rounded,
-                'Account Details',
-              ),
-              verticalGap(height * percentGapSmall),
-              _optionsWidget(
-                Icons.password,
-                'Change Password',
-              ),
-              verticalGap(height * percentGapMedium),
-              Divider(
-                height: 0,
-                color: colorScheme.outline.withOpacity(0.4),
-                thickness: 0.5,
-              ),
-              verticalGap(height * percentGapSmall),
-              _optionsWidget(onTap: () async {
-                await Get.find<AuthController>().signOut();
-                cloudFirestoreController.isInitialized = false;
-                Get.offAll(() => const AuthPage());
-              }, Icons.logout_rounded, 'Logout', color: colorScheme.error),
-            ],
+                verticalGap(height * percentGapMedium),
+                Divider(
+                  height: 0,
+                  color: colorScheme.outline.withOpacity(0.4),
+                  thickness: 0.5,
+                ),
+                verticalGap(height * percentGapSmall),
+                _optionsWidget(
+                  onTap: () => showConfirmDialog(context),
+                  Icons.logout_rounded,
+                  'Logout',
+                  color: colorScheme.error,
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _handleImageChangeButton() {
+    final colorScheme = Get.theme.colorScheme;
+    final textTheme = Get.theme.textTheme;
+    final height = Get.height;
+    final width = Get.width;
+
+    return Positioned(
+      bottom: -3,
+      right: -3,
+      child: PopupMenuButton(
+        position: PopupMenuPosition.under,
+        tooltip: 'Change Image',
+        itemBuilder: (BuildContext context) => [
+          const PopupMenuItem(
+            value: 'camera',
+            child: Text('Camera'),
+          ),
+          const PopupMenuItem(
+            value: 'gallery',
+            child: Text('Gallery'),
+          ),
+        ],
+        onSelected: (value) {
+          final profilePicController = Get.find<ProfilePicController>();
+          if (value == 'camera') {
+            profilePicController.pickUploadImage(ImageSource.camera);
+          } else {
+            profilePicController.pickUploadImage(ImageSource.gallery);
+          }
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colorScheme.surface,
+              ),
+            ),
+            Icon(
+              Icons.circle_rounded,
+              color: colorScheme.secondary,
+              size: 45,
+            ),
+            Icon(
+              Icons.add_a_photo_outlined,
+              color: colorScheme.surface,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
@@ -157,36 +215,79 @@ class ProfilePage extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: kSmall),
-        child: Row(
-          children: [
-            Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: colorScheme.surfaceVariant.withAlpha(100),
+      child: Container(
+        color: colorScheme.surface,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: kSmall),
+          child: Row(
+            children: [
+              Container(
+                height: 40,
+                width: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: colorScheme.surfaceVariant.withAlpha(100),
+                ),
+                child: Icon(
+                  icon,
+                  size: 25,
+                  color: colorScheme.secondary,
+                ),
               ),
-              child: Icon(
-                icon,
-                size: 25,
-                color: colorScheme.secondary,
+              horizontalGap(width * percentGapMedium),
+              Text(
+                text,
+                style: textTheme.titleSmall!.copyWith(color: color),
               ),
-            ),
-            horizontalGap(width * percentGapMedium),
-            Text(
-              text,
-              style: textTheme.titleSmall!.copyWith(color: color),
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-            ),
-          ],
+              const Spacer(),
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  void showConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Logout',
+            style: Get.textTheme.titleMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: Get.width,
+            child: Text(
+              'Do you really want to logout?',
+              style: Get.textTheme.bodyMedium,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await Get.find<AuthController>().signOut();
+                Get.find<CloudFirestoreController>().isInitialized = false;
+                Get.offAll(() => const AuthPage());
+              },
+              child: Text(
+                'Yes',
+                style: Get.theme.textTheme.bodyMedium!
+                    .copyWith(color: Get.theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('No'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
 
 import 'package:visoattend/controller/auth_controller.dart';
+import 'package:visoattend/controller/profile_pic_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
@@ -116,21 +117,33 @@ class CloudFirestoreController extends GetxController {
         .doc(currentAuthUser.uid)
         .get();
     if (userDoc.data() != null) {
-      _currentUser(UserModel.fromJson(userDoc.data()!));
+      final user = UserModel.fromJson(userDoc.data()!);
+      _currentUser(user);
+      Get.find<ProfilePicController>().profilePicUrl = user.profilePic;
     }
   }
 
-  void addUserDataToFirestore(UserModel user) async {
-    final userData = await getUserDataFromFirestore(user.userId);
-    if (userData == null) {
-      try {
-        await _firestoreInstance
-            .collection(userCollection)
-            .doc(user.authUid)
-            .set(user.toJson());
-      } catch (e) {
-        dev.log(e.toString());
-      }
+  Future<void> addUserDataToFirestore(UserModel user) async {
+    try {
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(user.authUid)
+          .set(user.toJson());
+      _currentUser.value = user;
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
+  Future<void> updateUserData(UserModel user) async {
+    try {
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(user.authUid)
+          .update(user.toJson());
+      _currentUser.value = user;
+    } catch (e) {
+      dev.log(e.toString());
     }
   }
 

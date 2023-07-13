@@ -16,6 +16,7 @@ class CustomTextField extends StatelessWidget {
     this.disableBorder = false,
     this.icon,
     this.onChanged,
+    this.contentPadding,
   }) : super(key: key);
 
   final String? hintText;
@@ -29,6 +30,7 @@ class CustomTextField extends StatelessWidget {
   final bool disableBorder;
   final Icon? icon;
   final void Function(String)? onChanged;
+  final EdgeInsetsGeometry? contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,7 @@ class CustomTextField extends StatelessWidget {
       onChanged: onChanged,
       style: style,
       decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        contentPadding:contentPadding?? const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         hintText: hintText,
         hintStyle: hintStyle ?? textTheme.bodySmall,
         labelText: labelText,

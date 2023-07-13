@@ -256,6 +256,8 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
       }
       final key = face.trackingId!;
       recognitionResults[key] = recognitionResult;
+    } else {
+      break;
     }
   }
 

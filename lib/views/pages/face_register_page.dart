@@ -14,14 +14,18 @@ import '../../models/user_model.dart';
 import '../widgets/face_detector_painter.dart';
 
 class FaceRegisterPage extends StatelessWidget {
-  const FaceRegisterPage({Key? key, required this.user}) : super(key: key);
+  const FaceRegisterPage(
+      {Key? key, required this.user, this.retrainModel = false})
+      : super(key: key);
   final UserModel user;
+  final bool retrainModel;
 
   @override
   Widget build(BuildContext context) {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
-    final userDatabaseController = Get.find<UserDatabaseController>();
+    final userDatabaseController = Get.find<UserDatabaseController>()
+      ..resetValues();
     cameraServiceController.isSignUp = true;
     final size = Get.size;
     final colorScheme = Get.theme.colorScheme;
@@ -121,9 +125,13 @@ class FaceRegisterPage extends StatelessWidget {
                   flex: 1,
                   child: GestureDetector(
                     onTap: () async {
-                      final registerSuccess = await userDatabaseController
-                          .registerNewUserToFirestore(user);
-                      if (registerSuccess) {
+                      final registerRetrainSuccess = await userDatabaseController
+                          .registerRetrainUserToFirestore(user, retrainModel: retrainModel);
+                      if (registerRetrainSuccess) {
+                        if(retrainModel) {
+                          Get.back();
+                          return;
+                        }
                         Get.offAll(() => const AuthPage());
                       }
                     },

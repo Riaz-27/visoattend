@@ -126,7 +126,9 @@ class RecognitionController extends GetxController {
         users: users,
         cameraLensDirection: cameraLensDirection);
     _performedRecognition(true);
-    _recognitionResults.value = result;
+    if (!isRegistration) {
+      _recognitionResults.value = result;
+    }
     final pre = DateTime.now().millisecondsSinceEpoch;
     log('Total Time: ${pre - pres}');
     return result;

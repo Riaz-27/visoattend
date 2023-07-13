@@ -96,9 +96,14 @@ class LoginRegisterPage extends StatelessWidget {
         authController.tempPassword = password;
         final user = UserModel(
           authUid: 'null',
+          profilePic: '',
           userId: userId,
           name: name,
           email: email,
+          mobile: '',
+          gender: '',
+          semesterOrDesignation: '',
+          department: '',
           classrooms: {},
           faceDataFront: [],
           faceDataLeft: [],
@@ -125,7 +130,7 @@ class LoginRegisterPage extends StatelessWidget {
           );
           cloudFirestoreController.currentUser = userData!;
           cloudFirestoreController.getUserClassrooms();
-          Get.to(()=> const AuthPage());
+          Get.offAll(() => const AuthPage());
         } else {
           Get.snackbar(
             'Invalid user',
@@ -276,27 +281,29 @@ class LoginRegisterPage extends StatelessWidget {
                     ),
                     verticalGap(height * percentGapMedium),
                   ],
-                  Obx(() {
-                    return authController.isLoading
-                        ? const SizedBox(
-                            height: 25,
-                            width: 25,
-                            child: CircularProgressIndicator(),
-                          )
-                        : CustomButton(
-                            text: isSignUp ? 'Sign Up' : 'Sign In',
-                            onPressed: () async {
-                              authController.isLoading = true;
-                              await validateEmail(emailController.text);
-                              await validateUser(userIdController.text);
-                              if (formKey.currentState!.validate()) {
-                                await handleSignInOrSignUp();
-                              } else {
-                                authController.isLoading = false;
-                              }
-                            },
-                          );
-                  }),
+                  Obx(
+                    () {
+                      return authController.isLoading
+                          ? const SizedBox(
+                              height: 25,
+                              width: 25,
+                              child: CircularProgressIndicator(),
+                            )
+                          : CustomButton(
+                              text: isSignUp ? 'Sign Up' : 'Sign In',
+                              onPressed: () async {
+                                authController.isLoading = true;
+                                await validateEmail(emailController.text);
+                                await validateUser(userIdController.text);
+                                if (formKey.currentState!.validate()) {
+                                  await handleSignInOrSignUp();
+                                } else {
+                                  authController.isLoading = false;
+                                }
+                              },
+                            );
+                    },
+                  ),
                   verticalGap(height * percentGapSmall),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,

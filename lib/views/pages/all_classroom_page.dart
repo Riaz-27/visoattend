@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
-import 'package:visoattend/views/pages/detailed_classroom_page.dart';
-import 'package:visoattend/views/widgets/custom_text_form_field.dart';
 
-import '../../controller/classroom_controller.dart';
+import '../../helper/functions.dart';
+import '../../views/pages/detailed_classroom_page.dart';
+import '../../views/widgets/custom_text_form_field.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
 import '../../models/classroom_model.dart';
-import '../widgets/custom_button.dart';
-import 'create_edit_classroom_page.dart';
+
 
 class AllClassroomPage extends StatelessWidget {
   const AllClassroomPage({super.key});
@@ -37,9 +33,11 @@ class AllClassroomPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              verticalGap(height * percentGapSmall),
               CustomTextFormField(
                 labelText: 'Search Class',
                 controller: searchController,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                 onChanged: (value) => cloudFirestoreController
                     .filterAllClassesSearchResult(value),
               ),
@@ -86,7 +84,7 @@ class AllClassroomPage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
               child: Column(

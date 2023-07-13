@@ -55,7 +55,7 @@ class DetailedHomePage extends GetView<NavigationController> {
           forceMaterialTransparency: true,
           title: Column(
             children: [
-              verticalGap(height*percentGapSmall),
+              verticalGap(height * percentGapSmall),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -68,8 +68,10 @@ class DetailedHomePage extends GetView<NavigationController> {
                             cloudFirestoreController.currentUser.name;
                         return Text(
                           'Welcome, $userName',
-                          style: Get.textTheme.titleMedium!
-                              .copyWith(fontWeight: FontWeight.bold),
+                          style: Get.textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Get.theme.colorScheme.onSurface,
+                          ),
                         );
                       }),
                       verticalGap(height * percentGapVerySmall),
@@ -82,13 +84,12 @@ class DetailedHomePage extends GetView<NavigationController> {
                     ],
                   ),
                   Obx(() {
-                    final picUrl =
-                        Get.find<ProfilePicController>().profilePicUrl;
+                    final picUrl = Get.find<ProfilePicController>().profilePicUrl;
                     return GestureDetector(
-                      onTap: () => Get.to(()=>const ProfilePage()),
+                      onTap: () => Get.to(() => const ProfilePage()),
                       child: Container(
-                        width: 35,
-                        height: 35,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
@@ -108,7 +109,7 @@ class DetailedHomePage extends GetView<NavigationController> {
           return navigationPages[controller.selectedHomeIndex];
         }),
         floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom:15, right: 8),
+          padding: const EdgeInsets.only(bottom: 15, right: 8),
           child: FloatingActionButton(
             onPressed: () {
               Get.bottomSheet(

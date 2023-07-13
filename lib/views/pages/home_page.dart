@@ -131,9 +131,12 @@ class HomePage extends StatelessWidget {
   }) {
     final height = Get.height;
 
-    final weekTime = classroom
+    final weekStartTime = classroom
         .weekTimes[DateFormat('EEEE').format(DateTime.now())]['startTime'];
-    final startTime = DateFormat.jm().format(DateTime.parse(weekTime));
+    final weekEndTime = classroom
+        .weekTimes[DateFormat('EEEE').format(DateTime.now())]['endTime'];
+    final startTime = DateFormat.jm().format(DateTime.parse(weekStartTime));
+    final endTime = DateFormat.jm().format(DateTime.parse(weekEndTime));
 
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
@@ -154,6 +157,7 @@ class HomePage extends StatelessWidget {
                     classroom.courseTitle,
                     style: Get.textTheme.titleSmall!
                         .copyWith(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   verticalGap(height * percentGapVerySmall),
                   Text(
@@ -194,7 +198,7 @@ class HomePage extends StatelessWidget {
                 }),
                 verticalGap(height * percentGapVerySmall),
                 Text(
-                  startTime,
+                  '$startTime - $endTime',
                   style: Get.textTheme.titleSmall!.copyWith(
                       color: Get.theme.colorScheme.onBackground.withAlpha(150)),
                 ),
