@@ -12,12 +12,21 @@ class CustomInput extends StatelessWidget {
     required this.title,
     this.isPassword = false,
     this.enableTextField = true,
+    this.onChanged,
+    this.validator,
+    this.focusNode,
+    this.readOnly = false, this.onSubmitted,
   });
 
   final TextEditingController controller;
   final String title;
   final bool isPassword;
   final bool enableTextField;
+  final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
+  final String? Function(String?)? validator;
+  final FocusNode? focusNode;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +52,11 @@ class CustomInput extends StatelessWidget {
         CustomTextFormField(
           controller: controller,
           enabled: enableTextField,
+          onChanged: onChanged,
+          readOnly: readOnly,
+          validator: validator,
+          focusNode: focusNode,
+          onSubmitted: onSubmitted,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
           style: textTheme.bodyMedium,

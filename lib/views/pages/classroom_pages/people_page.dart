@@ -11,6 +11,7 @@ import '../../../controller/attendance_controller.dart';
 import '../../../controller/profile_pic_controller.dart';
 import '../../../helper/functions.dart';
 import '../../../models/classroom_model.dart';
+import '../../../models/user_model.dart';
 
 class PeoplePage extends GetView<AttendanceController> {
   const PeoplePage({super.key});
@@ -25,21 +26,6 @@ class PeoplePage extends GetView<AttendanceController> {
 
     final currentUserRole = controller.currentUserRole;
 
-    final studentsList = classroom.students
-      ..sort((a, b) => a['userId'].compareTo(b['userId']));
-
-    final studentImageLinks = studentsList
-        .map((user) async => await Get.find<ProfilePicController>()
-            .getUserProfilePic(userAuthUid: user['authUid']))
-        .toList();
-    final cRImageLinks = classroom.cRs
-        .map((user) async => await Get.find<ProfilePicController>()
-            .getUserProfilePic(userAuthUid: user['authUid']))
-        .toList();
-    final teacherImageLinks = classroom.teachers
-        .map((user) async => await Get.find<ProfilePicController>()
-            .getUserProfilePic(userAuthUid: user['authUid']))
-        .toList();
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -64,16 +50,16 @@ class PeoplePage extends GetView<AttendanceController> {
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: classroom.teachers.length,
+                  itemCount: controller.teachersData.length,
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
                         _buildUsersList(
-                          classroom.teachers[index],
+                          controller.teachersData[index],
                           userRole: 'Teacher',
                           forTeacher: true,
                         ),
-                        if (classroom.teachers.length > 1)
+                        if (controller.teachersData.length > 1)
                           const Divider(
                             thickness: 0.3,
                           )
@@ -108,15 +94,15 @@ class PeoplePage extends GetView<AttendanceController> {
                   child: ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
-                    itemCount: classroom.cRs.length,
+                    itemCount: controller.cRsData.length,
                     itemBuilder: (context, index) {
                       return Column(
                         children: [
                           _buildUsersList(
-                            classroom.cRs[index],
+                            controller.cRsData[index],
                             userRole: 'CR',
                           ),
-                          if (classroom.cRs.length > 1)
+                          if (controller.cRsData.length > 1)
                             const Divider(
                               thickness: 0.3,
                             )
@@ -151,16 +137,15 @@ class PeoplePage extends GetView<AttendanceController> {
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: studentsList.length,
+                  itemCount: controller.studentsData.length,
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
                         _buildUsersList(
-                          studentsList[index],
+                          controller.studentsData[index],
                           userRole: 'Student',
-                          studentImageLinks[index]
                         ),
-                        if (studentsList.length > 1)
+                        if (controller.studentsData.length > 1)
                           const Divider(
                             thickness: 0.3,
                           )
@@ -177,9 +162,9 @@ class PeoplePage extends GetView<AttendanceController> {
   }
 
   Widget _buildUsersList(
-    Map<String, dynamic> user, {
+    UserModel user, {
     required String userRole,
-    required String picUrl,
+    // required String picUrl,
     bool forTeacher = false,
   }) {
     final classroom = controller.classroomData;
@@ -196,8 +181,8 @@ class PeoplePage extends GetView<AttendanceController> {
     return InkWell(
       onTap: () {
         if (!isTeacher ||
-            currentUserAuthUid == user['authUid'] ||
-            user['authUid'] == classroom.teachers.first['authUid']) {
+            currentUserAuthUid == user.authUid ||
+            user.authUid == controller.teachersData.first.authUid) {
           return;
         }
         Get.find<CloudFirestoreController>().selectedUserRole = userRole;
@@ -206,7 +191,7 @@ class PeoplePage extends GetView<AttendanceController> {
       child: Container(
         color: colorScheme.surface,
         child: Obx(() {
-          final percent = controller.getUserAttendancePercent(user['authUid']);
+          final percent = controller.getUserAttendancePercent(user.authUid);
           Color color = colorScheme.primary;
           String status = 'Collegiate';
           if (percent < 0.6) {
@@ -223,7 +208,7 @@ class PeoplePage extends GetView<AttendanceController> {
               isTeacher
                   ? CircularPercentIndicator(
                       radius: 22,
-                      lineWidth: 5,
+                      lineWidth: 3,
                       percent: forTeacher
                           ? 0
                           : percent == 0
@@ -234,13 +219,13 @@ class PeoplePage extends GetView<AttendanceController> {
                       backgroundColor: colorScheme.onBackground.withAlpha(15),
                       animation: true,
                       center: Container(
-                        width: 32,
-                        height: 32,
+                        width: 35,
+                        height: 35,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
                             fit: BoxFit.cover,
-                            image: NetworkImage(picUrl),
+                            image: NetworkImage(user.profilePic),
                           ),
                         ),
                       ),
@@ -252,7 +237,7 @@ class PeoplePage extends GetView<AttendanceController> {
                         shape: BoxShape.circle,
                         image: DecorationImage(
                           fit: BoxFit.cover,
-                          image: NetworkImage(picUrl),
+                          image: NetworkImage(user.profilePic),
                         ),
                       ),
                     ),
@@ -261,11 +246,11 @@ class PeoplePage extends GetView<AttendanceController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user['name'],
+                    user.name,
                     style: textTheme.bodyMedium!,
                   ),
                   Text(
-                    user['userId'],
+                    user.userId,
                     style: textTheme.bodySmall,
                   ),
                 ],
@@ -294,7 +279,7 @@ class PeoplePage extends GetView<AttendanceController> {
     );
   }
 
-  void _handleUserPrivilege(Map<String, dynamic> user, String userRole) {
+  void _handleUserPrivilege(UserModel user, String userRole) {
     final height = Get.height;
     final width = Get.width;
     final textTheme = Get.theme.textTheme;
@@ -319,11 +304,11 @@ class PeoplePage extends GetView<AttendanceController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${user['name']}',
+              user.name,
               style: textTheme.titleLarge,
             ),
             Text(
-              '${user['userId']}',
+              user.userId,
               style: textTheme.titleSmall,
             ),
             verticalGap(height * percentGapMedium),
@@ -384,7 +369,11 @@ class PeoplePage extends GetView<AttendanceController> {
                   text: 'Confirm',
                   onPressed: () async {
                     await cloudFirestoreController.changeUserRole(
-                      user: user,
+                      user: {
+                        'authUid': user.authUid,
+                        'name': user.name,
+                        'userId': user.userId,
+                      },
                       classroom: controller.classroomData,
                       currentRole: userRole,
                     );

@@ -25,7 +25,12 @@ class AttendanceController extends GetxController {
 
   ClassroomModel get classroomData => _classroomData.value;
 
-  List<UserModel> studentsData = [];
+  final _teachersData = <UserModel>[].obs;
+  List<UserModel> get teachersData => _teachersData;
+  final _cRsData = <UserModel>[].obs;
+  List<UserModel> get cRsData => _cRsData;
+  final _studentsData = <UserModel>[].obs;
+  List<UserModel> get studentsData => _studentsData;
 
   final _currentUserRole = ''.obs;
 
@@ -131,18 +136,31 @@ class AttendanceController extends GetxController {
     }
   }
 
-  Future<void> getStudentsData() async {
+  Future<void> getUsersData() async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    List<String> allTeachersUid = [];
+    List<String> allCRsUid = [];
     List<String> allStudentsUid = [];
-    for (var student in classroomData.students + classroomData.cRs) {
+    for (var student in classroomData.teachers) {
+      allTeachersUid.add(student['authUid']);
+    }
+    _teachersData.value =
+        await cloudFirestoreController.getUsersOfClassroom(allTeachersUid);
+
+    for (var student in classroomData.cRs) {
+      allCRsUid.add(student['authUid']);
+    }
+    for (var student in classroomData.students) {
       allStudentsUid.add(student['authUid']);
     }
-    if (allStudentsUid.isEmpty) {
+    if ((allCRsUid + allStudentsUid).isEmpty) {
       print('No Students in this class');
       return;
     }
-    final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    studentsData =
-        await cloudFirestoreController.getStudentsOfClassroom(allStudentsUid);
+    _cRsData.value = await cloudFirestoreController.getUsersOfClassroom(allCRsUid);
+    _studentsData.value =
+        await cloudFirestoreController.getUsersOfClassroom(allStudentsUid);
   }
 
   Future<void> setMatchedStudents() async {
@@ -168,13 +186,13 @@ class AttendanceController extends GetxController {
       studentsData: {},
       takenBy: takenBy,
     );
-    for (var student in studentsData) {
+    for (var student in cRsData + studentsData) {
       attendanceData.studentsData[student.authUid] = 'Absent';
       if (matchedStudents.containsKey(student.authUid)) {
         attendanceData.studentsData[student.authUid] = 'Present';
       }
     }
-    for(int i=0; i<attendanceCount; i++){
+    for (int i = 0; i < attendanceCount; i++) {
       await cloudFirestoreController
           .saveAttendanceData(classroomData.classroomId, attendanceData)
           .then((attendance) => _attendances.insert(0, attendance));

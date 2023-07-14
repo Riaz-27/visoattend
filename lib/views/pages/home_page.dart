@@ -53,7 +53,6 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-
                   verticalGap(height * percentGapSmall),
                   // Running Class UI
                   Obx(() {

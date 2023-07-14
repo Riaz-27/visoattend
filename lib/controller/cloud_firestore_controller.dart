@@ -307,16 +307,15 @@ class CloudFirestoreController extends GetxController {
     _isInitialized.value = true;
   }
 
-  Future<List<UserModel>> getStudentsOfClassroom(
-      List<String> studentsUid) async {
+  Future<List<UserModel>> getUsersOfClassroom(List<String> usersUid) async {
     List<UserModel> finalList = [];
-    for (int i = 0; i < studentsUid.length; i += 10) {
+    for (int i = 0; i < usersUid.length; i += 10) {
       try {
         final collectionsRef = await _firestoreInstance
             .collection(userCollection)
             .where(FieldPath.documentId,
-                whereIn: studentsUid.sublist(i,
-                    i + 10 > studentsUid.length ? studentsUid.length : i + 10))
+                whereIn: usersUid.sublist(
+                    i, i + 10 > usersUid.length ? usersUid.length : i + 10))
             .get();
         for (var docRef in collectionsRef.docs) {
           finalList.add(UserModel.fromJson(docRef.data()));

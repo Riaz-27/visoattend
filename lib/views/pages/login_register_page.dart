@@ -96,7 +96,7 @@ class LoginRegisterPage extends StatelessWidget {
         authController.tempPassword = password;
         final user = UserModel(
           authUid: 'null',
-          profilePic: '',
+          profilePic: 'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7',
           userId: userId,
           name: name,
           email: email,

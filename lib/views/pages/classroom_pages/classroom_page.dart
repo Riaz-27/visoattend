@@ -17,9 +17,7 @@ import '../../widgets/custom_text_field.dart';
 import '../attendance_record_page.dart';
 
 class ClassroomPage extends GetView<AttendanceController> {
-  const ClassroomPage({
-    super.key,
-  });
+  const ClassroomPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -29,6 +29,7 @@ class DetailedHomePage extends GetView<NavigationController> {
     }
 
     final height = Get.height;
+    final width = Get.width;
 
     final navigationPages = [const HomePage(), const AllClassroomPage()];
 
@@ -57,8 +58,9 @@ class DetailedHomePage extends GetView<NavigationController> {
             children: [
               verticalGap(height * percentGapSmall),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  horizontalGap(width*percentGapSmall),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +69,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                         final userName =
                             cloudFirestoreController.currentUser.name;
                         return Text(
-                          'Welcome, $userName',
+                          'Hi, $userName',
                           style: Get.textTheme.titleMedium!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Get.theme.colorScheme.onSurface,
@@ -83,6 +85,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                       ),
                     ],
                   ),
+                  const Spacer(),
                   Obx(() {
                     final picUrl = Get.find<ProfilePicController>().profilePicUrl;
                     return GestureDetector(
@@ -100,6 +103,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                       ),
                     );
                   }),
+                  horizontalGap(width*percentGapMedium)
                 ],
               ),
             ],

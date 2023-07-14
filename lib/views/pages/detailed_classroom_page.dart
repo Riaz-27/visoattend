@@ -21,7 +21,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
     final attendanceController = Get.find<AttendanceController>();
     attendanceController
         .updateValues(classroomData)
-        .then((_) => attendanceController.getStudentsData());
+        .then((_) => attendanceController.getUsersData());
 
     final navigationPages = [
       const ClassroomPage(),

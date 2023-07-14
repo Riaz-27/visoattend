@@ -142,7 +142,6 @@ class UserDatabaseController extends GetxController {
                 email: user.email, password: authController.tempPassword);
         if (userCredential != null) {
           user.authUid = userCredential.user!.uid;
-          user.profilePic = await profilePicController.uploadDefaultImage(userCredential.user!.uid);
           await cloudFirestoreController.addUserDataToFirestore(user);
           authController.tempPassword = '';
           cloudFirestoreController.initialize();

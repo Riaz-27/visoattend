@@ -22,10 +22,54 @@ class AccountDetailsPage extends StatelessWidget {
     final nameController = TextEditingController(text: currentUser.name);
     final idController = TextEditingController(text: currentUser.userId);
     final emailController = TextEditingController(text: currentUser.email);
-    final mobileController = TextEditingController(text: '01812345678');
-    final genderController = TextEditingController(text: 'Male');
-    final semesterController = TextEditingController(text: '');
-    final departmentController = TextEditingController(text: 'Computer Science and Engineering');
+    final mobileController = TextEditingController(text: currentUser.mobile);
+    final genderController = TextEditingController(text: currentUser.gender);
+    final semesterOrDesignationController =
+        TextEditingController(text: currentUser.semesterOrDesignation);
+    final departmentController =
+        TextEditingController(text: currentUser.department);
+
+    final semesterDesignation = [
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '5th',
+      '6th',
+      '7th',
+      '8th',
+      'Outgoing',
+      'Chairman  & Associate Professor',
+      'Professor',
+      'Associate Professor',
+      'Assistant Professor',
+      'Lecturer',
+      'Assistant Lecturer',
+      'Medical Physicist',
+      'Adjunct Lecturer',
+    ];
+
+    final departmentOptions = [
+      'Qur\'anic Sciences and Islamic Studies (QSIS)',
+      'Da\'wah and Islamic Studies (DIS)',
+      'Science of Hadith and Islamic Studies (SHIS)',
+      'Computer Science and Engineering (CSE)',
+      'Computer and Communication Engineering (CCE)',
+      'Electrical and Electronic Engineering (EEE)',
+      'Electronic and Telecommunication Engineering (ETE)',
+      'Civil Engineering (CE)',
+      'Pharmacy',
+      'Business Administration',
+      'Economics & Banking',
+      'Department of Law',
+      'English Language and Literature (ELL)',
+      'Arabic Language and Literature (ALL)',
+      'Library and Information Science  (LIS)',
+      'Shariah and Islamic Studies',
+      'Institute of Foreign Language',
+      'Center for General Education',
+      'Morality Development Program',
+    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +77,9 @@ class AccountDetailsPage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              print('text : ${semesterOrDesignationController.text}');
+            },
             icon: Icon(Icons.check, color: colorScheme.primary),
           ),
         ],
@@ -47,10 +93,7 @@ class AccountDetailsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Account Details',
-                style: textTheme.titleMedium,
-              ),
+              Text('Account Details', style: textTheme.titleMedium),
               verticalGap(height * percentGapLarge),
               CustomInput(
                 controller: nameController,
@@ -74,14 +117,90 @@ class AccountDetailsPage extends StatelessWidget {
               verticalGap(height * percentGapSmall),
               CustomInput(controller: genderController, title: 'Gender'),
               verticalGap(height * percentGapSmall),
-              CustomInput(controller: semesterController, title: 'Semester or Designation'),
+              _autocompleteField(
+                  controller: semesterOrDesignationController,
+                  options: semesterDesignation,
+                  title: 'Semester or Designation'),
               verticalGap(height * percentGapSmall),
-              CustomInput(controller: departmentController, title: 'Department'),
-              verticalGap(height * percentGapLarge),
+              _autocompleteField(
+                  controller: departmentController,
+                  options: departmentOptions,
+                  title: 'Department'),
+              verticalGap(height * 0.3),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _autocompleteField(
+      {required TextEditingController controller,
+      required List<String> options,
+      required String title}) {
+    final colorScheme = Get.theme.colorScheme;
+    final textTheme = Get.theme.textTheme;
+    final height = Get.height;
+    final width = Get.width;
+
+    return Autocomplete<String>(
+      optionsBuilder: (textEditingValue) {
+        if (textEditingValue.text == '') {
+          return const Iterable<String>.empty();
+        }
+        return options.where((opt) =>
+            opt.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+      },
+      onSelected: (value) {
+        controller.text = value;
+      },
+      fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
+        return CustomInput(
+          controller: fieldController,
+          title: title,
+          focusNode: focusNode,
+          onChanged: (value) => controller.text = value,
+        );
+      },
+      optionsViewBuilder: (context, onSelected, optionsData) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            child: Container(
+              margin: EdgeInsets.only(top: height * percentGapVerySmall),
+              width: width * 0.9,
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceVariant.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                itemCount: optionsData.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final option = optionsData.elementAt(index);
+                  return GestureDetector(
+                    onTap: () => onSelected(option),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        verticalGap(10),
+                        Text(option, style: textTheme.bodyMedium),
+                        verticalGap(10),
+                        if (index < optionsData.length - 1)
+                          const Divider(height: 0, thickness: 0.5),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

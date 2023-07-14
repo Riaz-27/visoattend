@@ -74,7 +74,7 @@ class CameraServiceController extends GetxController {
               cameraImage: cameraImage,
               faces: faceDetectorController.faces,
               cameraLensDirection: cameraLensDirection,
-              users: attendanceController.studentsData,
+              users: (attendanceController.cRsData + attendanceController.studentsData),
             )
                 .then((value) {
               attendanceController.totalRecognized.addAll(value);

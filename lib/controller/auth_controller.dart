@@ -2,10 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'cloud_firestore_controller.dart';
+
 class AuthController extends GetxController {
   final _isLoading = false.obs;
 
   bool get isLoading => _isLoading.value;
+
   set isLoading(value) => _isLoading.value = value;
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -67,6 +70,29 @@ class AuthController extends GetxController {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  Future<String?> matchOldPassword(String oldPassword) async {
+    final email = Get.find<CloudFirestoreController>().currentUser.email;
+    final cred =
+        EmailAuthProvider.credential(email: email, password: oldPassword);
+
+    try {
+      await currentUser!.reauthenticateWithCredential(cred);
+    } catch (_){
+      return 'Invalid password';
+    }
+    return null;
+  }
+
+  Future<bool> changePassword(String newPassword) async {
+    try {
+      await
+        currentUser!.updatePassword(newPassword);
+    } catch (_) {
+      return false;
+    }
+    return true;
   }
 
   Future<void> signOut() async {
