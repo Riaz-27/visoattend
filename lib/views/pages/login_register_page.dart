@@ -102,6 +102,7 @@ class LoginRegisterPage extends StatelessWidget {
           email: email,
           mobile: '',
           gender: '',
+          dob: '',
           semesterOrDesignation: '',
           department: '',
           classrooms: {},

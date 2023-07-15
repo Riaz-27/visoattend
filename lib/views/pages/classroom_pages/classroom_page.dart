@@ -325,9 +325,9 @@ class ClassroomPage extends GetView<AttendanceController> {
               status = 'Non-Collegiate';
             }
             if (isTeacher) {
-              color = Get.theme.colorScheme.secondary;
+              color = Get.theme.colorScheme.onSurfaceVariant;
               percentText = totalClasses.toString();
-              status = 'Classes Taken';
+              status = 'Total classes';
             }
 
             return Column(
@@ -343,6 +343,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                   backgroundColor:
                       Get.theme.colorScheme.onBackground.withAlpha(15),
                   animation: true,
+                  animateFromLastPercent: true,
                   center: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

@@ -6,6 +6,7 @@ class UserModel {
   String email;
   String mobile;
   String gender;
+  String dob;
   String semesterOrDesignation;
   String department;
   Map<String,dynamic> classrooms;
@@ -21,6 +22,7 @@ class UserModel {
     required this.email,
     required this.mobile,
     required this.gender,
+    required this.dob,
     required this.semesterOrDesignation,
     required this.department,
     required this.classrooms,
@@ -38,6 +40,7 @@ class UserModel {
       email: '',
       mobile: '',
       gender: '',
+      dob: '',
       semesterOrDesignation: '',
       department: '',
       classrooms: {},
@@ -56,6 +59,7 @@ class UserModel {
       email: json['email'],
       mobile: json['mobile'],
       gender: json['gender'],
+      dob: json['dob'],
       semesterOrDesignation: json['semesterOrDesignation'],
       department: json['department'],
       classrooms: Map<String,dynamic>.from(json['classrooms']),
@@ -74,6 +78,7 @@ class UserModel {
       'email': email,
       'mobile': mobile,
       'gender': gender,
+      'dob': dob,
       'semesterOrDesignation': semesterOrDesignation,
       'department': department,
       'classrooms': classrooms,

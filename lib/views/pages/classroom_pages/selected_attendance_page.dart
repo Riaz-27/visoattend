@@ -6,6 +6,7 @@ import '../../../controller/attendance_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
 import '../../../models/attendance_model.dart';
+import '../../../models/user_model.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 
@@ -22,15 +23,12 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
     controller.selectedAttendance = attendance;
     final studentsData = controller.filteredStudents;
-    final totalStudents = controller.classroomData.cRs.length +
-        controller.classroomData.students.length;
+    final totalStudents = controller.allStudents.length;
     final attendanceDateTime =
         DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
     final classroomData = controller.classroomData;
 
     final searchController = TextEditingController();
-
-    print(controller.selectedAttendance.attendanceId);
 
     return WillPopScope(
       onWillPop: () async {
@@ -69,21 +67,22 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
           child: Obx(() {
-            final studentsText = controller.selectedCategory =='' ? '$totalStudents Students' : '${studentsData.length}/$totalStudents Students';
+            final studentsText = controller.selectedCategory == ''
+                ? '$totalStudents Students'
+                : '${studentsData.length}/$totalStudents Students';
             return Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 CustomTextField(
-                  controller: searchController,
-                  style: textTheme.labelLarge,
-                  hintText: 'Search by ID or Name',
-                  onChanged: (value) {
-                    controller.selectedCategory = '';
-                    controller.filterSearchResult(value);
-                  }
-                ),
+                    controller: searchController,
+                    style: textTheme.labelLarge,
+                    hintText: 'Search by ID or Name',
+                    onChanged: (value) {
+                      controller.selectedCategory = '';
+                      controller.filterSearchResult(value);
+                    }),
                 verticalGap(height * percentGapVerySmall),
                 _buildFilterChip(),
                 verticalGap(height * percentGapVerySmall),
@@ -161,18 +160,14 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     );
   }
 
-  Widget _buildUsersList(Map<String, dynamic> student) {
+  Widget _buildUsersList(UserModel student) {
     final height = Get.height;
     final width = Get.width;
     final textTheme = Get.textTheme;
     final colorScheme = Get.theme.colorScheme;
 
-    String picUrl =
-        'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7';
-
     final attendance = controller.selectedAttendance;
-    final studentStatus =
-        attendance.studentsData[student['authUid']] ?? 'Absent';
+    final studentStatus = attendance.studentsData[student.authUid] ?? 'Absent';
     return GestureDetector(
       onTap: () {
         controller.selectedAttendanceStatus = studentStatus;
@@ -190,7 +185,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                 shape: BoxShape.circle,
                 image: DecorationImage(
                   fit: BoxFit.cover,
-                  image: NetworkImage(picUrl),
+                  image: NetworkImage(student.profilePic),
                 ),
               ),
             ),
@@ -199,11 +194,11 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  student['name'],
+                  student.name,
                   style: textTheme.bodyMedium!,
                 ),
                 Text(
-                  student['userId'],
+                  student.userId,
                   style: textTheme.bodySmall,
                 ),
               ],
@@ -224,7 +219,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     );
   }
 
-  void _handleUpdateAttendanceStatus(Map<String, dynamic> student) {
+  void _handleUpdateAttendanceStatus(UserModel student) {
     final height = Get.height;
     final width = Get.width;
     final textTheme = Get.theme.textTheme;
@@ -247,11 +242,11 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${student['name']}',
+              student.name,
               style: textTheme.titleLarge,
             ),
             Text(
-              '${student['userId']}',
+              student.userId,
               style: textTheme.titleSmall,
             ),
             verticalGap(height * percentGapMedium),

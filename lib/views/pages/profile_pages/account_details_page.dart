@@ -1,10 +1,13 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
-import '../../widgets/custom_button.dart';
 import '../../widgets/custom_input.dart';
 
 class AccountDetailsPage extends StatelessWidget {
@@ -17,19 +20,22 @@ class AccountDetailsPage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
 
-    final currentUser = Get.find<CloudFirestoreController>().currentUser;
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final currentUser = cloudFirestoreController.currentUser;
 
     final nameController = TextEditingController(text: currentUser.name);
     final idController = TextEditingController(text: currentUser.userId);
     final emailController = TextEditingController(text: currentUser.email);
+
     final mobileController = TextEditingController(text: currentUser.mobile);
     final genderController = TextEditingController(text: currentUser.gender);
+    final dobController = TextEditingController(text: currentUser.gender);
     final semesterOrDesignationController =
         TextEditingController(text: currentUser.semesterOrDesignation);
     final departmentController =
         TextEditingController(text: currentUser.department);
 
-    final semesterDesignation = [
+    final semesterDesignationOptions = [
       '1st',
       '2nd',
       '3rd',
@@ -71,14 +77,32 @@ class AccountDetailsPage extends StatelessWidget {
       'Morality Development Program',
     ];
 
+    final genderOptions = ['Male', 'Female', 'Other'];
+
     return Scaffold(
       appBar: AppBar(
         forceMaterialTransparency: true,
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () {
-              print('text : ${semesterOrDesignationController.text}');
+            onPressed: () async {
+              cloudFirestoreController.currentUser.mobile =
+                  mobileController.text;
+              cloudFirestoreController.currentUser.gender =
+                  genderController.text;
+              cloudFirestoreController.currentUser.dob = dobController.text;
+              cloudFirestoreController.currentUser.semesterOrDesignation =
+                  semesterOrDesignationController.text;
+              cloudFirestoreController.currentUser.department =
+                  departmentController.text;
+
+              await cloudFirestoreController
+                  .updateUserData(cloudFirestoreController.currentUser)
+                  .then(
+                    (_) => Fluttertoast.showToast(
+                      msg: 'Updated details successfully',
+                    ),
+                  );
             },
             icon: Icon(Icons.check, color: colorScheme.primary),
           ),
@@ -115,11 +139,69 @@ class AccountDetailsPage extends StatelessWidget {
               verticalGap(height * percentGapSmall),
               CustomInput(controller: mobileController, title: 'Mobile Number'),
               verticalGap(height * percentGapSmall),
-              CustomInput(controller: genderController, title: 'Gender'),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Stack(
+                      alignment: Alignment.bottomLeft,
+                      children: [
+                        CustomInput(
+                          controller: genderController,
+                          title: 'Gender',
+                          readOnly: true,
+                        ),
+                        PopupMenuButton<String>(
+                          itemBuilder: (context) => genderOptions
+                              .map(
+                                (String gender) => PopupMenuItem<String>(
+                                  value: gender,
+                                  child: Text(gender),
+                                ),
+                              )
+                              .toList(),
+                          onSelected: (value) => genderController.text = value,
+                          constraints: BoxConstraints.expand(
+                              width: width * 0.4, height: 150),
+                          position: PopupMenuPosition.under,
+                          child: Container(
+                            width: width,
+                            height: 45,
+                            decoration: const BoxDecoration(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  horizontalGap(width * percentGapMedium),
+                  Expanded(
+                    flex: 3,
+                    child: CustomInput(
+                      controller: dobController,
+                      title: 'Date Of Birth',
+                      readOnly: true,
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1970),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          final dob = DateFormat('dd-MM-y').format(picked);
+                          dobController.text = dob;
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
               verticalGap(height * percentGapSmall),
               _autocompleteField(
                   controller: semesterOrDesignationController,
-                  options: semesterDesignation,
+                  options: semesterDesignationOptions,
                   title: 'Semester or Designation'),
               verticalGap(height * percentGapSmall),
               _autocompleteField(
@@ -134,10 +216,11 @@ class AccountDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _autocompleteField(
-      {required TextEditingController controller,
-      required List<String> options,
-      required String title}) {
+  Widget _autocompleteField({
+    required TextEditingController controller,
+    required List<String> options,
+    required String title,
+  }) {
     final colorScheme = Get.theme.colorScheme;
     final textTheme = Get.theme.textTheme;
     final height = Get.height;
@@ -156,7 +239,7 @@ class AccountDetailsPage extends StatelessWidget {
       },
       fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
         return CustomInput(
-          controller: fieldController,
+          controller: fieldController..text = controller.text,
           title: title,
           focusNode: focusNode,
           onChanged: (value) => controller.text = value,

@@ -21,7 +21,9 @@ class CustomTextFormField extends StatelessWidget {
     this.validator,
     this.contentPadding,
     this.fillColor,
-    this.focusNode, this.onSubmitted,
+    this.focusNode,
+    this.onSubmitted,
+    this.onTap,
   }) : super(key: key);
 
   final String? hintText;
@@ -42,6 +44,7 @@ class CustomTextFormField extends StatelessWidget {
   final EdgeInsetsGeometry? contentPadding;
   final Color? fillColor;
   final FocusNode? focusNode;
+  final void Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +56,7 @@ class CustomTextFormField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       onFieldSubmitted: onSubmitted,
+      onTap: onTap,
       style: enabled
           ? style
           : textTheme.bodyMedium!

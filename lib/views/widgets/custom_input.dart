@@ -15,7 +15,9 @@ class CustomInput extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.focusNode,
-    this.readOnly = false, this.onSubmitted,
+    this.readOnly = false,
+    this.onSubmitted,
+    this.onTap,
   });
 
   final TextEditingController controller;
@@ -27,6 +29,7 @@ class CustomInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final FocusNode? focusNode;
   final bool readOnly;
+  final void Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +60,7 @@ class CustomInput extends StatelessWidget {
           validator: validator,
           focusNode: focusNode,
           onSubmitted: onSubmitted,
+          onTap: onTap,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
           style: textTheme.bodyMedium,

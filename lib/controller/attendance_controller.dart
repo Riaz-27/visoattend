@@ -26,10 +26,13 @@ class AttendanceController extends GetxController {
   ClassroomModel get classroomData => _classroomData.value;
 
   final _teachersData = <UserModel>[].obs;
+
   List<UserModel> get teachersData => _teachersData;
   final _cRsData = <UserModel>[].obs;
+
   List<UserModel> get cRsData => _cRsData;
   final _studentsData = <UserModel>[].obs;
+
   List<UserModel> get studentsData => _studentsData;
 
   final _currentUserRole = ''.obs;
@@ -158,9 +161,15 @@ class AttendanceController extends GetxController {
       print('No Students in this class');
       return;
     }
-    _cRsData.value = await cloudFirestoreController.getUsersOfClassroom(allCRsUid);
+    _cRsData.value =
+        await cloudFirestoreController.getUsersOfClassroom(allCRsUid);
     _studentsData.value =
         await cloudFirestoreController.getUsersOfClassroom(allStudentsUid);
+
+    // sorting by id
+    _teachersData.sort((a, b) => a.userId.compareTo(b.userId));
+    _cRsData.sort((a, b) => a.userId.compareTo(b.userId));
+    _studentsData.sort((a, b) => a.userId.compareTo(b.userId));
   }
 
   Future<void> setMatchedStudents() async {
@@ -211,16 +220,15 @@ class AttendanceController extends GetxController {
     }
   }
 
-  double getUserAttendancePercent(String userAuthUid) {
+  int getUserMissedClassesCount(String userAuthUid) {
     int missedClasses = 0;
-    final totalClasses = _attendances.length;
     for (AttendanceModel attendance in _attendances) {
       if (attendance.studentsData[userAuthUid] == 'Absent' ||
           attendance.studentsData[userAuthUid] == null) {
         missedClasses++;
       }
     }
-    return totalClasses > 0 ? (totalClasses - missedClasses) / totalClasses : 0;
+    return missedClasses;
   }
 
   Future<void> openAttendance() async {
@@ -254,13 +262,13 @@ class AttendanceController extends GetxController {
   set selectedAttendance(AttendanceModel value) =>
       _selectedAttendance.value = value;
 
-  final _allStudents = <Map<String, dynamic>>[].obs;
+  final _allStudents = <UserModel>[].obs;
 
-  List<Map<String, dynamic>> get allStudents => _allStudents;
+  List<UserModel> get allStudents => _allStudents;
 
-  final _filteredStudents = <Map<String, dynamic>>[].obs;
+  final _filteredStudents = <UserModel>[].obs;
 
-  List<Map<String, dynamic>> get filteredStudents => _filteredStudents;
+  List<UserModel> get filteredStudents => _filteredStudents;
 
   final _selectedAttendanceStatus = ''.obs;
 
@@ -279,23 +287,19 @@ class AttendanceController extends GetxController {
     if (selectedAttendance == AttendanceModel.empty()) {
       return;
     }
-    List<Map<String, dynamic>> tempStudents = [];
-    for (var student in classroomData.cRs + classroomData.students) {
-      tempStudents.add(student);
-    }
 
-    tempStudents.sort((a, b) {
-      return a['userId'].compareTo(b['userId']);
-    });
+    List<UserModel> tempStudents = studentsData.toList() + cRsData.toList();
 
-    _allStudents.value = tempStudents;
-    _filteredStudents.value = _allStudents;
+    tempStudents.sort((a, b) => a.userId.compareTo(b.userId));
+
+    _allStudents(tempStudents);
+    _filteredStudents(tempStudents);
   }
 
   Future<void> changeStudentAttendanceStatus({
-    required Map<String, dynamic> student,
+    required UserModel student,
   }) async {
-    _selectedAttendance.value.studentsData[student['authUid']] =
+    _selectedAttendance.value.studentsData[student.authUid] =
         selectedAttendanceStatus;
 
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
@@ -317,8 +321,8 @@ class AttendanceController extends GetxController {
     value = value.toLowerCase();
     _filteredStudents.value = _allStudents
         .where((student) =>
-            student['name'].toLowerCase().contains(value.toLowerCase()) ||
-            student['userId'].toLowerCase().contains(value.toLowerCase()))
+            student.name.toLowerCase().contains(value.toLowerCase()) ||
+            student.userId.toLowerCase().contains(value.toLowerCase()))
         .toList();
   }
 
@@ -332,9 +336,11 @@ class AttendanceController extends GetxController {
     }
 
     _filteredStudents.value = _filteredStudents
-        .where((student) =>
-            _selectedAttendance.value.studentsData[student['authUid']] ==
-            selectedCategory)
+        .where(
+          (student) =>
+              _selectedAttendance.value.studentsData[student.authUid] ==
+              selectedCategory,
+        )
         .toList();
   }
 }
