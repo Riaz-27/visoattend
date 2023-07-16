@@ -29,7 +29,7 @@ class AccountDetailsPage extends StatelessWidget {
 
     final mobileController = TextEditingController(text: currentUser.mobile);
     final genderController = TextEditingController(text: currentUser.gender);
-    final dobController = TextEditingController(text: currentUser.gender);
+    final dobController = TextEditingController(text: currentUser.dob);
     final semesterOrDesignationController =
         TextEditingController(text: currentUser.semesterOrDesignation);
     final departmentController =

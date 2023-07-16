@@ -68,6 +68,7 @@ class ProfilePage extends StatelessWidget {
                           height: 90,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            color: colorScheme.outline.withOpacity(0.4),
                             image: DecorationImage(
                               fit: BoxFit.cover,
                               image: NetworkImage(picUrl),

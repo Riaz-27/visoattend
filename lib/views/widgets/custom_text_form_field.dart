@@ -24,6 +24,7 @@ class CustomTextFormField extends StatelessWidget {
     this.focusNode,
     this.onSubmitted,
     this.onTap,
+    this.maxLength, this.maxLines,
   }) : super(key: key);
 
   final String? hintText;
@@ -38,6 +39,8 @@ class CustomTextFormField extends StatelessWidget {
   final double? borderRadius;
   final bool disableBorder;
   final Icon? icon;
+  final int? maxLength;
+  final int? maxLines;
   final void Function(String)? onChanged;
   final void Function(String)? onSubmitted;
   final String? Function(String?)? validator;
@@ -64,6 +67,8 @@ class CustomTextFormField extends StatelessWidget {
       enabled: enabled,
       readOnly: readOnly,
       focusNode: focusNode,
+      maxLength: maxLength,
+      maxLines: maxLines,
       decoration: InputDecoration(
         contentPadding: contentPadding ??
             const EdgeInsets.symmetric(horizontal: 15, vertical: 15),

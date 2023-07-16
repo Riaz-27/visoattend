@@ -95,6 +95,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                         height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: Get.theme.colorScheme.outline.withOpacity(0.4),
                           image: DecorationImage(
                             fit: BoxFit.cover,
                             image: NetworkImage(picUrl),

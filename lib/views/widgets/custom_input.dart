@@ -18,6 +18,8 @@ class CustomInput extends StatelessWidget {
     this.readOnly = false,
     this.onSubmitted,
     this.onTap,
+    this.maxLength,
+    this.maxLines, this.borderRadius,
   });
 
   final TextEditingController controller;
@@ -29,6 +31,9 @@ class CustomInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final FocusNode? focusNode;
   final bool readOnly;
+  final int? maxLength;
+  final int? maxLines;
+  final double? borderRadius;
   final void Function()? onTap;
 
   @override
@@ -61,6 +66,9 @@ class CustomInput extends StatelessWidget {
           focusNode: focusNode,
           onSubmitted: onSubmitted,
           onTap: onTap,
+          maxLength: maxLength,
+          maxLines: maxLines??1,
+          borderRadius: borderRadius,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
           style: textTheme.bodyMedium,

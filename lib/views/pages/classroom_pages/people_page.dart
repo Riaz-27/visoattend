@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/controller/navigation_controller.dart';
 import 'package:visoattend/helper/constants.dart';
@@ -233,6 +234,7 @@ class PeoplePage extends GetView<AttendanceController> {
                         height: 32,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
+                          color: colorScheme.outline.withOpacity(0.4),
                           image: DecorationImage(
                             fit: BoxFit.cover,
                             image: NetworkImage(user.profilePic),
@@ -245,6 +247,7 @@ class PeoplePage extends GetView<AttendanceController> {
                       height: 35,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        color: colorScheme.outline.withOpacity(0.4),
                         image: DecorationImage(
                           fit: BoxFit.cover,
                           image: NetworkImage(user.profilePic),
@@ -348,6 +351,7 @@ class PeoplePage extends GetView<AttendanceController> {
                       height: 60,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        color: colorScheme.outline.withOpacity(0.4),
                         image: DecorationImage(
                           fit: BoxFit.cover,
                           image: NetworkImage(user.profilePic),
@@ -417,8 +421,28 @@ class PeoplePage extends GetView<AttendanceController> {
                       ),
                     ],
                   ),
-                  Spacer(),
-                  Icon(Icons.phone)
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () async{
+                      if(user.mobile == '') {
+                        return;
+                      }
+                      await launchPhoneDialer(user.mobile);
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(50),
+                        color:user.mobile == ''? colorScheme.outline.withOpacity(0.3): colorScheme.surfaceVariant,
+                      ),
+                      child: Icon(
+                        Icons.call,
+                        size: 25,
+                        color:user.mobile == ''? colorScheme.outline: colorScheme.primary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
               verticalGap(height * percentGapMedium),
@@ -498,5 +522,19 @@ class PeoplePage extends GetView<AttendanceController> {
         ),
       ),
     );
+  }
+
+  Future<void> launchPhoneDialer(String contactNumber) async {
+    final Uri phoneUri = Uri(
+        scheme: "tel",
+        path: contactNumber
+    );
+    try {
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      }
+    } catch (error) {
+      throw("Cannot dial");
+    }
   }
 }

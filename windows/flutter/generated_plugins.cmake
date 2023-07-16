@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   isar_flutter_libs
   tflite_flutter_plus
+  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
