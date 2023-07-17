@@ -46,6 +46,7 @@ class ClassroomController extends GetxController {
     required courseTitle,
     required section,
     required session,
+    required department,
   }) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final currentUser = cloudFirestoreController.currentUser;
@@ -62,6 +63,8 @@ class ClassroomController extends GetxController {
       courseTitle: courseTitle,
       section: section,
       session: session,
+      department: department,
+      leaveRequestIds: [],
       weekTimes: _selectedWeekTimes,
       teachers: [teacher],
       cRs: [],

@@ -29,6 +29,7 @@ class CreateEditClassroomPage extends StatelessWidget {
     final courseTitleController = TextEditingController();
     final sectionController = TextEditingController();
     final sessionController = TextEditingController();
+    final departmentController = TextEditingController();
     final roomNoController =
         List.generate(7, (index) => TextEditingController());
 
@@ -42,6 +43,7 @@ class CreateEditClassroomPage extends StatelessWidget {
       courseCodeController.text = classroom.courseCode;
       sectionController.text = classroom.section;
       sessionController.text = classroom.session;
+      departmentController.text = classroom.department;
       final weekDays = classroomController.weekDays;
       for (int i = 0; i < weekDays.length; i++) {
         final dbWeekStartTime = classroom.weekTimes[weekDays[i]]['startTime'];
@@ -143,7 +145,17 @@ class CreateEditClassroomPage extends StatelessWidget {
             TextField(
               controller: sessionController,
               decoration: InputDecoration(
-                labelText: 'Session (e.g. Spring-2022)',
+                labelText: 'Session (e.g. Spring-2022, Batch-47)',
+                labelStyle: Get.textTheme.bodyMedium,
+                isDense: true,
+                alignLabelWithHint: true,
+              ),
+            ),
+            verticalGap(height * percentGapVerySmall),
+            TextField(
+              controller: departmentController,
+              decoration: InputDecoration(
+                labelText: 'Department (e.g. CSE)',
                 labelStyle: Get.textTheme.bodyMedium,
                 isDense: true,
                 alignLabelWithHint: true,
@@ -195,6 +207,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                       courseTitle: courseTitle,
                       section: sectionController.text.trim(),
                       session: sessionController.text.trim(),
+                      department: departmentController.text.trim(),
                     );
                     Get.back();
                   }

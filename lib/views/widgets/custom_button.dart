@@ -8,6 +8,7 @@ class CustomButton extends StatelessWidget {
     this.height,
     this.backgroundColor,
     this.textColor,
+    this.textStyle,
     this.fontWeight,
     required this.text,
     required this.onPressed,
@@ -17,6 +18,7 @@ class CustomButton extends StatelessWidget {
   final double? height;
   final Color? backgroundColor;
   final Color? textColor;
+  final TextStyle? textStyle;
   final FontWeight? fontWeight;
   final String text;
   final VoidCallback onPressed;
@@ -36,7 +38,7 @@ class CustomButton extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: textTheme.bodyLarge!.copyWith(
+          style:textStyle?? textTheme.bodyLarge!.copyWith(
             color: textColor ?? colorScheme.surface,
           ),
         ),

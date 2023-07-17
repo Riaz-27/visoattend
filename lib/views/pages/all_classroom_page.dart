@@ -94,6 +94,7 @@ class AllClassroomPage extends StatelessWidget {
                     classroom.courseTitle,
                     style: Get.textTheme.titleSmall!
                         .copyWith(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     classroom.courseCode,

@@ -296,7 +296,7 @@ class ClassroomPage extends GetView<AttendanceController> {
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        color: Get.theme.colorScheme.surfaceVariant.withOpacity(0.4),
       ),
       padding: const EdgeInsets.all(kSmall),
       child: Row(

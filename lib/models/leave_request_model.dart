@@ -1,5 +1,6 @@
 class LeaveRequestModel {
   String leaveRequestId;
+  String dateTime;
   String userAuthUid;
   String reason;
   String fromDate;
@@ -9,6 +10,7 @@ class LeaveRequestModel {
 
   LeaveRequestModel({
     required this.leaveRequestId,
+    required this.dateTime,
     required this.userAuthUid,
     required this.reason,
     required this.fromDate,
@@ -20,6 +22,7 @@ class LeaveRequestModel {
   factory LeaveRequestModel.empty() {
     return LeaveRequestModel(
       leaveRequestId: '',
+      dateTime: '',
       userAuthUid: '',
       reason: '',
       fromDate: '',
@@ -32,6 +35,7 @@ class LeaveRequestModel {
   factory LeaveRequestModel.fromJson(Map<String, dynamic> json) {
     return LeaveRequestModel(
       leaveRequestId: json['leaveRequestId'],
+      dateTime: json['dateTime'],
       userAuthUid: json['userAuthUid'],
       reason: json['reason'],
       fromDate: json['fromDate'],
@@ -44,6 +48,7 @@ class LeaveRequestModel {
   Map<String, dynamic> toJson() {
     return {
       'leaveRequestId': leaveRequestId,
+      'dateTime': dateTime,
       'userAuthUid': userAuthUid,
       'reason': reason,
       'fromDate': fromDate,

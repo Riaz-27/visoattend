@@ -6,6 +6,8 @@ class ClassroomModel {
   String courseTitle;
   String section;
   String session;
+  String department;
+  List<dynamic> leaveRequestIds;
   Map<String, dynamic> weekTimes;
   List<Map<String, dynamic>> teachers;
   List<Map<String, dynamic>> cRs;
@@ -19,6 +21,8 @@ class ClassroomModel {
     required this.courseTitle,
     required this.section,
     required this.session,
+    required this.department,
+    required this.leaveRequestIds,
     required this.weekTimes,
     required this.teachers,
     required this.cRs,
@@ -34,6 +38,8 @@ class ClassroomModel {
       courseTitle: '',
       section: '',
       session: '',
+      department: '',
+      leaveRequestIds: [],
       weekTimes: {},
       teachers: [],
       cRs: [],
@@ -50,6 +56,8 @@ class ClassroomModel {
       courseTitle: json['courseTitle'],
       section: json['section'],
       session: json['session'],
+      department: json['department'],
+      leaveRequestIds: json['leaveRequestIds'],
       weekTimes: Map<String,dynamic>.from(json['weekTimes']),
       teachers: List<Map<String,dynamic>>.from(json['teachers']),
       cRs: List<Map<String,dynamic>>.from(json['cRs']),
@@ -66,6 +74,8 @@ class ClassroomModel {
       'courseTitle': courseTitle,
       'section': section,
       'session': session,
+      'department': department,
+      'leaveRequestIds': leaveRequestIds,
       'weekTimes': weekTimes,
       'teachers': teachers,
       'cRs': cRs,

@@ -68,7 +68,7 @@ class CustomTextFormField extends StatelessWidget {
       readOnly: readOnly,
       focusNode: focusNode,
       maxLength: maxLength,
-      maxLines: maxLines,
+      maxLines: maxLines??1,
       decoration: InputDecoration(
         contentPadding: contentPadding ??
             const EdgeInsets.symmetric(horizontal: 15, vertical: 15),

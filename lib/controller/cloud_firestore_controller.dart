@@ -13,6 +13,7 @@ import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
 import '../models/attendance_model.dart';
+import '../models/leave_request_model.dart';
 import 'timer_controller.dart';
 
 class CloudFirestoreController extends GetxController {
@@ -611,5 +612,49 @@ class CloudFirestoreController extends GetxController {
           ? ClassroomModel.fromJson(documentSnapshot.data()!)
           : ClassroomModel.empty();
     });
+  }
+
+  /// For: Leave Request database control
+  final leaveRequestCollection = 'LeaveRequests';
+
+  Future<String> saveLeaveRequest(LeaveRequestModel leaveRequest) async {
+    try {
+      final docRef =
+          _firestoreInstance.collection(leaveRequestCollection).doc();
+      leaveRequest.leaveRequestId = docRef.id;
+      await docRef.set(leaveRequest.toJson());
+      return leaveRequest.leaveRequestId;
+    } catch (e) {
+      print(e.toString());
+      return '';
+    }
+  }
+
+  Future<void> updateLeaveRequestApplicationStatus(
+      LeaveRequestModel leaveRequest) async {
+    try {
+      await _firestoreInstance
+          .collection(leaveRequestCollection)
+          .doc(leaveRequest.leaveRequestId)
+          .update({'applicationStatus': leaveRequest.applicationStatus});
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<void> addLeaveRequestInClassroom(
+    ClassroomModel classroom,
+    String leaveRequestId,
+  ) async {
+    try {
+      List<dynamic> leaveRequestIds = classroom.leaveRequestIds;
+      leaveRequestIds.add(leaveRequestId);
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update({'leaveRequestIds': leaveRequestIds});
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }

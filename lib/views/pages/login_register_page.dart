@@ -237,6 +237,7 @@ class LoginRegisterPage extends StatelessWidget {
                     labelText: 'Password',
                     controller: passwordController,
                     isPassword: true,
+                    maxLines: 1,
                     validator: (value) {
                       if (isSignUp &&
                           (value!.isEmpty ||
@@ -252,6 +253,7 @@ class LoginRegisterPage extends StatelessWidget {
                       labelText: 'Confirm Password',
                       controller: confirmPasswordController,
                       isPassword: true,
+                      maxLines: 1,
                       validator: (value) {
                         if (value!.isEmpty ||
                             passwordController.text != value) {

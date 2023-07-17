@@ -34,14 +34,17 @@ class AttendanceRecordPage extends StatelessWidget {
         height: height,
         width: width,
         child: Obx(() {
+          // final size = Get.size;
+          // final deviceRatio = size.width / size.height;
           return (cameraServiceController.isInitialized)
+              // old method - too much narrow preview
               ? ClipRect(
                   child: OverflowBox(
                     alignment: Alignment.center,
                     child: SizedBox(
                       height: 1,
                       child: AspectRatio(
-                        aspectRatio: 1 /
+                        aspectRatio:
                             cameraServiceController
                                 .cameraController.value.aspectRatio,
                         child: CameraPreview(
@@ -50,6 +53,19 @@ class AttendanceRecordPage extends StatelessWidget {
                     ),
                   ),
                 )
+              // ? Transform.scale(
+              //     scale: cameraServiceController
+              //             .cameraController.value.aspectRatio /
+              //         deviceRatio,
+              //     child: Center(
+              //       child: AspectRatio(
+              //         aspectRatio: cameraServiceController
+              //             .cameraController.value.aspectRatio,
+              //         child: CameraPreview(
+              //             cameraServiceController.cameraController),
+              //       ),
+              //     ),
+              //   )
               : Container(
                   color: Colors.black,
                 );
@@ -171,7 +187,7 @@ class AttendanceRecordPage extends StatelessWidget {
               flex: 1,
               child: GestureDetector(
                 onTap: () {
-                  if(attendanceController.attendanceCount != 1){
+                  if (attendanceController.attendanceCount != 1) {
                     attendanceController.attendanceCount--;
                   }
                 },
@@ -202,16 +218,14 @@ class AttendanceRecordPage extends StatelessWidget {
                     size: 50,
                     color: Colors.black.withOpacity(0.3),
                   ),
-                  Obx(
-                    () {
-                      return Text(
-                        attendanceController.attendanceCount.toString(),
-                        style: Get.textTheme.titleSmall!.copyWith(
-                          color: Colors.white,
-                        ),
-                      );
-                    }
-                  ),
+                  Obx(() {
+                    return Text(
+                      attendanceController.attendanceCount.toString(),
+                      style: Get.textTheme.titleSmall!.copyWith(
+                        color: Colors.white,
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
