@@ -657,4 +657,25 @@ class CloudFirestoreController extends GetxController {
       print(e.toString());
     }
   }
+
+  Future<List<LeaveRequestModel>> getClassroomLeaveRequests(List<dynamic> leaveRequestList) async {
+    List<LeaveRequestModel> finalList = [];
+    for (int i = 0; i < leaveRequestList.length; i += 10) {
+      try {
+        final collectionsRef = await _firestoreInstance
+            .collection(leaveRequestCollection)
+            .where(FieldPath.documentId,
+            whereIn: leaveRequestList.sublist(
+                i, i + 10 > leaveRequestList.length ? leaveRequestList.length : i + 10))
+            .get();
+        for (var docRef in collectionsRef.docs) {
+          finalList.add(LeaveRequestModel.fromJson(docRef.data()));
+        }
+      } catch (e) {
+        dev.log(e.toString());
+        return [];
+      }
+    }
+    return finalList;
+  }
 }

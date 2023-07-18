@@ -44,7 +44,8 @@ class CameraServiceController extends GetxController {
 
   Future<void> _checkCameras() async {
     _cameras = await availableCameras();
-    _cameraLensDirection = isSignUp ? CameraLensDirection.front :CameraLensDirection.back;
+    _cameraLensDirection =
+        isSignUp ? CameraLensDirection.front : CameraLensDirection.back;
     _cameraDescription = isSignUp ? _cameras[1] : _cameras[0];
   }
 
@@ -69,12 +70,14 @@ class CameraServiceController extends GetxController {
           await faceDetectorController.doFaceDetectionOnFrame(
               _cameraImage, _cameraRotation!);
           if (!isSignUp) {
+            final totalStudents = attendanceController.cRsData.toList() +
+                attendanceController.studentsData.toList();
             await recognitionController
                 .performRecognitionOnIsolateFirestore(
               cameraImage: cameraImage,
               faces: faceDetectorController.faces,
               cameraLensDirection: cameraLensDirection,
-              users: (attendanceController.cRsData + attendanceController.studentsData),
+              users: totalStudents,
             )
                 .then((value) {
               attendanceController.totalRecognized.addAll(value);
@@ -112,7 +115,7 @@ class CameraServiceController extends GetxController {
   }
 
   Size getImageSize() {
-    if(!_isInitialized.value){
+    if (!_isInitialized.value) {
       return Size.zero;
     }
     return Size(

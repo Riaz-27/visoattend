@@ -126,7 +126,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                         title: 'To*',
                         readOnly: true,
                         onTap: () async {
-                          final picked = await showDatePicker(
+                          DateTime? picked = await showDatePicker(
                             context: context,
                             initialDate: fromDateString == ''
                                 ? DateTime.now()
@@ -137,6 +137,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                             lastDate:
                                 DateTime.now().add(const Duration(days: 365)),
                           );
+                          picked = picked?.add(const Duration(days: 1)).add(const Duration(milliseconds: -1));
                           toDateString =
                               picked != null ? picked.toString() : '';
                           toDateTextController.text = picked != null

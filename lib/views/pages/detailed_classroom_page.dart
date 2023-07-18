@@ -8,6 +8,7 @@ import 'package:visoattend/views/pages/classroom_pages/people_page.dart';
 import 'package:visoattend/views/pages/create_edit_classroom_page.dart';
 
 import '../../controller/attendance_controller.dart';
+import '../../controller/leave_request_controller.dart';
 import '../../models/classroom_model.dart';
 import 'classroom_pages/classroom_page.dart';
 
@@ -19,9 +20,10 @@ class DetailedClassroomPage extends GetView<NavigationController> {
   @override
   Widget build(BuildContext context) {
     final attendanceController = Get.find<AttendanceController>();
-    attendanceController
-        .updateValues(classroomData)
-        .then((_) => attendanceController.getUsersData());
+    final leaveRequestController = Get.find<LeaveRequestController>();
+    attendanceController.updateValues(classroomData).then((_) =>
+        attendanceController.getUsersData().then((_) =>
+            leaveRequestController.getAndFilterClassroomLeaveRequests()));
 
     final navigationPages = [
       const ClassroomPage(),
@@ -31,9 +33,9 @@ class DetailedClassroomPage extends GetView<NavigationController> {
 
     return WillPopScope(
       onWillPop: () async {
-        if(controller.selectedIndex == 0) {
+        if (controller.selectedIndex == 0) {
           return true;
-        }else{
+        } else {
           controller.changeIndex(0);
           return false;
         }
@@ -48,7 +50,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
           actions: [
             Obx(() {
               final userRole = attendanceController.currentUserRole;
-              if(userRole == ''){
+              if (userRole == '') {
                 return const SizedBox();
               }
               if (userRole == 'Student') {
@@ -129,19 +131,17 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                     style: Get.textTheme.bodyMedium,
                   ),
                   verticalGap(20),
-                  Row(
-                    children: [
-                      Text(
-                        'Course Title: ',
-                        style: Get.textTheme.bodySmall!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        classroomData.courseTitle,
-                        style: Get.textTheme.bodyMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  Text(
+                    'Course Title',
+                    style: Get.textTheme.labelSmall!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Flexible(
+                    child: Text(
+                      classroomData.courseTitle,
+                      style: Get.textTheme.bodySmall!
+                          .copyWith(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/controller/user_database_controller.dart';
+import 'package:visoattend/models/leave_request_model.dart';
 
 import '../models/attendance_model.dart';
 import '../models/classroom_model.dart';
@@ -9,6 +10,7 @@ import '../models/user_model.dart';
 import 'camera_service_controller.dart';
 import 'cloud_firestore_controller.dart';
 import 'face_detector_controller.dart';
+import 'leave_request_controller.dart';
 import 'recognition_controller.dart';
 import 'timer_controller.dart';
 
@@ -195,16 +197,57 @@ class AttendanceController extends GetxController {
       studentsData: {},
       takenBy: takenBy,
     );
-    for (var student in cRsData + studentsData) {
+    final totalStudents = cRsData.toList() + studentsData.toList();
+    for (var student in totalStudents) {
       attendanceData.studentsData[student.authUid] = 'Absent';
       if (matchedStudents.containsKey(student.authUid)) {
         attendanceData.studentsData[student.authUid] = 'Present';
       }
     }
+    if (currentUserRole == 'CR') {
+      attendanceData.studentsData[currentUser.authUid] = 'Present';
+    }
+
+    //Check for leave request data
+    final leaveRequestController = Get.find<LeaveRequestController>();
+    for (LeaveRequestModel request
+        in leaveRequestController.activeLeaveRequests) {
+      final userAuthUid = request.userAuthUid;
+      if (attendanceData.studentsData[userAuthUid] == 'Absent') {
+        attendanceData.studentsData[userAuthUid] = 'Present(Leave)';
+      }
+    }
+
     for (int i = 0; i < attendanceCount; i++) {
       await cloudFirestoreController
           .saveAttendanceData(classroomData.classroomId, attendanceData)
           .then((attendance) => _attendances.insert(0, attendance));
+    }
+  }
+
+  // Checking and updating previous attendance on leave request approved
+  Future<void> updateAttendanceOnApprove(LeaveRequestModel leaveRequest) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    final fromDateTime = DateTime.parse(leaveRequest.fromDate);
+    final toDateTime = DateTime.parse(leaveRequest.toDate);
+
+    for (int i = 0; i < _attendances.length; i++) {
+      final attendanceDateTime =
+          DateTime.fromMillisecondsSinceEpoch(_attendances[i].dateTime);
+      if (attendanceDateTime.isAfter(fromDateTime) &&
+          attendanceDateTime.isBefore(toDateTime)) {
+        if (_attendances[i].studentsData[leaveRequest.userAuthUid] ==
+            'Absent') {
+          _attendances[i].studentsData[leaveRequest.userAuthUid] =
+              'Present(Leave)';
+          await cloudFirestoreController.changeStudentAttendanceStatus(
+            classroomId: classroomData.classroomId,
+            attendanceId: _attendances[i].attendanceId,
+            studentData: _attendances[i].studentsData,
+          );
+        }
+      }
     }
   }
 

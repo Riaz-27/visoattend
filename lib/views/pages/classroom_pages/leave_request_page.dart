@@ -1,36 +1,102 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
 import 'package:visoattend/helper/functions.dart';
 import 'package:visoattend/views/widgets/custom_button.dart';
 
+import '../../../controller/cloud_firestore_controller.dart';
+import '../../../controller/leave_request_controller.dart';
 import '../../../helper/constants.dart';
+import '../../../models/leave_request_model.dart';
+import '../../../models/user_model.dart';
 import 'apply_leave_page.dart';
 
-class LeaveRequestPage extends GetView<AttendanceController> {
+class LeaveRequestPage extends GetView<LeaveRequestController> {
   const LeaveRequestPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final attendanceController = Get.find<AttendanceController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    final isTeacher = attendanceController.currentUserRole == 'Teacher';
+
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.only(
           right: height * percentGapSmall,
           left: height * percentGapSmall,
         ),
-        child: ListView.builder(
-          itemCount: 10,
-          itemBuilder: (context, index){
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: _buildLeaveRequestList(),
-            );
+        child: Obx(
+          () {
+            Map<String, int> dateTextMap = {};
+            return controller.classroomLeaveRequests.isEmpty
+                ? const Center(
+                    child: Text('No leave request application found'),
+                  )
+                : ListView.builder(
+                    itemCount: controller.classroomLeaveRequests.length,
+                    itemBuilder: (context, index) {
+                      final leaveRequest =
+                          controller.classroomLeaveRequests[index];
+                      final user = isTeacher
+                          ? controller
+                              .leaveRequestsUser[leaveRequest.leaveRequestId]!
+                          : cloudFirestoreController.currentUser;
+
+                      //Calculation for showing the date on the top
+                      final requestDate = DateTime.parse(leaveRequest.dateTime);
+                      final dateDiff = requestDate
+                          .copyWith(
+                            hour: 0,
+                            second: 0,
+                            millisecond: 0,
+                            microsecond: 0,
+                          )
+                          .difference(DateTime.now().copyWith(
+                            hour: 0,
+                            second: 0,
+                            millisecond: 0,
+                            microsecond: 0,
+                          ))
+                          .inDays;
+                      final dateText = dateDiff >= 1
+                          ? dateDiff >= 2
+                              ? DateFormat('dd MMMM, y').format(requestDate)
+                              : 'Yesterday'
+                          : 'Today';
+                      dateTextMap[dateText] = dateTextMap[dateText] == null
+                          ? 1
+                          : dateTextMap[dateText]! + 1;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 15),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (dateTextMap[dateText]! == 1) ...[
+                              Text(
+                                dateText,
+                                style: textTheme.labelSmall!.copyWith(
+                                    color:
+                                        colorScheme.onSurface.withOpacity(0.6)),
+                              ),
+                              verticalGap(10),
+                            ],
+                            _buildLeaveRequestList(
+                                leaveRequestIndex: index, user: user),
+                          ],
+                        ),
+                      );
+                    },
+                  );
           },
-        )
+        ),
       ),
       floatingActionButton: Obx(
         () {
-          return controller.currentUserRole != 'Teacher'
+          return attendanceController.currentUserRole != 'Teacher'
               ? FloatingActionButton(
                   onPressed: () =>
                       Get.to(() => const ApplyLeavePage(isSelectedClass: true)),
@@ -42,7 +108,19 @@ class LeaveRequestPage extends GetView<AttendanceController> {
     );
   }
 
-  Widget _buildLeaveRequestList() {
+  Widget _buildLeaveRequestList(
+      {required int leaveRequestIndex, required UserModel user}) {
+    final attendanceController = Get.find<AttendanceController>();
+
+    final leaveRequest = controller.classroomLeaveRequests[leaveRequestIndex];
+
+    final fromDateTime = DateTime.parse(leaveRequest.fromDate);
+    final toDateTime = DateTime.parse(leaveRequest.toDate);
+    final dateDifference = toDateTime.difference(fromDateTime);
+    String durationDay = dateDifference.inDays + 1 > 1
+        ? '${dateDifference.inDays + 1} days'
+        : '${dateDifference.inDays + 1} day';
+
     return Container(
       padding: EdgeInsets.symmetric(
         vertical: height * percentGapSmall,
@@ -50,26 +128,50 @@ class LeaveRequestPage extends GetView<AttendanceController> {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: colorScheme.surfaceVariant.withOpacity(0.4),
+        color: colorScheme.surfaceVariant.withOpacity(0.5),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'Approved',
-                style: textTheme.labelMedium!
-                    .copyWith(color: colorScheme.primary),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.check_circle,
-                size: 25,
-                color: colorScheme.primaryContainer,
-              )
-            ],
-          ),
+          Obx(() {
+            final status = leaveRequest.applicationStatus[
+                attendanceController.classroomData.classroomId];
+            Color color = colorScheme.primary;
+            IconData icon = Icons.check_rounded;
+            Color iconColor = colorScheme.primaryContainer;
+            if (status == 'Declined') {
+              color = colorScheme.error;
+              iconColor = colorScheme.error.withOpacity(0.7);
+              icon = Icons.clear_rounded;
+            }
+            return status != 'Pending'
+                ? Row(
+                    children: [
+                      Text(
+                        status,
+                        style: textTheme.labelMedium!.copyWith(color: color),
+                      ),
+                      const Spacer(),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.circle_rounded,
+                            size: 25,
+                            color: iconColor,
+                          ),
+                          Icon(
+                            icon,
+                            size: 15,
+                            color: colorScheme.surface,
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : const SizedBox();
+          }),
           Row(
             children: [
               Stack(
@@ -93,10 +195,9 @@ class LeaveRequestPage extends GetView<AttendanceController> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: colorScheme.outline.withOpacity(0.4),
-                      image: const DecorationImage(
+                      image: DecorationImage(
                         fit: BoxFit.cover,
-                        image: NetworkImage(
-                            'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'),
+                        image: NetworkImage(user.profilePic),
                       ),
                     ),
                   ),
@@ -108,13 +209,13 @@ class LeaveRequestPage extends GetView<AttendanceController> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
-                    'Riaz Uddin Emon',
+                    user.name,
                     style: textTheme.bodyMedium!
                         .copyWith(fontWeight: FontWeight.bold),
                   ),
                   verticalGap(height * percentGapVerySmall),
                   Text(
-                    'C183044',
+                    user.userId,
                     style: textTheme.bodySmall,
                   ),
                 ],
@@ -142,23 +243,26 @@ class LeaveRequestPage extends GetView<AttendanceController> {
             children: [
               Icon(
                 Icons.date_range_rounded,
-                size: 20,
+                size: 18,
                 color: colorScheme.secondary,
               ),
               horizontalGap(width * percentGapSmall),
               Text(
-                '19 July 2023',
-                style: textTheme.labelMedium,
+                DateFormat('dd MMMM y').format(fromDateTime),
+                style: textTheme.labelMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
               horizontalGap(width * percentGapSmall),
               Text(
-                'To',
-                style: textTheme.labelMedium,
+                'to',
+                style: textTheme.labelMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
               horizontalGap(width * percentGapSmall),
               Text(
-                '21 July 2023',
-                style: textTheme.labelMedium,
+                DateFormat('dd MMMM y').format(toDateTime),
+                style: textTheme.labelMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               Container(
@@ -171,7 +275,7 @@ class LeaveRequestPage extends GetView<AttendanceController> {
                   color: colorScheme.surfaceVariant.withOpacity(0.7),
                 ),
                 child: Text(
-                  '3 Days',
+                  durationDay,
                   style: textTheme.labelMedium,
                 ),
               ),
@@ -181,14 +285,15 @@ class LeaveRequestPage extends GetView<AttendanceController> {
           Row(
             children: [
               Icon(
-                Icons.attach_file_rounded,
+                Icons.subtitles,
                 size: 18,
                 color: colorScheme.secondary,
               ),
               horizontalGap(width * percentGapSmall),
               Text(
-                'High fever',
-                style: textTheme.labelMedium,
+                leaveRequest.reason,
+                style: textTheme.labelMedium!
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -198,43 +303,61 @@ class LeaveRequestPage extends GetView<AttendanceController> {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.subject_rounded,
-                size: 18,
-                color: colorScheme.secondary,
-              ),
-              horizontalGap(width * percentGapSmall),
+              horizontalGap(width * percentGapSmall + 18),
               Expanded(
                 child: Text(
-                  'I am writing this letter to request you to grant me leave for two days, as I am suffering from high fever and have been advised by the doctor to take rest.',
+                  leaveRequest.description,
                   style: textTheme.labelMedium,
                 ),
               ),
             ],
           ),
           verticalGap(height * percentGapSmall),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CustomButton(
-                text: 'Approve',
-                textStyle: textTheme.bodyMedium!.copyWith(color: colorScheme.surface),
-                width: width*0.3,
-                height: 35,
-                backgroundColor: colorScheme.primary.withOpacity(0.6),
-                onPressed: () {},
-              ),
-              CustomButton(
-                text: 'Decline',
-                textColor: colorScheme.error,
-                textStyle: textTheme.bodyMedium!.copyWith(color: colorScheme.surface),
-                width: width*0.3,
-                backgroundColor: colorScheme.onSurface.withOpacity(0.8),
-                height: 35,
-                onPressed: () {},
-              ),
-            ],
+          Obx(
+            () {
+              final currentClass = attendanceController.classroomData;
+              return attendanceController.currentUserRole == 'Teacher' &&
+                      leaveRequest
+                              .applicationStatus[currentClass.classroomId] ==
+                          'Pending'
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomButton(
+                          text: 'Approve',
+                          textStyle: textTheme.bodyMedium!
+                              .copyWith(color: colorScheme.surface),
+                          width: width * 0.3,
+                          height: 35,
+                          backgroundColor: colorScheme.primary.withOpacity(0.6),
+                          onPressed: () async {
+                            await controller.changeApplicationStatus(
+                                leaveRequestIndex: leaveRequestIndex,
+                                status: 'Approved');
+                            await attendanceController
+                                .updateAttendanceOnApprove(leaveRequest);
+                          },
+                        ),
+                        CustomButton(
+                          text: 'Decline',
+                          textColor: colorScheme.error,
+                          textStyle: textTheme.bodyMedium!
+                              .copyWith(color: colorScheme.surface),
+                          width: width * 0.3,
+                          backgroundColor:
+                              colorScheme.onSurface.withOpacity(0.8),
+                          height: 35,
+                          onPressed: () async {
+                            await controller.changeApplicationStatus(
+                                leaveRequestIndex: leaveRequestIndex,
+                                status: 'Declined');
+                          },
+                        ),
+                      ],
+                    )
+                  : const SizedBox();
+            },
           ),
         ],
       ),
