@@ -30,7 +30,6 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
         ),
         child: Obx(
           () {
-            Map<String, int> dateTextMap = {};
             return controller.classroomLeaveRequests.isEmpty
                 ? const Center(
                     child: Text('No leave request application found'),
@@ -45,49 +44,10 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                               .leaveRequestsUser[leaveRequest.leaveRequestId]!
                           : cloudFirestoreController.currentUser;
 
-                      //Calculation for showing the date on the top
-                      final requestDate = DateTime.parse(leaveRequest.dateTime);
-                      final dateDiff = requestDate
-                          .copyWith(
-                            hour: 0,
-                            second: 0,
-                            millisecond: 0,
-                            microsecond: 0,
-                          )
-                          .difference(DateTime.now().copyWith(
-                            hour: 0,
-                            second: 0,
-                            millisecond: 0,
-                            microsecond: 0,
-                          ))
-                          .inDays;
-                      final dateText = dateDiff >= 1
-                          ? dateDiff >= 2
-                              ? DateFormat('dd MMMM, y').format(requestDate)
-                              : 'Yesterday'
-                          : 'Today';
-                      dateTextMap[dateText] = dateTextMap[dateText] == null
-                          ? 1
-                          : dateTextMap[dateText]! + 1;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 15),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (dateTextMap[dateText]! == 1) ...[
-                              Text(
-                                dateText,
-                                style: textTheme.labelSmall!.copyWith(
-                                    color:
-                                        colorScheme.onSurface.withOpacity(0.6)),
-                              ),
-                              verticalGap(10),
-                            ],
-                            _buildLeaveRequestList(
-                                leaveRequestIndex: index, user: user),
-                          ],
-                        ),
+                        child: _buildLeaveRequestList(
+                            leaveRequestIndex: index, user: user),
                       );
                     },
                   );
@@ -116,10 +76,11 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
 
     final fromDateTime = DateTime.parse(leaveRequest.fromDate);
     final toDateTime = DateTime.parse(leaveRequest.toDate);
-    final dateDifference = toDateTime.difference(fromDateTime);
-    String durationDay = dateDifference.inDays + 1 > 1
-        ? '${dateDifference.inDays + 1} days'
-        : '${dateDifference.inDays + 1} day';
+    final dateDifference = toDateTime.add(const Duration(milliseconds: 1)).difference(fromDateTime);
+    String durationDay = dateDifference.inDays > 1
+        ? '${dateDifference.inDays} days'
+        : '${dateDifference.inDays} day';
+
 
     return Container(
       padding: EdgeInsets.symmetric(

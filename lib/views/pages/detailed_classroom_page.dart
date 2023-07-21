@@ -83,24 +83,34 @@ class DetailedClassroomPage extends GetView<NavigationController> {
           return navigationPages[controller.selectedIndex];
         }),
         bottomNavigationBar: Obx(() {
+          final leaveRequestController = Get.find<LeaveRequestController>();
           return NavigationBar(
             selectedIndex: controller.selectedIndex,
             onDestinationSelected: (index) => controller.changeIndex(index),
             height: 65,
-            destinations: const [
-              NavigationDestination(
+            destinations: [
+              const NavigationDestination(
                 icon: Icon(Icons.class_outlined),
                 selectedIcon: Icon(Icons.class_rounded),
                 label: 'Classroom',
               ),
-              NavigationDestination(
+              const NavigationDestination(
                 icon: Icon(Icons.people_alt_outlined),
                 selectedIcon: Icon(Icons.people_alt),
                 label: 'People',
               ),
               NavigationDestination(
-                icon: Icon(Icons.mail_outline_rounded),
-                selectedIcon: Icon(Icons.mail),
+                icon: Obx(
+                  () {
+                    final pendingCount = leaveRequestController.pendingLeaveRequestsCount;
+                    return Badge(
+                      isLabelVisible: pendingCount > 0,
+                      label: Text(pendingCount.toString()),
+                      child: const Icon(Icons.mail_outline_rounded),
+                    );
+                  }
+                ),
+                selectedIcon: const Icon(Icons.mail),
                 label: 'Leave Request',
               ),
             ],

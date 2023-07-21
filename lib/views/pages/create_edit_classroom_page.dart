@@ -32,6 +32,8 @@ class CreateEditClassroomPage extends StatelessWidget {
     final departmentController = TextEditingController();
     final roomNoController =
         List.generate(7, (index) => TextEditingController());
+    final classCountController =
+        List.generate(7, (index) => TextEditingController());
 
     final classroomController = Get.find<ClassroomController>();
     final currentUser = Get.find<CloudFirestoreController>().currentUser;
@@ -66,6 +68,24 @@ class CreateEditClassroomPage extends StatelessWidget {
         }
       }
     }
+
+    final collapsedTitle = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          courseTitleController.text,
+          style: textTheme.bodyMedium,
+        ),
+        Text(
+          courseCodeController.text,
+          style: textTheme.bodySmall,
+        ),
+      ],
+    );
+    const expandedTitle = SizedBox();
+
+    Widget title = collapsedTitle;
 
     return Scaffold(
       appBar: AppBar(
@@ -104,117 +124,158 @@ class CreateEditClassroomPage extends StatelessWidget {
             )
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: height * percentGapSmall),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              enabled: isEdit && userRole == 'CR'? false: true,
-              controller: courseCodeController,
-              decoration: InputDecoration(
-                labelText: 'Course Code (e.g. CSE-4800) *',
-                labelStyle: Get.textTheme.bodyMedium,
-                isDense: true,
-                alignLabelWithHint: true,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: height * percentGapSmall),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Classroom Details', style: textTheme.bodySmall),
+              verticalGap(height * percentGapSmall),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: colorScheme.surfaceVariant.withOpacity(0.6)),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                child: ListTileTheme(
+                  contentPadding: EdgeInsets.zero,
+                  minVerticalPadding: 0,
+                  dense: true,
+                  child: Theme(
+                    data: Get.theme.copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      initiallyExpanded: !isEdit,
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: EdgeInsets.zero,
+                      title: title,
+                      onExpansionChanged: (value) {
+                        if(title == expandedTitle){
+
+                        }
+                      },
+                      children: [
+                        TextField(
+                          enabled: isEdit && userRole == 'CR' ? false : true,
+                          controller: courseCodeController,
+                          decoration: InputDecoration(
+                            labelText: 'Course Code (e.g. CSE-4800) *',
+                            labelStyle: Get.textTheme.bodyMedium,
+                            isDense: true,
+                            alignLabelWithHint: true,
+                          ),
+                        ),
+                        verticalGap(height * percentGapVerySmall),
+                        TextField(
+                          enabled: isEdit && userRole == 'CR' ? false : true,
+                          controller: courseTitleController,
+                          decoration: InputDecoration(
+                            labelText: 'Course Title (e.g. Project / Thesis) *',
+                            labelStyle: Get.textTheme.bodyMedium,
+                            alignLabelWithHint: true,
+                            isDense: true,
+                          ),
+                        ),
+                        verticalGap(height * percentGapVerySmall),
+                        TextField(
+                          controller: sectionController,
+                          decoration: InputDecoration(
+                            labelText: 'Section (e.g. 8BM)',
+                            labelStyle: Get.textTheme.bodyMedium,
+                            isDense: true,
+                            alignLabelWithHint: true,
+                          ),
+                        ),
+                        verticalGap(height * percentGapVerySmall),
+                        TextField(
+                          controller: sessionController,
+                          decoration: InputDecoration(
+                            labelText: 'Session (e.g. Spring-2022, Batch-47)',
+                            labelStyle: Get.textTheme.bodyMedium,
+                            isDense: true,
+                            alignLabelWithHint: true,
+                          ),
+                        ),
+                        verticalGap(height * percentGapVerySmall),
+                        TextField(
+                          controller: departmentController,
+                          decoration: InputDecoration(
+                            labelText: 'Department (e.g. CSE)',
+                            labelStyle: Get.textTheme.bodyMedium,
+                            isDense: true,
+                            alignLabelWithHint: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            verticalGap(height * percentGapVerySmall),
-            TextField(
-              enabled: isEdit && userRole == 'CR'? false: true,
-              controller: courseTitleController,
-              decoration: InputDecoration(
-                labelText: 'Course Title (e.g. Project / Thesis) *',
-                labelStyle: Get.textTheme.bodyMedium,
-                alignLabelWithHint: true,
-                isDense: true,
+              verticalGap(height * percentGapMedium),
+              Text(
+                'Set Week Times',
+                style: textTheme.bodySmall,
               ),
-            ),
-            verticalGap(height * percentGapVerySmall),
-            TextField(
-              controller: sectionController,
-              decoration: InputDecoration(
-                labelText: 'Section (e.g. 8BM)',
-                labelStyle: Get.textTheme.bodyMedium,
-                isDense: true,
-                alignLabelWithHint: true,
+              verticalGap(height * percentGapSmall),
+              Flexible(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: colorScheme.surfaceVariant.withOpacity(0.6)),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      return _buildWeekTimeList(context, index, roomNoController);
+                    },
+                  ),
+                ),
               ),
-            ),
-            verticalGap(height * percentGapVerySmall),
-            TextField(
-              controller: sessionController,
-              decoration: InputDecoration(
-                labelText: 'Session (e.g. Spring-2022, Batch-47)',
-                labelStyle: Get.textTheme.bodyMedium,
-                isDense: true,
-                alignLabelWithHint: true,
+              verticalGap(height * percentGapSmall),
+              Padding(
+                padding: EdgeInsets.only(bottom: height * percentGapSmall),
+                child: CustomButton(
+                  height: height * 0.055,
+                  backgroundColor: Get.theme.colorScheme.secondaryContainer,
+                  textColor: Get.theme.colorScheme.onSecondaryContainer,
+                  text: 'Confirm',
+                  onPressed: () async {
+                    final courseCode = courseCodeController.text.trim();
+                    final courseTitle = courseTitleController.text.trim();
+                    if (courseTitle.isEmpty || courseTitle.isEmpty) {
+                      return;
+                    }
+                    if (isEdit) {
+                      classroom.courseCode = courseCodeController.text.trim();
+                      classroom.courseTitle = courseTitleController.text.trim();
+                      classroom.session = sessionController.text.trim();
+                      classroom.section = sectionController.text.trim();
+                      classroom.weekTimes = classroomController.selectedWeekTimes;
+                      await classroomController.updateClassroom(classroom);
+                      Get.back();
+                      Get.back();
+                      Get.to(
+                          () => DetailedClassroomPage(classroomData: classroom));
+                    } else if (!isEdit) {
+                      await classroomController.createNewClassroom(
+                        courseCode: courseCode,
+                        courseTitle: courseTitle,
+                        section: sectionController.text.trim(),
+                        session: sessionController.text.trim(),
+                        department: departmentController.text.trim(),
+                      );
+                      Get.back();
+                    }
+                  },
+                ),
               ),
-            ),
-            verticalGap(height * percentGapVerySmall),
-            TextField(
-              controller: departmentController,
-              decoration: InputDecoration(
-                labelText: 'Department (e.g. CSE)',
-                labelStyle: Get.textTheme.bodyMedium,
-                isDense: true,
-                alignLabelWithHint: true,
-              ),
-            ),
-            verticalGap(height * percentGapMedium),
-            Text(
-              'Set Week Times',
-              style: Get.textTheme.titleMedium,
-            ),
-            verticalGap(height * percentGapVerySmall),
-            Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: 7,
-                itemBuilder: (context, index) {
-                  return _buildWeekTimeList(context, index, roomNoController);
-                },
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(bottom: height * percentGapSmall),
-              child:
-              CustomButton(
-                height: height * 0.055,
-                backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                textColor: Get.theme.colorScheme.onSecondaryContainer,
-                text: 'Confirm',
-                onPressed: () async {
-                  final courseCode = courseCodeController.text.trim();
-                  final courseTitle = courseTitleController.text.trim();
-                  if (courseTitle.isEmpty || courseTitle.isEmpty) {
-                    return;
-                  }
-                  if (isEdit) {
-                    classroom.courseCode = courseCodeController.text.trim();
-                    classroom.courseTitle = courseTitleController.text.trim();
-                    classroom.session = sessionController.text.trim();
-                    classroom.section = sectionController.text.trim();
-                    classroom.weekTimes =
-                        classroomController.selectedWeekTimes;
-                    await classroomController.updateClassroom(classroom);
-                    Get.back();
-                    Get.back();
-                    Get.to(() => DetailedClassroomPage(classroomData: classroom));
-                  } else if (!isEdit) {
-                    await classroomController.createNewClassroom(
-                      courseCode: courseCode,
-                      courseTitle: courseTitle,
-                      section: sectionController.text.trim(),
-                      session: sessionController.text.trim(),
-                      department: departmentController.text.trim(),
-                    );
-                    Get.back();
-                  }
-                },
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -380,24 +441,29 @@ Widget _buildWeekTimeList(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Checkbox(
-              value: classroomController.selectedWeeks[index],
-              onChanged: (value) {
-                classroomController.selectedWeeks[index] = value ?? false;
-                classroomController.selectedWeekTimes[weekName]['startTime'] =
-                    'Off Day';
-                classroomController.selectedWeekTimes[weekName]['endTime'] =
-                    'Off Day';
-                classroomController.selectedWeekTimes[weekName]['room'] = '';
-                classroomController.selectedStartTimes[index] = 'Off Day';
-                classroomController.selectedEndTimes[index] = 'Off Day';
-                if (value != null && value) {
-                  _selectTime(context, index);
-                }
-              },
-            ),
             Text(weekName),
-            horizontalGap(width * percentGapSmall),
+            const Spacer(),
+            SizedBox(
+              height: 40,
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: Switch.adaptive(
+                  value: classroomController.selectedWeeks[index],
+                  onChanged: (value) {
+                    classroomController.selectedWeeks[index] = value;
+                    classroomController.selectedWeekTimes[weekName]
+                        ['startTime'] = 'Off Day';
+                    classroomController.selectedWeekTimes[weekName]['endTime'] =
+                        'Off Day';
+                    classroomController.selectedStartTimes[index] = 'Off Day';
+                    classroomController.selectedEndTimes[index] = 'Off Day';
+                    if (value) {
+                      _selectTime(context, index);
+                    }
+                  },
+                ),
+              ),
+            ),
             // Obx(() {
             //   return ElevatedButton(
             //     onPressed:

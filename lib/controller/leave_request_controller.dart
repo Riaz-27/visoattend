@@ -23,6 +23,10 @@ class LeaveRequestController extends GetxController {
 
   List<LeaveRequestModel> get activeLeaveRequests => _activeLeaveRequests;
 
+  final _pendingLeaveRequestsCount = 0.obs;
+
+  int get pendingLeaveRequestsCount => _pendingLeaveRequestsCount.value;
+
   final _leaveRequestsUser = <String, UserModel>{}.obs;
 
   Map<String, UserModel> get leaveRequestsUser => _leaveRequestsUser;
@@ -103,17 +107,24 @@ class LeaveRequestController extends GetxController {
         final fromDateTime = DateTime.parse(request.fromDate);
         final toDateTime = DateTime.parse(request.toDate);
         if (request.applicationStatus[currentClass.classroomId] == 'Approved' &&
-            now.isAfter(fromDateTime) && now.isBefore(toDateTime)) {
+            now.isAfter(fromDateTime) &&
+            now.isBefore(toDateTime)) {
           _activeLeaveRequests.add(request);
         }
       }
     }
-    if(userRole != 'Teacher') {
+    if (userRole != 'Teacher') {
       _classroomLeaveRequests.removeWhere((request) =>
           request.userAuthUid != cloudFirestoreController.currentUser.authUid);
     }
 
     _classroomLeaveRequests.sort((a, b) => b.dateTime.compareTo(a.dateTime));
+
+    _pendingLeaveRequestsCount.value = _classroomLeaveRequests
+        .where((request) =>
+            request.applicationStatus[currentClass.classroomId] == 'Pending')
+        .toList()
+        .length;
   }
 
   Future<void> changeApplicationStatus({
@@ -131,5 +142,7 @@ class LeaveRequestController extends GetxController {
 
     await cloudFirestoreController
         .updateLeaveRequestApplicationStatus(leaveRequest);
+
+    _pendingLeaveRequestsCount.value--;
   }
 }

@@ -678,4 +678,5 @@ class CloudFirestoreController extends GetxController {
     }
     return finalList;
   }
+  
 }
