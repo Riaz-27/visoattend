@@ -56,11 +56,12 @@ class FaceDetectorPainter extends CustomPainter {
         Color color;
 
         if (value.userOrNot is String) {
-          // text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
-          text = 'Unknown';
+          text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
+          // text = 'Unknown';
           color = colorScheme.error;
         } else {
-          text = '${value.userOrNot.userId}';
+          text = '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
+          // text = '${value.userOrNot.userId}';
           color = Colors.green.shade600;
         }
 
@@ -68,7 +69,7 @@ class FaceDetectorPainter extends CustomPainter {
           style: textTheme.labelSmall!.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            backgroundColor: text == 'Unknown'? colorScheme.error.withOpacity(0.4) : Colors.black.withOpacity(0.3),
+            backgroundColor: color.withOpacity(0.4),
           ),
           text: text,
         );

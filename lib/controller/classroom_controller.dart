@@ -17,13 +17,48 @@ class ClassroomController extends GetxController {
   List<String> get weekDays => _weekDays;
 
   final _selectedWeekTimes = {
-    'Saturday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Sunday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Monday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Tuesday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Wednesday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Thursday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
-    'Friday': {'startTime': 'Off Day','endTime': 'Off Day', 'room': ''},
+    'Saturday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Sunday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Monday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Tuesday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Wednesday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Thursday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
+    'Friday': {
+      'startTime': 'Off Day',
+      'endTime': 'Off Day',
+      'room': '',
+      'classCount': '1',
+    },
   };
 
   Map<String, dynamic> get selectedWeekTimes => _selectedWeekTimes;
@@ -36,10 +71,15 @@ class ClassroomController extends GetxController {
 
   List<String> get selectedEndTimes => _selectedEndTimes;
 
-
   final _selectedWeeks = List.generate(7, (index) => false).obs;
 
   List<bool> get selectedWeeks => _selectedWeeks;
+
+  final _detailsExpanded = true.obs;
+
+  bool get detailsExpanded => _detailsExpanded.value;
+
+  set detailsExpanded(bool value) => _detailsExpanded.value = value;
 
   Future<void> createNewClassroom({
     required courseCode,

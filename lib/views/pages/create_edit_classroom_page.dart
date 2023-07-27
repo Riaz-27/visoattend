@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
@@ -24,6 +25,28 @@ class CreateEditClassroomPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final departmentOptions = [
+      'Qur\'anic Sciences and Islamic Studies',
+      'Da\'wah and Islamic Studies',
+      'Science of Hadith and Islamic Studies',
+      'Computer Science and Engineering',
+      'Computer and Communication Engineering',
+      'Electrical and Electronic Engineering',
+      'Electronic and Telecommunication Engineering',
+      'Civil Engineering',
+      'Pharmacy',
+      'Business Administration',
+      'Economics & Banking',
+      'Department of Law',
+      'English Language and Literature',
+      'Arabic Language and Literature',
+      'Library and Information Science',
+      'Shariah and Islamic Studies',
+      'Institute of Foreign Language',
+      'Center for General Education',
+      'Morality Development Program',
+    ];
+
     final classroom = Get.find<AttendanceController>().classroomData;
     final courseCodeController = TextEditingController();
     final courseTitleController = TextEditingController();
@@ -41,6 +64,8 @@ class CreateEditClassroomPage extends StatelessWidget {
     final height = Get.height;
 
     if (isEdit) {
+      classroomController.detailsExpanded = false;
+
       courseTitleController.text = classroom.courseTitle;
       courseCodeController.text = classroom.courseCode;
       sectionController.text = classroom.section;
@@ -51,6 +76,7 @@ class CreateEditClassroomPage extends StatelessWidget {
         final dbWeekStartTime = classroom.weekTimes[weekDays[i]]['startTime'];
         final dbWeekEndTime = classroom.weekTimes[weekDays[i]]['endTime'];
         final dbWeekRoomNo = classroom.weekTimes[weekDays[i]]['room'];
+        final dbClassCount = classroom.weekTimes[weekDays[i]]['classCount'];
         if (dbWeekStartTime != 'Off Day') {
           //getting the database time and setting the variables
           classroomController.selectedStartTimes[i] = dbWeekStartTime;
@@ -61,10 +87,14 @@ class CreateEditClassroomPage extends StatelessWidget {
               dbWeekEndTime;
           classroomController.selectedWeeks[i] = true;
 
-          //getting the database room no and setting the variables
+          //getting the database room no and class count and setting the variables
           classroomController.selectedWeekTimes[weekDays[i]]['room'] =
               dbWeekRoomNo;
           roomNoController[i].text = dbWeekRoomNo;
+
+          classroomController.selectedWeekTimes[weekDays[i]]['classCount'] =
+              dbClassCount;
+          classCountController[i].text = dbClassCount;
         }
       }
     }
@@ -83,9 +113,8 @@ class CreateEditClassroomPage extends StatelessWidget {
         ),
       ],
     );
-    const expandedTitle = SizedBox();
-
-    Widget title = collapsedTitle;
+    final expandedTitle =
+        Text(isEdit ? 'Change classroom details' : 'Set classroom details');
 
     return Scaffold(
       appBar: AppBar(
@@ -95,33 +124,75 @@ class CreateEditClassroomPage extends StatelessWidget {
           style: Get.textTheme.bodyLarge,
         ),
         actions: [
-          if (isEdit && currentUser.authUid == classroom.teachers[0]['authUid'])
-            Padding(
-              padding: const EdgeInsets.only(right: kMedium, top: kVerySmall),
-              child: GestureDetector(
-                onTap: () => _handleClassArchive(context,
-                    courseTitle: courseTitleController.text),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: Get.theme.colorScheme.secondaryContainer,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: kSmall,
-                      vertical: kVerySmall,
-                    ),
-                    child: Text(
-                      'Archive',
-                      style: Get.textTheme.bodySmall!.copyWith(
-                        color: Get.theme.colorScheme.onSecondaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+          GestureDetector(
+            onTap: () async {
+              final courseCode = courseCodeController.text.trim();
+              final courseTitle = courseTitleController.text.trim();
+              if (courseTitle.isEmpty || courseTitle.isEmpty) {
+                return;
+              }
+              if (isEdit) {
+                classroom.courseCode = courseCodeController.text.trim();
+                classroom.courseTitle = courseTitleController.text.trim();
+                classroom.session = sessionController.text.trim();
+                classroom.section = sectionController.text.trim();
+                classroom.department = departmentController.text.trim();
+                classroom.weekTimes = classroomController.selectedWeekTimes;
+                await classroomController.updateClassroom(classroom);
+                Get.back();
+                Get.back();
+                Get.to(() => DetailedClassroomPage(classroomData: classroom));
+              } else if (!isEdit) {
+                await classroomController.createNewClassroom(
+                  courseCode: courseCode,
+                  courseTitle: courseTitle,
+                  section: sectionController.text.trim(),
+                  session: sessionController.text.trim(),
+                  department: departmentController.text.trim(),
+                );
+                Get.back();
+              }
+            },
+            child: Container(
+              margin: isEdit
+                  ? EdgeInsets.zero
+                  : EdgeInsets.symmetric(horizontal: width * percentGapMedium),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+                color: Get.theme.colorScheme.secondaryContainer,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: kSmall,
+                  vertical: kVerySmall,
+                ),
+                child: Text(
+                  isEdit ? 'Save' : 'Create',
+                  style: Get.textTheme.bodySmall!.copyWith(
+                    color: Get.theme.colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            )
+            ),
+          ),
+          if (isEdit && currentUser.authUid == classroom.teachers[0]['authUid'])
+            PopupMenuButton(
+              position: PopupMenuPosition.under,
+              tooltip: 'Classroom Options',
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'archive',
+                  child: Text('Archive Classroom'),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'archive') {
+                  _handleClassArchive(context,
+                      courseTitle: courseTitleController.text);
+                }
+              },
+            ),
         ],
       ),
       body: SingleChildScrollView(
@@ -138,142 +209,180 @@ class CreateEditClassroomPage extends StatelessWidget {
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: colorScheme.surfaceVariant.withOpacity(0.6)),
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                 child: ListTileTheme(
                   contentPadding: EdgeInsets.zero,
                   minVerticalPadding: 0,
                   dense: true,
                   child: Theme(
-                    data: Get.theme.copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      initiallyExpanded: !isEdit,
-                      tilePadding: EdgeInsets.zero,
-                      childrenPadding: EdgeInsets.zero,
-                      title: title,
-                      onExpansionChanged: (value) {
-                        if(title == expandedTitle){
-
-                        }
-                      },
-                      children: [
-                        TextField(
-                          enabled: isEdit && userRole == 'CR' ? false : true,
-                          controller: courseCodeController,
-                          decoration: InputDecoration(
-                            labelText: 'Course Code (e.g. CSE-4800) *',
-                            labelStyle: Get.textTheme.bodyMedium,
-                            isDense: true,
-                            alignLabelWithHint: true,
+                    data: Get.theme.copyWith(
+                        dividerColor: Colors.transparent,
+                        splashColor: Colors.transparent),
+                    child: Obx(() {
+                      final classroomController =
+                          Get.find<ClassroomController>();
+                      Widget title = classroomController.detailsExpanded
+                          ? expandedTitle
+                          : collapsedTitle;
+                      return ExpansionTile(
+                        initiallyExpanded: !isEdit,
+                        tilePadding: EdgeInsets.zero,
+                        childrenPadding: EdgeInsets.zero,
+                        title: title,
+                        onExpansionChanged: (value) =>
+                            classroomController.detailsExpanded = value,
+                        children: [
+                          TextField(
+                            enabled: isEdit && userRole == 'CR' ? false : true,
+                            controller: courseCodeController,
+                            style: textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: 'Course Code (e.g. CSE-4800) *',
+                              labelStyle: Get.textTheme.bodyMedium,
+                              isDense: true,
+                              alignLabelWithHint: true,
+                            ),
                           ),
-                        ),
-                        verticalGap(height * percentGapVerySmall),
-                        TextField(
-                          enabled: isEdit && userRole == 'CR' ? false : true,
-                          controller: courseTitleController,
-                          decoration: InputDecoration(
-                            labelText: 'Course Title (e.g. Project / Thesis) *',
-                            labelStyle: Get.textTheme.bodyMedium,
-                            alignLabelWithHint: true,
-                            isDense: true,
+                          verticalGap(height * percentGapVerySmall),
+                          TextField(
+                            enabled: isEdit && userRole == 'CR' ? false : true,
+                            controller: courseTitleController,
+                            style: textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText:
+                                  'Course Title (e.g. Project / Thesis) *',
+                              labelStyle: Get.textTheme.bodyMedium,
+                              alignLabelWithHint: true,
+                              isDense: true,
+                            ),
                           ),
-                        ),
-                        verticalGap(height * percentGapVerySmall),
-                        TextField(
-                          controller: sectionController,
-                          decoration: InputDecoration(
-                            labelText: 'Section (e.g. 8BM)',
-                            labelStyle: Get.textTheme.bodyMedium,
-                            isDense: true,
-                            alignLabelWithHint: true,
+                          verticalGap(height * percentGapVerySmall),
+                          TextField(
+                            controller: sectionController,
+                            style: textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: 'Section (e.g. 8BM)',
+                              labelStyle: Get.textTheme.bodyMedium,
+                              isDense: true,
+                              alignLabelWithHint: true,
+                            ),
                           ),
-                        ),
-                        verticalGap(height * percentGapVerySmall),
-                        TextField(
-                          controller: sessionController,
-                          decoration: InputDecoration(
-                            labelText: 'Session (e.g. Spring-2022, Batch-47)',
-                            labelStyle: Get.textTheme.bodyMedium,
-                            isDense: true,
-                            alignLabelWithHint: true,
+                          verticalGap(height * percentGapVerySmall),
+                          TextField(
+                            controller: sessionController,
+                            style: textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: 'Session (e.g. Spring-2022, Batch-47)',
+                              labelStyle: Get.textTheme.bodyMedium,
+                              isDense: true,
+                              alignLabelWithHint: true,
+                            ),
                           ),
-                        ),
-                        verticalGap(height * percentGapVerySmall),
-                        TextField(
-                          controller: departmentController,
-                          decoration: InputDecoration(
-                            labelText: 'Department (e.g. CSE)',
-                            labelStyle: Get.textTheme.bodyMedium,
-                            isDense: true,
-                            alignLabelWithHint: true,
+                          verticalGap(height * percentGapVerySmall),
+                          Autocomplete<String>(
+                            optionsBuilder: (textEditingValue) {
+                              if (textEditingValue.text == '') {
+                                return const Iterable<String>.empty();
+                              }
+                              return departmentOptions.where((opt) =>
+                                  opt.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+                            },
+                            onSelected: (value) {
+                              departmentController.text = value;
+                            },
+                            fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
+                              return TextField(
+                                controller: fieldController,
+                                style: textTheme.bodyMedium,
+                                focusNode: focusNode,
+                                decoration: InputDecoration(
+                                  labelText: 'Department',
+                                  labelStyle: Get.textTheme.bodyMedium,
+                                  isDense: true,
+                                  alignLabelWithHint: true,
+                                ),
+                              );
+                            },
+                            optionsViewBuilder: (context, onSelected, optionsData) {
+                              return Align(
+                                alignment: Alignment.topLeft,
+                                child: Material(
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: height * percentGapVerySmall),
+                                    width: width * 0.85,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.surfaceVariant.withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(color: colorScheme.onBackground)
+                                    ),
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      padding:
+                                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                                      itemCount: optionsData.length,
+                                      itemBuilder: (BuildContext context, int index) {
+                                        final option = optionsData.elementAt(index);
+                                        return GestureDetector(
+                                          onTap: () => onSelected(option),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              verticalGap(10),
+                                              Text(option, style: textTheme.bodyMedium),
+                                              verticalGap(10),
+                                              if (index < optionsData.length - 1)
+                                                const Divider(height: 0, thickness: 0.5),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ),
-                      ],
-                    ),
+                          // TextField(
+                          //   controller: departmentController,
+                          //   style: textTheme.bodyMedium,
+                          //   decoration: InputDecoration(
+                          //     labelText: 'Department',
+                          //     labelStyle: Get.textTheme.bodyMedium,
+                          //     isDense: true,
+                          //     alignLabelWithHint: true,
+                          //   ),
+                          // ),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ),
               verticalGap(height * percentGapMedium),
               Text(
-                'Set Week Times',
+                'Weekly class details',
                 style: textTheme.bodySmall,
               ),
               verticalGap(height * percentGapSmall),
               Flexible(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: colorScheme.surfaceVariant.withOpacity(0.6)),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
-                      return _buildWeekTimeList(context, index, roomNoController);
-                    },
-                  ),
-                ),
-              ),
-              verticalGap(height * percentGapSmall),
-              Padding(
-                padding: EdgeInsets.only(bottom: height * percentGapSmall),
-                child: CustomButton(
-                  height: height * 0.055,
-                  backgroundColor: Get.theme.colorScheme.secondaryContainer,
-                  textColor: Get.theme.colorScheme.onSecondaryContainer,
-                  text: 'Confirm',
-                  onPressed: () async {
-                    final courseCode = courseCodeController.text.trim();
-                    final courseTitle = courseTitleController.text.trim();
-                    if (courseTitle.isEmpty || courseTitle.isEmpty) {
-                      return;
-                    }
-                    if (isEdit) {
-                      classroom.courseCode = courseCodeController.text.trim();
-                      classroom.courseTitle = courseTitleController.text.trim();
-                      classroom.session = sessionController.text.trim();
-                      classroom.section = sectionController.text.trim();
-                      classroom.weekTimes = classroomController.selectedWeekTimes;
-                      await classroomController.updateClassroom(classroom);
-                      Get.back();
-                      Get.back();
-                      Get.to(
-                          () => DetailedClassroomPage(classroomData: classroom));
-                    } else if (!isEdit) {
-                      await classroomController.createNewClassroom(
-                        courseCode: courseCode,
-                        courseTitle: courseTitle,
-                        section: sectionController.text.trim(),
-                        session: sessionController.text.trim(),
-                        department: departmentController.text.trim(),
-                      );
-                      Get.back();
-                    }
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 7,
+                  itemBuilder: (context, index) {
+                    return _buildWeekTimeList(
+                      context,
+                      index,
+                      roomNoController,
+                      classCountController,
+                    );
                   },
                 ),
               ),
+              verticalGap(height * percentGapSmall),
             ],
           ),
         ),
@@ -412,10 +521,13 @@ Future<void> _selectTime(BuildContext context, int index,
   }
 }
 
+
+
 Widget _buildWeekTimeList(
   BuildContext context,
   int index,
   List<TextEditingController> roomNoController,
+  List<TextEditingController> classCountController,
 ) {
   final classroomController = Get.find<ClassroomController>();
 
@@ -423,6 +535,8 @@ Widget _buildWeekTimeList(
   final width = Get.width;
 
   final weekName = classroomController.weekDays[index];
+
+  final expansionController = ExpansionTileController();
   return Obx(() {
     final isSelected = classroomController.selectedWeeks[index];
     final selectedStartTime = classroomController.selectedStartTimes[index];
@@ -434,124 +548,398 @@ Widget _buildWeekTimeList(
         ? 'Off Day'
         : DateFormat.jm().format(DateTime.parse(selectedEndTime));
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(weekName),
-            const Spacer(),
-            SizedBox(
-              height: 40,
-              child: FittedBox(
-                fit: BoxFit.fill,
-                child: Switch.adaptive(
-                  value: classroomController.selectedWeeks[index],
-                  onChanged: (value) {
-                    classroomController.selectedWeeks[index] = value;
-                    classroomController.selectedWeekTimes[weekName]
-                        ['startTime'] = 'Off Day';
-                    classroomController.selectedWeekTimes[weekName]['endTime'] =
-                        'Off Day';
-                    classroomController.selectedStartTimes[index] = 'Off Day';
-                    classroomController.selectedEndTimes[index] = 'Off Day';
-                    if (value) {
-                      _selectTime(context, index);
-                    }
-                  },
-                ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: colorScheme.surfaceVariant.withOpacity(0.6)),
+      child: Theme(
+        data: Get.theme.copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          controller: expansionController,
+          onExpansionChanged: (value) async {
+            if (!classroomController.selectedWeeks[index] && value) {
+              classroomController.selectedWeeks[index] = value;
+              classroomController.selectedWeekTimes[weekName]['startTime'] =
+                  'Off Day';
+              classroomController.selectedWeekTimes[weekName]['endTime'] =
+                  'Off Day';
+              classroomController.selectedStartTimes[index] = 'Off Day';
+              classroomController.selectedEndTimes[index] = 'Off Day';
+              if (value) {
+                await _selectTime(context, index);
+                if (!classroomController.selectedWeeks[index]) {
+                  expansionController.collapse();
+                }
+              }
+            }
+          },
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                weekName,
+                style: classroomController.selectedWeeks[index]
+                    ? textTheme.bodyMedium
+                    : textTheme.bodyMedium!.copyWith(
+                        color: colorScheme.onBackground.withOpacity(0.6)),
+              ),
+              Text(
+                startTimeString == 'Off Day'
+                    ? 'No class'
+                    : '$startTimeString - $endTimeString',
+                style: textTheme.labelSmall!
+                    .copyWith(color: colorScheme.onBackground.withOpacity(0.6)),
+              ),
+            ],
+          ),
+          trailing: SizedBox(
+            height: 35,
+            child: FittedBox(
+              fit: BoxFit.fill,
+              child: Switch.adaptive(
+                value: classroomController.selectedWeeks[index],
+                onChanged: (value) {
+                  classroomController.selectedWeeks[index] = value;
+                  classroomController.selectedWeekTimes[weekName]['startTime'] =
+                      'Off Day';
+                  classroomController.selectedWeekTimes[weekName]['endTime'] =
+                      'Off Day';
+                  classroomController.selectedStartTimes[index] = 'Off Day';
+                  classroomController.selectedEndTimes[index] = 'Off Day';
+                  if (value) {
+                    expansionController.expand();
+                    _selectTime(context, index);
+                  } else {
+                    expansionController.collapse();
+                  }
+                },
               ),
             ),
-            // Obx(() {
-            //   return ElevatedButton(
-            //     onPressed:
-            //         classroomController.selectedWeeks[index]
-            //             ? () => selectTime(index)
-            //             : null,
-            //     child: const Icon(Icons.access_time),
-            //   );
-            // }),
+          ),
+          children: [
+            verticalGap(height * percentGapVerySmall),
+            Row(
+              children: [
+                horizontalGap(width * 0.05),
+                Flexible(
+                  flex: 1,
+                  child: TextField(
+                    keyboardType: TextInputType.none,
+                    onTap:
+                        isSelected ? () => _selectTime(context, index) : null,
+                    controller: TextEditingController(text: startTimeString),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8),
+                      isDense: true,
+                      labelText: 'From',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    textAlign: TextAlign.center,
+                    style: Get.textTheme.labelMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                horizontalGap(width * percentGapSmall),
+                const Text('-'),
+                horizontalGap(width * percentGapSmall),
+                Flexible(
+                  flex: 1,
+                  child: TextField(
+                    keyboardType: TextInputType.none,
+                    onTap: isSelected
+                        ? () => _selectTime(context, index, isEndTime: true)
+                        : null,
+                    controller: TextEditingController(text: endTimeString),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8),
+                      isDense: true,
+                      labelText: 'To',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    textAlign: TextAlign.center,
+                    style: Get.textTheme.labelMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                horizontalGap(width * 0.05),
+              ],
+            ),
+            verticalGap(height * percentGapSmall),
+            Row(
+              children: [
+                horizontalGap(width * 0.05),
+                Flexible(
+                  flex: 1,
+                  child: TextField(
+                    readOnly: !isSelected,
+                    enabled: isSelected,
+                    controller: roomNoController[index],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8),
+                      isDense: true,
+                      labelText: 'Room No',
+                      labelStyle: Get.textTheme.labelMedium,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    textAlign: TextAlign.start,
+                    style: Get.textTheme.labelMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                    onChanged: (value) {
+                      classroomController.selectedWeekTimes[weekName]['room'] =
+                          roomNoController[index].text.trim();
+                    },
+                  ),
+                ),
+                horizontalGap(width * percentGapSmall),
+                const Text(' '),
+                horizontalGap(width * percentGapSmall),
+                Flexible(
+                  flex: 1,
+                  child: TextField(
+                    readOnly: !isSelected,
+                    enabled: isSelected,
+                    controller: classCountController[index],
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(8),
+                      isDense: true,
+                      labelText: 'Class Count',
+                      labelStyle: Get.textTheme.labelMedium,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textAlign: TextAlign.start,
+                    style: Get.textTheme.labelMedium!
+                        .copyWith(fontWeight: FontWeight.bold),
+                    onChanged: (value) {
+                      if (value == '' || value == '0') {
+                        classroomController.selectedWeekTimes[weekName]
+                            ['classCount'] = '1';
+                      } else {
+                        classroomController.selectedWeekTimes[weekName]
+                                ['classCount'] =
+                            classCountController[index].text.trim();
+                      }
+                    },
+                  ),
+                ),
+                horizontalGap(width * 0.05),
+              ],
+            ),
+            verticalGap(height * percentGapSmall),
           ],
         ),
-        isSelected
-            ? Row(
-                children: [
-                  horizontalGap(width * 0.05),
-                  Flexible(
-                    flex: 1,
-                    child: TextField(
-                      keyboardType: TextInputType.none,
-                      onTap:
-                          isSelected ? () => _selectTime(context, index) : null,
-                      controller: TextEditingController(text: startTimeString),
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(8),
-                        isDense: true,
-                        labelText: 'From',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                      style: Get.textTheme.labelMedium!
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  horizontalGap(width * percentGapSmall),
-                  const Text('-'),
-                  horizontalGap(width * percentGapSmall),
-                  Flexible(
-                    flex: 1,
-                    child: TextField(
-                      keyboardType: TextInputType.none,
-                      onTap: isSelected
-                          ? () => _selectTime(context, index, isEndTime: true)
-                          : null,
-                      controller: TextEditingController(text: endTimeString),
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(8),
-                        isDense: true,
-                        labelText: 'To',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      textAlign: TextAlign.center,
-                      style: Get.textTheme.labelMedium!
-                          .copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  horizontalGap(width * percentGapLarge),
-                  Flexible(
-                    flex: 2,
-                    child: TextField(
-                      readOnly: !isSelected,
-                      enabled: isSelected,
-                      controller: roomNoController[index],
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(8),
-                        isDense: true,
-                        labelText: 'Room No',
-                        labelStyle: Get.textTheme.labelMedium,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      textAlign: TextAlign.start,
-                      style: Get.textTheme.labelMedium!
-                          .copyWith(fontWeight: FontWeight.bold),
-                      onChanged: (value) {
-                        classroomController.selectedWeekTimes[weekName]
-                            ['room'] = roomNoController[index].text.trim();
-                      },
-                    ),
-                  ),
-                ],
-              )
-            : const SizedBox(),
-      ],
+      ),
     );
   });
 }
+
+// Widget _buildWeekTimeList(
+//   BuildContext context,
+//   int index,
+//   List<TextEditingController> roomNoController,
+// ) {
+//   final classroomController = Get.find<ClassroomController>();
+//
+//   final height = Get.height;
+//   final width = Get.width;
+//
+//   final weekName = classroomController.weekDays[index];
+//   return Obx(() {
+//     final isSelected = classroomController.selectedWeeks[index];
+//     final selectedStartTime = classroomController.selectedStartTimes[index];
+//     final selectedEndTime = classroomController.selectedEndTimes[index];
+//     final startTimeString = selectedStartTime == 'Off Day'
+//         ? 'Off Day'
+//         : DateFormat.jm().format(DateTime.parse(selectedStartTime));
+//     final endTimeString = selectedEndTime == 'Off Day'
+//         ? 'Off Day'
+//         : DateFormat.jm().format(DateTime.parse(selectedEndTime));
+//
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 15),
+//       padding:
+//       const EdgeInsets.symmetric(vertical: 6, horizontal: 15),
+//       decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(15),
+//           color: colorScheme.surfaceVariant.withOpacity(0.6)),
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.start,
+//             crossAxisAlignment: CrossAxisAlignment.center,
+//             children: [
+//               Text(weekName),
+//               const Spacer(),
+//               SizedBox(
+//                 height: 40,
+//                 child: FittedBox(
+//                   fit: BoxFit.fill,
+//                   child: Switch.adaptive(
+//                     value: classroomController.selectedWeeks[index],
+//                     onChanged: (value) {
+//                       classroomController.selectedWeeks[index] = value;
+//                       classroomController.selectedWeekTimes[weekName]
+//                           ['startTime'] = 'Off Day';
+//                       classroomController.selectedWeekTimes[weekName]['endTime'] =
+//                           'Off Day';
+//                       classroomController.selectedStartTimes[index] = 'Off Day';
+//                       classroomController.selectedEndTimes[index] = 'Off Day';
+//                       if (value) {
+//                         _selectTime(context, index);
+//                       }
+//                     },
+//                   ),
+//                 ),
+//               ),
+//               // Obx(() {
+//               //   return ElevatedButton(
+//               //     onPressed:
+//               //         classroomController.selectedWeeks[index]
+//               //             ? () => selectTime(index)
+//               //             : null,
+//               //     child: const Icon(Icons.access_time),
+//               //   );
+//               // }),
+//             ],
+//           ),
+//           isSelected
+//               ? Column(
+//                   children: [
+//                     Row(
+//                       children: [
+//                         horizontalGap(width * 0.05),
+//                         Flexible(
+//                           flex: 1,
+//                           child: TextField(
+//                             keyboardType: TextInputType.none,
+//                             onTap: isSelected
+//                                 ? () => _selectTime(context, index)
+//                                 : null,
+//                             controller:
+//                                 TextEditingController(text: startTimeString),
+//                             decoration: InputDecoration(
+//                               contentPadding: const EdgeInsets.all(8),
+//                               isDense: true,
+//                               labelText: 'From',
+//                               border: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(10),
+//                               ),
+//                             ),
+//                             textAlign: TextAlign.center,
+//                             style: Get.textTheme.labelMedium!
+//                                 .copyWith(fontWeight: FontWeight.bold),
+//                           ),
+//                         ),
+//                         horizontalGap(width * percentGapSmall),
+//                         const Text('-'),
+//                         horizontalGap(width * percentGapSmall),
+//                         Flexible(
+//                           flex: 1,
+//                           child: TextField(
+//                             keyboardType: TextInputType.none,
+//                             onTap: isSelected
+//                                 ? () =>
+//                                     _selectTime(context, index, isEndTime: true)
+//                                 : null,
+//                             controller:
+//                                 TextEditingController(text: endTimeString),
+//                             decoration: InputDecoration(
+//                               contentPadding: const EdgeInsets.all(8),
+//                               isDense: true,
+//                               labelText: 'To',
+//                               border: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(10),
+//                               ),
+//                             ),
+//                             textAlign: TextAlign.center,
+//                             style: Get.textTheme.labelMedium!
+//                                 .copyWith(fontWeight: FontWeight.bold),
+//                           ),
+//                         ),
+//                         horizontalGap(width * 0.05),
+//                       ],
+//                     ),
+//                     verticalGap(height * percentGapSmall),
+//                     Row(
+//                       children: [
+//                         horizontalGap(width * 0.05),
+//                         Flexible(
+//                           flex: 1,
+//                           child: TextField(
+//                             readOnly: !isSelected,
+//                             enabled: isSelected,
+//                             controller: roomNoController[index],
+//                             decoration: InputDecoration(
+//                               contentPadding: const EdgeInsets.all(8),
+//                               isDense: true,
+//                               labelText: 'Room No',
+//                               labelStyle: Get.textTheme.labelMedium,
+//                               border: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(10),
+//                               ),
+//                             ),
+//                             textAlign: TextAlign.start,
+//                             style: Get.textTheme.labelMedium!
+//                                 .copyWith(fontWeight: FontWeight.bold),
+//                             onChanged: (value) {
+//                               classroomController.selectedWeekTimes[weekName]
+//                                   ['room'] = roomNoController[index].text.trim();
+//                             },
+//                           ),
+//                         ),
+//                         horizontalGap(width * percentGapSmall),
+//                         const Text(' '),
+//                         horizontalGap(width * percentGapSmall),
+//                         Flexible(
+//                           flex: 1,
+//                           child: TextField(
+//                             readOnly: !isSelected,
+//                             enabled: isSelected,
+//                             controller: roomNoController[index],
+//                             decoration: InputDecoration(
+//                               contentPadding: const EdgeInsets.all(8),
+//                               isDense: true,
+//                               labelText: 'Class Count',
+//                               labelStyle: Get.textTheme.labelMedium,
+//                               border: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(10),
+//                               ),
+//                             ),
+//                             textAlign: TextAlign.start,
+//                             style: Get.textTheme.labelMedium!
+//                                 .copyWith(fontWeight: FontWeight.bold),
+//                             onChanged: (value) {
+//                               classroomController.selectedWeekTimes[weekName]
+//                                   ['room'] = roomNoController[index].text.trim();
+//                             },
+//                           ),
+//                         ),
+//                         horizontalGap(width * 0.05),
+//                       ],
+//                     ),
+//                   ],
+//                 )
+//               : const SizedBox(),
+//         ],
+//       ),
+//     );
+//   });
+// }

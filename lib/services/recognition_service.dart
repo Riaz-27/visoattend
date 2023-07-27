@@ -89,7 +89,7 @@ class RecognitionService {
         .add(ResizeWithCropOrPadOp(cropSize, cropSize))
         .add(ResizeOp(
             _inputShape[1], _inputShape[2], ResizeMethod.nearestneighbour))
-        .add(preProcessNormalizeOp)
+        // .add(preProcessNormalizeOp)
         .build()
         .process(_inputImage);
   }
@@ -112,7 +112,6 @@ class RecognitionService {
         // final sendPort = data[3] as SendPort;
         interpreter.run(input, output.getBuffer());
         // sendPort.send(output.getDoubleList());
-        print('ISOLATE RUN SUCCESS');
       },
       [
         _inputImage.buffer,

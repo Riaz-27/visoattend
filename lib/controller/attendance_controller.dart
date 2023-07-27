@@ -98,6 +98,12 @@ class AttendanceController extends GetxController {
         .currentUser.classrooms[_classroomData.value.classroomId];
 
     _filteredAttendances.value = _attendances;
+
+    final classCount = classroom
+        .weekTimes[DateFormat('EEEE').format(DateTime.now())]['classCount'];
+    _attendanceCount.value =
+        classCount == null || classCount == '' ? 1 : int.parse(classCount);
+
     print(
         'The current user is : ${cloudFirestoreController.currentUser.authUid}');
     print('The current user is : $currentUserRole');
@@ -175,6 +181,7 @@ class AttendanceController extends GetxController {
   }
 
   Future<void> setMatchedStudents() async {
+    matchedStudents.clear();
     totalRecognized.forEach((key, value) {
       if (value.userOrNot is UserModel) {
         final authUid = value.userOrNot.authUid;

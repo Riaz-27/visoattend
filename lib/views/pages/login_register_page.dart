@@ -219,14 +219,16 @@ class LoginRegisterPage extends StatelessWidget {
                     verticalGap(height * percentGapMedium),
                   ],
                   CustomTextFormField(
-                    labelText: 'User ID',
+                    labelText: isSignUp? 'Student/Teacher Metric ID' :'Metric ID / Email',
                     controller: userIdController,
                     validator: (value) {
-                      if (value!.isEmpty ||
-                          !RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
-                        return 'User ID must be letters or number';
+                      if(value == null || value.isEmpty) {
+                        return 'Field cannot be empty';
                       }
                       if (isSignUp) {
+                        if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                          return 'User ID must be letters or number';
+                        }
                         return userValidatorString;
                       }
                       return null;

@@ -30,73 +30,6 @@ class UserDatabaseController extends GetxController {
     _isLeft(false);
   }
 
-  Future<bool> saveUser(IsarUser newUser) async {
-    final isar = await isarService.db;
-    final alreadyExist = await checkUser(newUser.userId);
-    if (alreadyExist) {
-      print('User Already Exists.');
-      return false;
-    } else {
-      await isar.writeTxn<int>(() => isar.isarUsers.put(newUser));
-      return true;
-    }
-  }
-
-  Future<bool> checkUser(String userId) async {
-    final isar = await isarService.db;
-    return await isar.isarUsers.filter().userIdEqualTo(userId).count() > 0
-        ? true
-        : false;
-  }
-
-  Future<IsarUser?> verifyUser(String userId, String password) async {
-    final isar = await isarService.db;
-    final user = await isar.isarUsers
-        .filter()
-        .userIdEqualTo(userId)
-        .and()
-        .passwordEqualTo(password)
-        .findFirst();
-    return user;
-  }
-
-  Future<List<IsarUser>> getAllIsarUsers() async {
-    final isar = await isarService.db;
-    return isar.isarUsers.where().findAll();
-  }
-
-  Future<void> registerNewUserToDatabase(IsarUser user) async {
-    final cameraServiceController = Get.find<CameraServiceController>();
-    final faceDetectorController = Get.find<FaceDetectorController>();
-    final recognitionController = Get.find<RecognitionController>();
-    await faceDetectorController.doFaceDetectionOnFrame(
-      cameraServiceController.cameraImage,
-      cameraServiceController.cameraRotation!,
-    );
-    final faceAngle = faceDetectorController.faces[0].headEulerAngleY!;
-    final emb = await recognitionController.performRecognitionOnIsolate(
-      cameraImage: cameraServiceController.cameraImage,
-      faces: faceDetectorController.faces,
-      cameraLensDirection: cameraServiceController.cameraLensDirection,
-      isRegistration: true,
-    );
-
-    if (faceAngle > -10 && faceAngle < 10) {
-      user.faceDataFront = emb;
-      _isFront(true);
-    } else if (faceAngle < -15 && faceAngle > -35) {
-      user.faceDataLeft = emb;
-      _isLeft(true);
-    } else if (faceAngle > 15 && faceAngle < 35) {
-      user.faceDataRight = emb;
-      _isRight(true);
-    }
-
-    if (_isFront.value && _isLeft.value && _isRight.value) {
-      saveUser(user);
-    }
-  }
-
   Future<bool> registerRetrainUserToFirestore(UserModel user, {bool retrainModel = false}) async {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
@@ -152,3 +85,39 @@ class UserDatabaseController extends GetxController {
     return false;
   }
 }
+
+
+// Future<bool> saveUser(IsarUser newUser) async {
+//   final isar = await isarService.db;
+//   final alreadyExist = await checkUser(newUser.userId);
+//   if (alreadyExist) {
+//     print('User Already Exists.');
+//     return false;
+//   } else {
+//     await isar.writeTxn<int>(() => isar.isarUsers.put(newUser));
+//     return true;
+//   }
+// }
+//
+// Future<bool> checkUser(String userId) async {
+//   final isar = await isarService.db;
+//   return await isar.isarUsers.filter().userIdEqualTo(userId).count() > 0
+//       ? true
+//       : false;
+// }
+//
+// Future<IsarUser?> verifyUser(String userId, String password) async {
+//   final isar = await isarService.db;
+//   final user = await isar.isarUsers
+//       .filter()
+//       .userIdEqualTo(userId)
+//       .and()
+//       .passwordEqualTo(password)
+//       .findFirst();
+//   return user;
+// }
+//
+// Future<List<IsarUser>> getAllIsarUsers() async {
+//   final isar = await isarService.db;
+//   return isar.isarUsers.where().findAll();
+// }

@@ -4,6 +4,8 @@ import 'dart:isolate';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:visoattend/helper/constants.dart';
 
 import '../../controller/attendance_controller.dart';
 import '../../controller/camera_service_controller.dart';
@@ -44,9 +46,8 @@ class AttendanceRecordPage extends StatelessWidget {
                     child: SizedBox(
                       height: 1,
                       child: AspectRatio(
-                        aspectRatio:
-                            cameraServiceController
-                                .cameraController.value.aspectRatio,
+                        aspectRatio: cameraServiceController
+                            .cameraController.value.aspectRatio,
                         child: CameraPreview(
                             cameraServiceController.cameraController),
                       ),
@@ -106,7 +107,7 @@ class AttendanceRecordPage extends StatelessWidget {
         bottom: 0.0,
         child: Container(
           height: 130,
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withOpacity(0.4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -179,80 +180,90 @@ class AttendanceRecordPage extends StatelessWidget {
       Positioned(
         left: 0.0,
         right: 0.0,
-        top: 30.0,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              flex: 1,
-              child: GestureDetector(
-                onTap: () {
-                  if (attendanceController.attendanceCount != 1) {
-                    attendanceController.attendanceCount--;
-                  }
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.circle_rounded,
-                      size: 50,
-                      color: Colors.black.withOpacity(0.3),
-                    ),
-                    const Icon(
-                      Icons.remove,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
+        top: 0.0,
+        child: Container(
+          height: 80,
+          color: Colors.black.withOpacity(0.4),
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Number of Attendance',
+                style: textTheme.titleSmall!.copyWith(color: Colors.white),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(
-                    Icons.circle_rounded,
-                    size: 50,
-                    color: Colors.black.withOpacity(0.3),
-                  ),
-                  Obx(() {
-                    return Text(
-                      attendanceController.attendanceCount.toString(),
-                      style: Get.textTheme.titleSmall!.copyWith(
+              const Spacer(),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () {
+                    if (attendanceController.attendanceCount != 1) {
+                      attendanceController.attendanceCount--;
+                    }
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.circle_rounded,
+                        size: 50,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      const Icon(
+                        Icons.remove,
+                        size: 15,
                         color: Colors.white,
                       ),
-                    );
-                  }),
-                ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-            Expanded(
-              flex: 1,
-              child: GestureDetector(
-                onTap: () {
-                  attendanceController.attendanceCount++;
-                },
+              Expanded(
+                flex: 1,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Icon(
                       Icons.circle_rounded,
                       size: 50,
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.white.withOpacity(0.3),
                     ),
-                    const Icon(
-                      Icons.add,
-                      size: 15,
-                      color: Colors.white,
-                    ),
+                    Obx(() {
+                      return Text(
+                        attendanceController.attendanceCount.toString(),
+                        style: Get.textTheme.titleSmall!.copyWith(
+                          color: Colors.white,
+                        ),
+                      );
+                    }),
                   ],
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  onTap: () {
+                    attendanceController.attendanceCount++;
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.circle_rounded,
+                        size: 50,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      const Icon(
+                        Icons.add,
+                        size: 15,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -262,15 +273,31 @@ class AttendanceRecordPage extends StatelessWidget {
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
         cameraServiceController.isStopped = true;
-        attendanceController.attendanceCount = 1;
+        final classCount = attendanceController.classroomData
+            .weekTimes[DateFormat('EEEE').format(DateTime.now())]['classCount'];
+        attendanceController.attendanceCount =
+            classCount == null || classCount == '' ? 1 : int.parse(classCount);
         final durationMs = faceDetectorController.faces.length * 100 + 500;
         await Future.delayed(Duration(milliseconds: durationMs));
         return true;
       },
       child: Scaffold(
         body: SafeArea(
-          child: Stack(
-            children: stackChildren,
+          child: GestureDetector(
+            onScaleUpdate: (updateDetails) async {
+              final cameraController = cameraServiceController.cameraController;
+              final maxZoomLevel = await cameraController.getMaxZoomLevel();
+
+              double dragIntensity = updateDetails.scale;
+              if (dragIntensity < 1) {
+                cameraController.setZoomLevel(1);
+              } else if (dragIntensity > 1 && dragIntensity < maxZoomLevel) {
+                cameraController.setZoomLevel(dragIntensity);
+              }
+            },
+            child: Stack(
+              children: stackChildren,
+            ),
           ),
         ),
       ),
