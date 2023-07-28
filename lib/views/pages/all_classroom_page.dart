@@ -8,9 +8,10 @@ import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
 import '../../models/classroom_model.dart';
 
-
 class AllClassroomPage extends StatelessWidget {
-  const AllClassroomPage({super.key});
+  const AllClassroomPage({super.key, this.isArchived = false});
+
+  final bool isArchived;
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +20,21 @@ class AllClassroomPage extends StatelessWidget {
     final searchController = TextEditingController();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
-    final classroomList = cloudFirestoreController.filteredClassroom;
+    final classroomList = isArchived
+        ? cloudFirestoreController.filteredArchivedClassroom
+        : cloudFirestoreController.filteredClassroom;
 
     return Scaffold(
+      appBar: isArchived
+          ? AppBar(
+        forceMaterialTransparency: true,
+        centerTitle: true,
+        title: Text(
+          'Archived Classes',
+          style: textTheme.titleMedium,
+        ),
+      )
+          : null,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
@@ -37,15 +50,24 @@ class AllClassroomPage extends StatelessWidget {
               CustomTextFormField(
                 labelText: 'Search Class',
                 controller: searchController,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                onChanged: (value) => cloudFirestoreController
+                contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                onChanged: (value) =>
+                isArchived
+                    ? cloudFirestoreController
+                    .filterArchiveClassesSearchResult(value)
+                    : cloudFirestoreController
                     .filterAllClassesSearchResult(value),
               ),
               verticalGap(height * percentGapSmall),
-              Text(
-                'All Classes',
-                style: Get.textTheme.bodySmall,
-              ),
+              Obx(() {
+                return Text(
+                  isArchived
+                      ? 'Archived Classes (${classroomList.length})'
+                      : 'All Classes (${classroomList.length})',
+                  style: Get.textTheme.bodySmall,
+                );
+              }),
               verticalGap(height * percentGapSmall),
               Expanded(
                 child: Obx(() {
@@ -53,10 +75,24 @@ class AllClassroomPage extends StatelessWidget {
                     itemCount: classroomList.length,
                     itemBuilder: (_, index) {
                       return GestureDetector(
-                        onTap: () => Get.to(() => DetailedClassroomPage(
-                            classroomData: classroomList[index])),
+                        onTap: () {
+                          if(isArchived){
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(days: 365),
+                                content: Text(
+                                  "Class has been archived. You can't add or edit anything.",
+                                ),
+                              ),
+                            );
+                          }
+                          Get.to(() =>
+                              DetailedClassroomPage(
+                                  classroomData: classroomList[index]));
+                        },
                         child:
-                            _buildCustomCard(classroom: classroomList[index]),
+                        _buildCustomCard(classroom: classroomList[index]),
                       );
                     },
                   );

@@ -61,10 +61,12 @@ class CameraServiceController extends GetxController {
     await _cameraController.initialize().then((_) {
       // _cameraRotation = InputImageRotationValue.fromRawValue(
       //     _cameraDescription.sensorOrientation);
-      _cameraRotation = rotationIntToImageRotation(_cameraDescription.sensorOrientation);
+      _cameraRotation =
+          rotationIntToImageRotation(_cameraDescription.sensorOrientation);
 
       print('Camera rotation: $_cameraRotation');
 
+      attendanceController.totalRecognized.clear();
 
       _cameraController.startImageStream((image) async {
         if (!isBusy) {
@@ -142,16 +144,16 @@ class CameraServiceController extends GetxController {
     await _initialize();
   }
 
-InputImageRotation rotationIntToImageRotation(int rotation) {
-  switch (rotation) {
-    case 90:
-      return InputImageRotation.rotation90deg;
-    case 180:
-      return InputImageRotation.rotation180deg;
-    case 270:
-      return InputImageRotation.rotation270deg;
-    default:
-      return InputImageRotation.rotation0deg;
+  InputImageRotation rotationIntToImageRotation(int rotation) {
+    switch (rotation) {
+      case 90:
+        return InputImageRotation.rotation90deg;
+      case 180:
+        return InputImageRotation.rotation180deg;
+      case 270:
+        return InputImageRotation.rotation270deg;
+      default:
+        return InputImageRotation.rotation0deg;
+    }
   }
-}
 }

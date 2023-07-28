@@ -130,7 +130,7 @@ class LoginRegisterPage extends StatelessWidget {
             password: password,
           );
           cloudFirestoreController.currentUser = userData!;
-          cloudFirestoreController.getUserClassrooms();
+          await cloudFirestoreController.getUserClassrooms();
           Get.offAll(() => const AuthPage());
         } else {
           Get.snackbar(

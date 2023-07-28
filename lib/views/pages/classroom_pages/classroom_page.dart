@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -26,6 +27,7 @@ class ClassroomPage extends GetView<AttendanceController> {
 
     final searchController = TextEditingController();
     DateTime selectedDate = DateTime.now();
+
 
     return Scaffold(
       body: Padding(
@@ -119,7 +121,8 @@ class ClassroomPage extends GetView<AttendanceController> {
                                 attendances: attendances,
                               );
                               final pdfData =
-                                  await reportGenerateService.generateReport();
+                                  await reportGenerateService.generateReport(
+                                      department: classroomData.department);
                               final dateTimeNow = DateFormat('ddMMy_hhmmss')
                                   .format(DateTime.now());
                               print('The date string : $dateTimeNow');
@@ -173,7 +176,11 @@ class ClassroomPage extends GetView<AttendanceController> {
           ),
         ),
       ),
-      floatingActionButton: _bottomFloatingButton(),
+      floatingActionButton: Obx(() {
+        return controller.classroomData.isArchived
+            ? const SizedBox()
+            : _bottomFloatingButton(context);
+      }),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -207,7 +214,11 @@ class ClassroomPage extends GetView<AttendanceController> {
       onTap: () {
         final openAttendance = controller.classroomData.openAttendance;
         if (userRole == 'Teacher' ||
-            (userRole == 'CR' && isToday && openAttendance != 'off')) {
+            (userRole == 'CR' && openAttendance == 'always') ||
+            (userRole == 'CR' &&
+                isToday &&
+                openAttendance != 'off' &&
+                openAttendance != 'always')) {
           Get.to(() => SelectedAttendancePage(attendance: attendance));
         }
       },
@@ -273,7 +284,11 @@ class ClassroomPage extends GetView<AttendanceController> {
               Obx(() {
                 final openAttendance = controller.classroomData.openAttendance;
                 if (userRole == 'Teacher' ||
-                    (userRole == 'CR' && isToday && openAttendance != 'off')) {
+                    (userRole == 'CR' && openAttendance == 'always') ||
+                    (userRole == 'CR' &&
+                        isToday &&
+                        openAttendance != 'off' &&
+                        openAttendance != 'always')) {
                   return const Icon(Icons.chevron_right);
                 }
                 return const SizedBox();
@@ -463,16 +478,18 @@ class ClassroomPage extends GetView<AttendanceController> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  controller.currentUserRole == 'Teacher'
+                  controller.currentUserRole == 'Teacher' && !classroom.isArchived
                       ? GestureDetector(
                           onTap: () async {
                             await Clipboard.setData(
                                     ClipboardData(text: classroom.classroomId))
                                 .then((value) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   behavior: SnackBarBehavior.floating,
-                                  content: Text(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(50)),
+                                  content: const Text(
                                     "Classroom ID copied to clipboard",
                                   ),
                                 ),
@@ -617,7 +634,7 @@ class ClassroomPage extends GetView<AttendanceController> {
     );
   }
 
-  Widget _bottomFloatingButton() {
+  Widget _bottomFloatingButton(BuildContext context) {
     final height = Get.height;
     final timerController = Get.find<TimerController>();
 
@@ -659,15 +676,24 @@ class ClassroomPage extends GetView<AttendanceController> {
                           Get.back();
                           Get.to(() => const AttendanceRecordPage());
                         },
+                        onLongPressed: () async {
+                          await controller.saveDataToFirestore().then((_) {
+                            Get.back();
+                            Fluttertoast.showToast(
+                                msg: 'Created empty attendance');
+                          });
+                        },
                       ),
                       verticalGap(height * percentGapSmall),
                       Obx(() {
-                        final isOpenAttendance =
+                        final openAttendance =
                             controller.classroomData.openAttendance;
                         String buttonText = 'Open Attendance';
                         final timeLeft = timerController.timeLeft;
-                        print(isOpenAttendance);
-                        if (isOpenAttendance != 'off') {
+                        print('time LEFT: $timeLeft');
+                        if (openAttendance == 'always') {
+                          buttonText = 'Close Attendance';
+                        } else if (openAttendance != 'off') {
                           if (timeLeft > 0) {
                             buttonText = 'Close Attendance';
                             final timeMin = timeLeft ~/ 60;
@@ -690,9 +716,14 @@ class ClassroomPage extends GetView<AttendanceController> {
                           text: buttonText,
                           onPressed: () async {
                             if (buttonText[0] == 'O') {
-                              await controller.openAttendance();
+                              await controller.openAttendance('30');
                             } else {
                               await controller.closeAttendance();
+                            }
+                          },
+                          onLongPressed: () async {
+                            if (buttonText[0] == 'O') {
+                              _openAttendanceTime(context);
                             }
                           },
                         );
@@ -708,21 +739,31 @@ class ClassroomPage extends GetView<AttendanceController> {
       }
       final openAttendance = controller.classroomData.openAttendance;
       if (userRole == 'CR' && openAttendance != 'off') {
-        controller.checkOpenCloseAttendance(openAttendance);
-        final timeLeft = timerController.timeLeft;
-        final timeMin = timeLeft ~/ 60;
-        final timeSec = timeLeft % 60;
         String timeText = 'Take Attendance';
-        if (timeMin > 0) {
-          timeText += ' (${timeMin}m ${timeSec}s)';
-        } else {
-          timeText += ' (${timeSec}s)';
+        if (openAttendance != 'always') {
+          controller.checkOpenCloseAttendance(openAttendance);
+          final timeLeft = timerController.timeLeft;
+          final timeMin = timeLeft ~/ 60;
+          final timeSec = timeLeft % 60;
+          if (timeMin > 0) {
+            timeText += ' (${timeMin}m ${timeSec}s)';
+          } else {
+            timeText += ' (${timeSec}s)';
+          }
         }
-        return FloatingActionButton.extended(
-          onPressed: () {
+        return InkWell(
+          onTap: () {
             Get.to(() => const AttendanceRecordPage());
           },
-          label: Text(timeText),
+          onLongPress: () async {
+            await controller.saveDataToFirestore().then((_) {
+              Fluttertoast.showToast(msg: 'Created empty attendance');
+            });
+          },
+          child: FloatingActionButton.extended(
+            onPressed: () {},
+            label: Text(timeText),
+          ),
         );
       } else if (userRole == 'CR' && openAttendance == 'off') {
         timerController.cancelAttendanceTimer();
@@ -730,5 +771,61 @@ class ClassroomPage extends GetView<AttendanceController> {
 
       return const SizedBox();
     });
+  }
+
+  void _openAttendanceTime(BuildContext context) async {
+    final textController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Open Attendance',
+            style: Get.textTheme.titleMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: Get.width,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Allow class CR to take attendance.\nEnter duration in minute.',
+                  style: Get.textTheme.bodyMedium,
+                ),
+                verticalGap(Get.height * percentGapSmall),
+                TextField(
+                  controller: textController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  decoration: const InputDecoration(
+                    hintText: 'Always',
+                    isDense: true,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await controller.openAttendance(textController.text);
+                Get.back();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -168,8 +168,11 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
     final attendance = controller.selectedAttendance;
     final studentStatus = attendance.studentsData[student.authUid] ?? 'Absent';
+    final classroomData = controller.classroomData;
     return GestureDetector(
       onTap: () {
+        if(classroomData.isArchived) return;
+
         controller.selectedAttendanceStatus = studentStatus;
 
         _handleUpdateAttendanceStatus(student);

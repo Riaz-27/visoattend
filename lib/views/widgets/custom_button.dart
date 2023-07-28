@@ -12,6 +12,7 @@ class CustomButton extends StatelessWidget {
     this.fontWeight,
     required this.text,
     required this.onPressed,
+    this.onLongPressed,
   });
 
   final double? width;
@@ -22,6 +23,7 @@ class CustomButton extends StatelessWidget {
   final FontWeight? fontWeight;
   final String text;
   final VoidCallback onPressed;
+  final VoidCallback? onLongPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,7 @@ class CustomButton extends StatelessWidget {
       width: width ?? Get.width,
       height: height ?? Get.height * 0.06,
       child: ElevatedButton(
+        onLongPress: onLongPressed,
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           elevation: 0,

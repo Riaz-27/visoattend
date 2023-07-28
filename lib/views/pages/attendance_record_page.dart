@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/helper/constants.dart';
+import 'package:visoattend/helper/functions.dart';
 
 import '../../controller/attendance_controller.dart';
 import '../../controller/camera_service_controller.dart';
@@ -183,85 +184,141 @@ class AttendanceRecordPage extends StatelessWidget {
         top: 0.0,
         child: Container(
           height: 80,
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withOpacity(0.6),
           padding: const EdgeInsets.all(10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 'Number of Attendance',
-                style: textTheme.titleSmall!.copyWith(color: Colors.white),
+                style: textTheme.titleMedium!.copyWith(color: Colors.white),
               ),
               const Spacer(),
-              Expanded(
-                flex: 1,
-                child: GestureDetector(
-                  onTap: () {
-                    if (attendanceController.attendanceCount != 1) {
-                      attendanceController.attendanceCount--;
-                    }
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.circle_rounded,
-                        size: 50,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      const Icon(
-                        Icons.remove,
-                        size: 15,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
+              Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50),
+                  color: Colors.white.withOpacity(0.7),
+                  border: Border.all(width: 0.5, color: Colors.white),
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Row(
                   children: [
-                    Icon(
-                      Icons.circle_rounded,
-                      size: 50,
-                      color: Colors.white.withOpacity(0.3),
-                    ),
-                    Obx(() {
-                      return Text(
-                        attendanceController.attendanceCount.toString(),
-                        style: Get.textTheme.titleSmall!.copyWith(
-                          color: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        if (attendanceController.attendanceCount != 1) {
+                          attendanceController.attendanceCount--;
+                        }
+                      },
+                      child: Container(
+                        color: Colors.transparent,
+                        width: 40,
+                        child: const Icon(
+                          Icons.remove,
+                          size: 18,
+                          color: Colors.black,
                         ),
-                      );
-                    }),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 25,
+                      child: Obx(() {
+                        return Text(
+                          attendanceController.attendanceCount.toString(),
+                          textAlign: TextAlign.center,
+                          style: Get.textTheme.titleSmall!.copyWith(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        attendanceController.attendanceCount++;
+                      },
+                      child: Container(
+                        color: Colors.transparent,
+                        width: 40,
+                        child: const Icon(
+                          Icons.add,
+                          size: 18,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Expanded(
-                flex: 1,
-                child: GestureDetector(
-                  onTap: () {
-                    attendanceController.attendanceCount++;
-                  },
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.circle_rounded,
-                        size: 50,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      const Icon(
-                        Icons.add,
-                        size: 15,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              horizontalGap(width * percentGapLarge)
+              // Expanded(
+              //   flex: 1,
+              //   child: GestureDetector(
+              //     onTap: () {
+              //       if (attendanceController.attendanceCount != 1) {
+              //         attendanceController.attendanceCount--;
+              //       }
+              //     },
+              //     child: Stack(
+              //       alignment: Alignment.center,
+              //       children: [
+              //         Icon(
+              //           Icons.circle_rounded,
+              //           size: 50,
+              //           color: Colors.white.withOpacity(0.3),
+              //         ),
+              //         const Icon(
+              //           Icons.remove,
+              //           size: 15,
+              //           color: Colors.white,
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              // Expanded(
+              //   flex: 1,
+              //   child: Stack(
+              //     alignment: Alignment.center,
+              //     children: [
+              //       Icon(
+              //         Icons.circle_rounded,
+              //         size: 50,
+              //         color: Colors.white.withOpacity(0.3),
+              //       ),
+              //       Obx(() {
+              //         return Text(
+              //           attendanceController.attendanceCount.toString(),
+              //           style: Get.textTheme.titleSmall!.copyWith(
+              //             color: Colors.white,
+              //           ),
+              //         );
+              //       }),
+              //     ],
+              //   ),
+              // ),
+              // Expanded(
+              //   flex: 1,
+              //   child: GestureDetector(
+              //     onTap: () {
+              //       attendanceController.attendanceCount++;
+              //     },
+              //     child: Stack(
+              //       alignment: Alignment.center,
+              //       children: [
+              //         Icon(
+              //           Icons.circle_rounded,
+              //           size: 50,
+              //           color: Colors.white.withOpacity(0.3),
+              //         ),
+              //         const Icon(
+              //           Icons.add,
+              //           size: 15,
+              //           color: Colors.white,
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

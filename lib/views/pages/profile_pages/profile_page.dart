@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:visoattend/helper/functions.dart';
+import 'package:visoattend/views/pages/all_classroom_page.dart';
 import 'package:visoattend/views/pages/profile_pages/account_details_page.dart';
 import 'package:visoattend/views/pages/profile_pages/change_password_page.dart';
 
@@ -102,7 +103,7 @@ class ProfilePage extends StatelessWidget {
                 Divider(
                   height: 0,
                   color: colorScheme.outline.withOpacity(0.4),
-                  thickness: 0.5,
+                  thickness: 1,
                 ),
                 verticalGap(height * percentGapSmall),
                 _optionsWidget(
@@ -133,7 +134,14 @@ class ProfilePage extends StatelessWidget {
                 Divider(
                   height: 0,
                   color: colorScheme.outline.withOpacity(0.4),
-                  thickness: 0.5,
+                  thickness: 1,
+                ),
+                verticalGap(height * percentGapSmall),
+                _optionsWidget(
+                  onTap: () =>
+                      Get.to(() => const AllClassroomPage(isArchived: true)),
+                  Icons.archive_outlined,
+                  'Archived classes',
                 ),
                 verticalGap(height * percentGapSmall),
                 _optionsWidget(

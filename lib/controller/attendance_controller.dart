@@ -49,7 +49,7 @@ class AttendanceController extends GetxController {
 
   Map<String, RecognitionModel> matchedStudents = {}; // String is user.authUid
 
-  int openAttendanceTimerSec = 300;
+  // int openAttendanceTimerSec = 300;
 
   final _attendanceCount = 1.obs;
 
@@ -78,6 +78,8 @@ class AttendanceController extends GetxController {
   }
 
   void updateRootClassesValue() {
+    if(classroomData.isArchived) return;
+
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     final classIndex = cloudFirestoreController.classrooms.indexWhere(
@@ -117,7 +119,7 @@ class AttendanceController extends GetxController {
     //Check for open attendance
     final dbOpenAttendance = _classroomData.value.openAttendance;
 
-    if (dbOpenAttendance != 'off') {
+    if (dbOpenAttendance != 'off' && dbOpenAttendance != 'always') {
       await checkOpenCloseAttendance(dbOpenAttendance);
     }
   }
@@ -133,12 +135,9 @@ class AttendanceController extends GetxController {
   Future<void> checkOpenCloseAttendance(String dbOpenAttendance) async {
     final timerController = Get.find<TimerController>();
     final now = DateTime.now();
-    final dbDateTime =
-        DateTime.fromMillisecondsSinceEpoch(int.parse(dbOpenAttendance));
-    final dbTimeSeconds =
-        (dbDateTime.minute * 60 + dbDateTime.second) + openAttendanceTimerSec;
-    final nowTimeSeconds = now.minute * 60 + now.second;
-    final timeDiff = dbTimeSeconds - nowTimeSeconds;
+    final dbDateTime = DateTime.parse(dbOpenAttendance);
+    final timeDiff = dbDateTime.difference(now).inSeconds;
+    print('Time Diff : $timeDiff');
     if (timeDiff > 0) {
       timerController.startAttendanceTimer(timeDiff);
     } else {
@@ -190,7 +189,7 @@ class AttendanceController extends GetxController {
     });
   }
 
-  Future<void> saveDataToFirestore() async {
+  Future<void> saveDataToFirestore({bool isEmpty = false}) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final currentUser = cloudFirestoreController.currentUser;
     final takenBy = {
@@ -207,7 +206,7 @@ class AttendanceController extends GetxController {
     final totalStudents = cRsData.toList() + studentsData.toList();
     for (var student in totalStudents) {
       attendanceData.studentsData[student.authUid] = 'Absent';
-      if (matchedStudents.containsKey(student.authUid)) {
+      if (!isEmpty && matchedStudents.containsKey(student.authUid)) {
         attendanceData.studentsData[student.authUid] = 'Present';
       }
     }
@@ -281,14 +280,24 @@ class AttendanceController extends GetxController {
     return missedClasses;
   }
 
-  Future<void> openAttendance() async {
-    final now = DateTime.now().millisecondsSinceEpoch.toString();
-    try {
-      await Get.find<CloudFirestoreController>()
-          .changeOpenAttendance(classroomData.classroomId, now);
-      Get.find<TimerController>().startAttendanceTimer(openAttendanceTimerSec);
-    } catch (e) {
-      return;
+  Future<void> openAttendance(String duration) async {
+    if (duration == '') {
+      try {
+        await Get.find<CloudFirestoreController>()
+            .changeOpenAttendance(classroomData.classroomId, 'always');
+      } catch (e) {
+        return;
+      }
+    } else {
+      final min = int.parse(duration);
+      final time = DateTime.now().add(Duration(minutes: min));
+      try {
+        await Get.find<CloudFirestoreController>()
+            .changeOpenAttendance(classroomData.classroomId, time.toString());
+        Get.find<TimerController>().startAttendanceTimer(min * 60);
+      } catch (e) {
+        return;
+      }
     }
   }
 

@@ -60,6 +60,7 @@ class CreateEditClassroomPage extends StatelessWidget {
 
     final classroomController = Get.find<ClassroomController>();
     final currentUser = Get.find<CloudFirestoreController>().currentUser;
+    final currentUserRole = Get.find<AttendanceController>().currentUserRole;
 
     final height = Get.height;
 
@@ -76,7 +77,9 @@ class CreateEditClassroomPage extends StatelessWidget {
         final dbWeekStartTime = classroom.weekTimes[weekDays[i]]['startTime'];
         final dbWeekEndTime = classroom.weekTimes[weekDays[i]]['endTime'];
         final dbWeekRoomNo = classroom.weekTimes[weekDays[i]]['room'];
-        final dbClassCount = classroom.weekTimes[weekDays[i]]['classCount'];
+        String dbClassCount =
+            classroom.weekTimes[weekDays[i]]['classCount'] ?? '';
+        dbClassCount = dbClassCount == '' ? '1' : dbClassCount;
         if (dbWeekStartTime != 'Off Day') {
           //getting the database time and setting the variables
           classroomController.selectedStartTimes[i] = dbWeekStartTime;
@@ -124,67 +127,83 @@ class CreateEditClassroomPage extends StatelessWidget {
           style: Get.textTheme.bodyLarge,
         ),
         actions: [
-          GestureDetector(
-            onTap: () async {
-              final courseCode = courseCodeController.text.trim();
-              final courseTitle = courseTitleController.text.trim();
-              if (courseTitle.isEmpty || courseTitle.isEmpty) {
-                return;
-              }
-              if (isEdit) {
-                classroom.courseCode = courseCodeController.text.trim();
-                classroom.courseTitle = courseTitleController.text.trim();
-                classroom.session = sessionController.text.trim();
-                classroom.section = sectionController.text.trim();
-                classroom.department = departmentController.text.trim();
-                classroom.weekTimes = classroomController.selectedWeekTimes;
-                await classroomController.updateClassroom(classroom);
-                Get.back();
-                Get.back();
-                Get.to(() => DetailedClassroomPage(classroomData: classroom));
-              } else if (!isEdit) {
-                await classroomController.createNewClassroom(
-                  courseCode: courseCode,
-                  courseTitle: courseTitle,
-                  section: sectionController.text.trim(),
-                  session: sessionController.text.trim(),
-                  department: departmentController.text.trim(),
-                );
-                Get.back();
-              }
-            },
-            child: Container(
-              margin: isEdit
-                  ? EdgeInsets.zero
-                  : EdgeInsets.symmetric(horizontal: width * percentGapMedium),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: Get.theme.colorScheme.secondaryContainer,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: kSmall,
-                  vertical: kVerySmall,
-                ),
-                child: Text(
-                  isEdit ? 'Save' : 'Create',
-                  style: Get.textTheme.bodySmall!.copyWith(
-                    color: Get.theme.colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.bold,
+          classroom.isArchived
+              ? const SizedBox()
+              : GestureDetector(
+                  onTap: () async {
+                    final courseCode = courseCodeController.text.trim();
+                    final courseTitle = courseTitleController.text.trim();
+                    if (courseTitle.isEmpty || courseTitle.isEmpty) {
+                      return;
+                    }
+                    if (isEdit) {
+                      classroom.courseCode = courseCodeController.text.trim();
+                      classroom.courseTitle = courseTitleController.text.trim();
+                      classroom.session = sessionController.text.trim();
+                      classroom.section = sectionController.text.trim();
+                      classroom.department = departmentController.text.trim();
+                      classroom.weekTimes =
+                          classroomController.selectedWeekTimes;
+                      await classroomController.updateClassroom(classroom);
+                      Get.back();
+                      Get.back();
+                      Get.to(() =>
+                          DetailedClassroomPage(classroomData: classroom));
+                    } else if (!isEdit) {
+                      await classroomController.createNewClassroom(
+                        courseCode: courseCode,
+                        courseTitle: courseTitle,
+                        section: sectionController.text.trim(),
+                        session: sessionController.text.trim(),
+                        department: departmentController.text.trim(),
+                      );
+                      Get.back();
+                    }
+                  },
+                  child: Container(
+                    margin: isEdit && currentUserRole == 'Teacher'
+                        ? EdgeInsets.zero
+                        : EdgeInsets.symmetric(
+                            horizontal: width * percentGapLarge),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(100),
+                      color: Get.theme.colorScheme.secondaryContainer,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: kSmall,
+                        vertical: kVerySmall,
+                      ),
+                      child: Text(
+                        isEdit ? 'Save' : 'Create',
+                        style: Get.textTheme.bodySmall!.copyWith(
+                          color: Get.theme.colorScheme.onSecondaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
           if (isEdit && currentUser.authUid == classroom.teachers[0]['authUid'])
             PopupMenuButton(
               position: PopupMenuPosition.under,
               tooltip: 'Classroom Options',
               itemBuilder: (BuildContext context) => [
-                const PopupMenuItem(
-                  value: 'archive',
-                  child: Text('Archive Classroom'),
-                ),
+                if(classroom.isArchived) ...[
+                  const PopupMenuItem(
+                    value: 'restore',
+                    child: Text('Restore'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Delete'),
+                  ),
+                ],
+                if (!classroom.isArchived)
+                  const PopupMenuItem(
+                    value: 'archive',
+                    child: Text('Archive Classroom'),
+                  ),
               ],
               onSelected: (value) {
                 if (value == 'archive') {
@@ -285,13 +304,16 @@ class CreateEditClassroomPage extends StatelessWidget {
                               if (textEditingValue.text == '') {
                                 return const Iterable<String>.empty();
                               }
-                              return departmentOptions.where((opt) =>
-                                  opt.toLowerCase().contains(textEditingValue.text.toLowerCase()));
+                              return departmentOptions.where((opt) => opt
+                                  .toLowerCase()
+                                  .contains(
+                                      textEditingValue.text.toLowerCase()));
                             },
                             onSelected: (value) {
                               departmentController.text = value;
                             },
-                            fieldViewBuilder: (context, fieldController, focusNode, onSubmitted) {
+                            fieldViewBuilder: (context, fieldController,
+                                focusNode, onSubmitted) {
                               return TextField(
                                 controller: fieldController,
                                 style: textTheme.bodyMedium,
@@ -304,37 +326,47 @@ class CreateEditClassroomPage extends StatelessWidget {
                                 ),
                               );
                             },
-                            optionsViewBuilder: (context, onSelected, optionsData) {
+                            optionsViewBuilder:
+                                (context, onSelected, optionsData) {
                               return Align(
                                 alignment: Alignment.topLeft,
                                 child: Material(
                                   child: Container(
-                                    margin: EdgeInsets.only(top: height * percentGapVerySmall),
+                                    margin: EdgeInsets.only(
+                                        top: height * percentGapVerySmall),
                                     width: width * 0.85,
                                     decoration: BoxDecoration(
-                                      color: colorScheme.surfaceVariant.withOpacity(0.7),
-                                      borderRadius: BorderRadius.circular(15),
-                                      border: Border.all(color: colorScheme.onBackground)
-                                    ),
+                                        color: colorScheme.surfaceVariant
+                                            .withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(15),
+                                        border: Border.all(
+                                            color: colorScheme.onBackground)),
                                     child: ListView.builder(
                                       shrinkWrap: true,
-                                      padding:
-                                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 10),
                                       itemCount: optionsData.length,
-                                      itemBuilder: (BuildContext context, int index) {
-                                        final option = optionsData.elementAt(index);
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        final option =
+                                            optionsData.elementAt(index);
                                         return GestureDetector(
                                           onTap: () => onSelected(option),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               verticalGap(10),
-                                              Text(option, style: textTheme.bodyMedium),
+                                              Text(option,
+                                                  style: textTheme.bodyMedium),
                                               verticalGap(10),
-                                              if (index < optionsData.length - 1)
-                                                const Divider(height: 0, thickness: 0.5),
+                                              if (index <
+                                                  optionsData.length - 1)
+                                                const Divider(
+                                                    height: 0, thickness: 0.5),
                                             ],
                                           ),
                                         );
@@ -520,8 +552,6 @@ Future<void> _selectTime(BuildContext context, int index,
     classroomController.selectedWeeks[index] = false;
   }
 }
-
-
 
 Widget _buildWeekTimeList(
   BuildContext context,

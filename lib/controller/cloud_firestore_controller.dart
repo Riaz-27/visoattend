@@ -43,6 +43,10 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get filteredClassroom => _filteredClassroom;
 
+  final _filteredArchivedClassroom = <ClassroomModel>[].obs;
+
+  List<ClassroomModel> get filteredArchivedClassroom => _filteredArchivedClassroom;
+
   final _classesOfToday = <ClassroomModel>[].obs;
 
   List<ClassroomModel> get classesOfToday => _classesOfToday;
@@ -305,6 +309,7 @@ class CloudFirestoreController extends GetxController {
     _classrooms.value = classes;
     _filteredClassroom.value = classes;
     _archivedClassrooms.value = archivedClasses;
+    _filteredArchivedClassroom.value = archivedClasses;
     _isInitialized.value = true;
   }
 
@@ -419,6 +424,18 @@ class CloudFirestoreController extends GetxController {
             classroom.courseCode.toLowerCase().contains(value) ||
             classroom.session.toLowerCase().contains(value) ||
             classroom.section.toLowerCase().contains(value))
+        .toList();
+  }
+
+  //filtering archived classroom for the search result
+  void filterArchiveClassesSearchResult(String value) {
+    value = value.toLowerCase();
+    _filteredArchivedClassroom.value = _archivedClassrooms
+        .where((classroom) =>
+    classroom.courseTitle.toLowerCase().contains(value) ||
+        classroom.courseCode.toLowerCase().contains(value) ||
+        classroom.session.toLowerCase().contains(value) ||
+        classroom.section.toLowerCase().contains(value))
         .toList();
   }
 
