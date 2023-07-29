@@ -77,6 +77,8 @@ class LeaveRequestController extends GetxController {
     }
     await cloudFirestoreController
         .updateLeaveRequestApplicationStatus(leaveRequest);
+
+    _classroomLeaveRequests.add(leaveRequest);
   }
 
   Future<void> getAndFilterClassroomLeaveRequests() async {
@@ -144,5 +146,25 @@ class LeaveRequestController extends GetxController {
         .updateLeaveRequestApplicationStatus(leaveRequest);
 
     _pendingLeaveRequestsCount.value--;
+  }
+
+  Future<void> deleteClassroomLeaveRequest(
+      {required int leaveRequestIndex}) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final attendanceController = Get.find<AttendanceController>();
+
+    final currentClassroom = attendanceController.classroomData;
+    final leaveRequest = _classroomLeaveRequests[leaveRequestIndex];
+
+    _classroomLeaveRequests.remove(leaveRequest);
+    await cloudFirestoreController.deleteClassroomLeaveRequest(
+      classroom: currentClassroom,
+      leaveRequest: leaveRequest,
+    );
+
+    if (leaveRequest.applicationStatus[currentClassroom.classroomId] ==
+        'Pending') {
+      _pendingLeaveRequestsCount.value--;
+    }
   }
 }

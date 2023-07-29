@@ -78,7 +78,7 @@ class AttendanceController extends GetxController {
   }
 
   void updateRootClassesValue() {
-    if(classroomData.isArchived) return;
+    if (classroomData.isArchived) return;
 
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
@@ -318,6 +318,12 @@ class AttendanceController extends GetxController {
 
   AttendanceModel get selectedAttendance => _selectedAttendance.value;
 
+  final _selectedDateTime = DateTime.now().obs;
+
+  DateTime get selectedDateTime => _selectedDateTime.value;
+
+  set selectedDateTime(DateTime dateTime) => _selectedDateTime.value = dateTime;
+
   set selectedAttendance(AttendanceModel value) =>
       _selectedAttendance.value = value;
 
@@ -353,6 +359,10 @@ class AttendanceController extends GetxController {
 
     _allStudents(tempStudents);
     _filteredStudents(tempStudents);
+
+    // setting attendance current date and time
+    _selectedDateTime.value =
+        DateTime.fromMillisecondsSinceEpoch(_selectedAttendance.value.dateTime);
   }
 
   Future<void> changeStudentAttendanceStatus({
@@ -401,5 +411,25 @@ class AttendanceController extends GetxController {
               selectedCategory,
         )
         .toList();
+  }
+
+  Future<void> updateAttendanceDateTime(AttendanceModel attendance) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    await cloudFirestoreController.updateAttendanceDateTime(
+      classroomData.classroomId,
+      attendance,
+    );
+    _attendances.value = await cloudFirestoreController
+        .getClassroomAttendances(classroomData.classroomId);
+  }
+
+  Future<void> deleteAttendance(AttendanceModel attendance) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    await cloudFirestoreController.deleteAttendanceData(
+      classroomData.classroomId,
+      attendance.attendanceId,
+    );
+    _attendances.remove(attendance);
+    _filteredAttendances.remove(attendance);
   }
 }

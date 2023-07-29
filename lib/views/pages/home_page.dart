@@ -31,9 +31,7 @@ class HomePage extends StatelessWidget {
     final height = Get.height;
     final width = Get.width;
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    // if (!cloudFirestoreController.isInitialized) {
-    //   cloudFirestoreController.initialize();
-    // }
+
     final classroomList = cloudFirestoreController.classesOfToday;
 
     return Scaffold(
@@ -277,7 +275,7 @@ class HomePage extends StatelessWidget {
       if (timeLeftToStart.isNotEmpty) {
         if (timeLeftToStart.first > 0) {
           final timeLeft = timeLeftToStart.first;
-          final timeLeftHour = (timeLeft / 60).floor();
+          final timeLeftHour = timeLeft ~/ 60;
           final timeLeftMin = timeLeft % 60;
           if (timeLeftHour > 0) {
             startTimeLeftText += '${timeLeftHour}h ';
@@ -316,151 +314,155 @@ class HomePage extends StatelessWidget {
           color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
         ),
         padding: const EdgeInsets.all(kSmall),
-        child: Row(
+        child: Column(
           children: [
-            horizontalGap(width * percentGapSmall),
-            if (!cloudFirestoreController.isHoliday && classroomList.isNotEmpty)
-              CircularPercentIndicator(
-                radius: height * 0.07,
-                lineWidth: 12,
-                percent: percent,
-                circularStrokeCap: CircularStrokeCap.round,
-                progressColor: color,
-                backgroundColor:
-                    Get.theme.colorScheme.onBackground.withAlpha(15),
-                animation: true,
-                center: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      percentText,
-                      style: Get.textTheme.titleLarge,
+            Row(
+              children: [
+                horizontalGap(width * percentGapSmall),
+                if (!cloudFirestoreController.isHoliday && classroomList.isNotEmpty)
+                  CircularPercentIndicator(
+                    radius: height * 0.07,
+                    lineWidth: 12,
+                    percent: percent,
+                    circularStrokeCap: CircularStrokeCap.round,
+                    progressColor: color,
+                    backgroundColor:
+                        Get.theme.colorScheme.onBackground.withAlpha(15),
+                    animation: true,
+                    center: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          percentText,
+                          style: Get.textTheme.titleLarge,
+                        ),
+                        Text(
+                          status,
+                          style: Get.textTheme.labelSmall!.copyWith(color: color),
+                        ),
+                      ],
                     ),
-                    Text(
-                      status,
-                      style: Get.textTheme.labelSmall!.copyWith(color: color),
-                    ),
-                  ],
-                ),
-              ),
-            horizontalGap(width * 0.05),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  verticalGap(height * percentGapSmall),
-                  Text(
-                    cloudFirestoreController.isHoliday
-                        ? 'Looks like its a Holiday!'
-                        : classroomList.isEmpty
-                            ? 'No more classes today'
-                            : classroom.courseTitle,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  verticalGap(height * percentGapVerySmall),
-                  Row(
+                horizontalGap(width * 0.05),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      verticalGap(height * percentGapSmall),
                       Text(
                         cloudFirestoreController.isHoliday
-                            ? 'Enjoy your Holiday!'
-                            : classroom.courseCode,
-                        style: Get.textTheme.labelMedium,
+                            ? 'Looks like its a Holiday!'
+                            : classroomList.isEmpty
+                                ? 'No more classes today'
+                                : classroom.courseTitle,
+                        style: Get.textTheme.labelMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      verticalGap(height * percentGapVerySmall),
+                      Row(
+                        children: [
+                          Text(
+                            cloudFirestoreController.isHoliday
+                                ? 'Enjoy your Holiday!'
+                                : classroom.courseCode,
+                            style: Get.textTheme.labelMedium,
+                          ),
+                          if (classroomList.isNotEmpty) ...[
+                            horizontalGap(width * percentGapSmall),
+                            Text(
+                              'Section: ',
+                              style: Get.textTheme.labelSmall!.copyWith(
+                                  color: Get.theme.colorScheme.onBackground
+                                      .withAlpha(150)),
+                            ),
+                            Text(
+                              classroom.section,
+                              style: Get.textTheme.labelMedium,
+                            ),
+                          ]
+                        ],
                       ),
                       if (classroomList.isNotEmpty) ...[
-                        horizontalGap(width * percentGapSmall),
-                        Text(
-                          'Section: ',
-                          style: Get.textTheme.labelSmall!.copyWith(
-                              color: Get.theme.colorScheme.onBackground
-                                  .withAlpha(150)),
+                        verticalGap(height * percentGapSmall),
+                        Row(
+                          children: [
+                            if (roomNo != '') ...[
+                              const Icon(
+                                Icons.location_pin,
+                                size: 14,
+                              ),
+                              Text(
+                                'Room No: ',
+                                style: Get.textTheme.labelSmall!.copyWith(
+                                    color: Get.theme.colorScheme.onBackground
+                                        .withAlpha(150)),
+                              ),
+                              Text(
+                                roomNo,
+                                style: Get.textTheme.labelMedium,
+                              ),
+                            ]
+                          ],
                         ),
-                        Text(
-                          classroom.section,
-                          style: Get.textTheme.labelMedium,
-                        ),
+                        verticalGap(height * percentGapSmall),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isRunning ? 'Started' : 'Starts at',
+                                  style: Get.textTheme.labelSmall!.copyWith(
+                                    color: Get.theme.colorScheme.onBackground
+                                        .withAlpha(150),
+                                  ),
+                                ),
+                                verticalGap(height * percentGapVerySmall),
+                                Text(
+                                  startTime,
+                                  style: Get.textTheme.labelMedium,
+                                ),
+                                Text(
+                                  startTimeLeftText,
+                                  style: Get.textTheme.labelMedium!.copyWith(
+                                    color: startTextColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Ends at',
+                                  style: Get.textTheme.labelSmall!.copyWith(
+                                    color: Get.theme.colorScheme.onBackground
+                                        .withAlpha(150),
+                                  ),
+                                ),
+                                verticalGap(height * percentGapVerySmall),
+                                Text(
+                                  endTime,
+                                  style: Get.textTheme.labelMedium,
+                                ),
+                                Text(
+                                  endTimeLeftText,
+                                  style: Get.textTheme.labelMedium!.copyWith(
+                                    color: endTextColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
                       ]
                     ],
                   ),
-                  if (classroomList.isNotEmpty) ...[
-                    verticalGap(height * percentGapSmall),
-                    Row(
-                      children: [
-                        if (roomNo != '') ...[
-                          const Icon(
-                            Icons.location_pin,
-                            size: 14,
-                          ),
-                          Text(
-                            'Room No: ',
-                            style: Get.textTheme.labelSmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150)),
-                          ),
-                          Text(
-                            roomNo,
-                            style: Get.textTheme.labelMedium,
-                          ),
-                        ]
-                      ],
-                    ),
-                    verticalGap(height * percentGapSmall),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isRunning ? 'Started' : 'Starts at',
-                              style: Get.textTheme.labelSmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150),
-                              ),
-                            ),
-                            verticalGap(height * percentGapVerySmall),
-                            Text(
-                              startTime,
-                              style: Get.textTheme.labelMedium,
-                            ),
-                            Text(
-                              startTimeLeftText,
-                              style: Get.textTheme.labelMedium!.copyWith(
-                                color: startTextColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Ends at',
-                              style: Get.textTheme.labelSmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150),
-                              ),
-                            ),
-                            verticalGap(height * percentGapVerySmall),
-                            Text(
-                              endTime,
-                              style: Get.textTheme.labelMedium,
-                            ),
-                            Text(
-                              endTimeLeftText,
-                              style: Get.textTheme.labelMedium!.copyWith(
-                                color: endTextColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    )
-                  ]
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

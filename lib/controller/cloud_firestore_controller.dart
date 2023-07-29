@@ -45,7 +45,8 @@ class CloudFirestoreController extends GetxController {
 
   final _filteredArchivedClassroom = <ClassroomModel>[].obs;
 
-  List<ClassroomModel> get filteredArchivedClassroom => _filteredArchivedClassroom;
+  List<ClassroomModel> get filteredArchivedClassroom =>
+      _filteredArchivedClassroom;
 
   final _classesOfToday = <ClassroomModel>[].obs;
 
@@ -231,18 +232,66 @@ class CloudFirestoreController extends GetxController {
           .collection(classroomsCollection)
           .doc(classroom.classroomId)
           .update(classroom.toJson());
+
+      int index = classrooms.indexWhere(
+        (dbClassroom) => classroom.classroomId == dbClassroom.classroomId,
+      );
+      classrooms[index] = classroom;
     } catch (e) {
       dev.log(e.toString());
     }
   }
 
-  Future<void> archiveClassroom(ClassroomModel classroom) async {
+  Future<void> archiveRestoreClassroom(
+      ClassroomModel classroom, bool archive) async {
     try {
       await _firestoreInstance
           .collection(classroomsCollection)
           .doc(classroom.classroomId)
-          .update({'isArchived': true});
-      await initialize();
+          .update({'isArchived': archive});
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
+  Future<void> deleteClassroom({
+    required ClassroomModel classroom,
+    required List<AttendanceModel> attendances,
+    required List<LeaveRequestModel> leaveRequests,
+    required List<UserModel> classroomUsers,
+  }) async {
+    // deleting all attendance data
+    if (attendances.isNotEmpty) {
+      for (final attendance in attendances) {
+        await deleteAttendanceData(
+          classroom.classroomId,
+          attendance.attendanceId,
+        );
+      }
+    }
+    // removing leave requests from this classroom
+    if (leaveRequests.isNotEmpty) {
+      for (final leaveRequest in leaveRequests) {
+        await deleteClassroomLeaveRequest(
+          classroom: classroom,
+          leaveRequest: leaveRequest,
+        );
+      }
+    }
+    //removing users from this classroom
+    for (final user in classroomUsers) {
+      user.classrooms.remove(classroom.classroomId);
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(user.authUid)
+          .update({'classrooms': user.classrooms});
+    }
+
+    try {
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .delete();
     } catch (e) {
       dev.log(e.toString());
     }
@@ -250,10 +299,9 @@ class CloudFirestoreController extends GetxController {
 
   Future<void> leaveClassroom(ClassroomModel classroom) async {
     try {
-      classroom.students.removeWhere(
-          (students) => students['authUid'] == currentUser.authUid);
-      currentUser.classrooms
-          .removeWhere((key, value) => key == classroom.classroomId);
+      classroom.students
+          .removeWhere((student) => student['authUid'] == currentUser.authUid);
+      currentUser.classrooms.remove(classroom.classroomId);
       await _firestoreInstance
           .collection(classroomsCollection)
           .doc(classroom.classroomId)
@@ -432,10 +480,10 @@ class CloudFirestoreController extends GetxController {
     value = value.toLowerCase();
     _filteredArchivedClassroom.value = _archivedClassrooms
         .where((classroom) =>
-    classroom.courseTitle.toLowerCase().contains(value) ||
-        classroom.courseCode.toLowerCase().contains(value) ||
-        classroom.session.toLowerCase().contains(value) ||
-        classroom.section.toLowerCase().contains(value))
+            classroom.courseTitle.toLowerCase().contains(value) ||
+            classroom.courseCode.toLowerCase().contains(value) ||
+            classroom.session.toLowerCase().contains(value) ||
+            classroom.section.toLowerCase().contains(value))
         .toList();
   }
 
@@ -497,6 +545,38 @@ class CloudFirestoreController extends GetxController {
     attendanceData.attendanceId = docRef.id;
     await docRef.set(attendanceData.toJson());
     return attendanceData;
+  }
+
+  Future<void> updateAttendanceDateTime(
+    String classroomId,
+    AttendanceModel attendanceData,
+  ) async {
+    try {
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroomId)
+          .collection(attendanceCollection)
+          .doc(attendanceData.attendanceId)
+          .update({'dateTime': attendanceData.dateTime});
+    } catch (e) {
+      return;
+    }
+  }
+
+  Future<void> deleteAttendanceData(
+    String classroomId,
+    String attendanceId,
+  ) async {
+    try {
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroomId)
+          .collection(attendanceCollection)
+          .doc(attendanceId)
+          .delete();
+    } catch (e) {
+      return;
+    }
   }
 
   Future<void> calculateHomeClassAttendance(String classroomId) async {
@@ -675,15 +755,19 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
-  Future<List<LeaveRequestModel>> getClassroomLeaveRequests(List<dynamic> leaveRequestList) async {
+  Future<List<LeaveRequestModel>> getClassroomLeaveRequests(
+      List<dynamic> leaveRequestList) async {
     List<LeaveRequestModel> finalList = [];
     for (int i = 0; i < leaveRequestList.length; i += 10) {
       try {
         final collectionsRef = await _firestoreInstance
             .collection(leaveRequestCollection)
             .where(FieldPath.documentId,
-            whereIn: leaveRequestList.sublist(
-                i, i + 10 > leaveRequestList.length ? leaveRequestList.length : i + 10))
+                whereIn: leaveRequestList.sublist(
+                    i,
+                    i + 10 > leaveRequestList.length
+                        ? leaveRequestList.length
+                        : i + 10))
             .get();
         for (var docRef in collectionsRef.docs) {
           finalList.add(LeaveRequestModel.fromJson(docRef.data()));
@@ -695,5 +779,35 @@ class CloudFirestoreController extends GetxController {
     }
     return finalList;
   }
-  
+
+  Future<void> deleteClassroomLeaveRequest({
+    required ClassroomModel classroom,
+    required LeaveRequestModel leaveRequest,
+  }) async {
+    final isValid =
+        leaveRequest.applicationStatus[classroom.classroomId] != null;
+    if (isValid) {
+      leaveRequest.applicationStatus.remove(classroom.classroomId);
+      classroom.leaveRequestIds.remove(leaveRequest.leaveRequestId);
+      await updateClassroom(classroom);
+    } else {
+      return;
+    }
+    if (leaveRequest.applicationStatus.isEmpty) {
+      await deleteLeaveRequest(leaveRequest);
+    } else {
+      await updateLeaveRequestApplicationStatus(leaveRequest);
+    }
+  }
+
+  Future<void> deleteLeaveRequest(LeaveRequestModel leaveRequest) async {
+    try {
+      await _firestoreInstance
+          .collection(leaveRequestCollection)
+          .doc(leaveRequest.leaveRequestId)
+          .delete();
+    } catch (e) {
+      return;
+    }
+  }
 }

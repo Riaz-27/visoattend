@@ -82,7 +82,7 @@ class AllClassroomPage extends StatelessWidget {
                                 behavior: SnackBarBehavior.floating,
                                 duration: Duration(days: 365),
                                 content: Text(
-                                  "Class has been archived. You can't add or edit anything.",
+                                  "This class has been archived. You can't add or edit anything.",
                                 ),
                               ),
                             );

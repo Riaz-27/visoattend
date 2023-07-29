@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:visoattend/controller/attendance_controller.dart';
 import 'package:visoattend/controller/classroom_controller.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
+import 'package:visoattend/controller/leave_request_controller.dart';
 import 'package:visoattend/helper/constants.dart';
 import 'package:visoattend/helper/functions.dart';
 import 'package:visoattend/views/pages/detailed_classroom_page.dart';
+import 'package:visoattend/views/pages/detailed_home_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../models/classroom_model.dart';
@@ -131,6 +133,8 @@ class CreateEditClassroomPage extends StatelessWidget {
               ? const SizedBox()
               : GestureDetector(
                   onTap: () async {
+                    if (classroom.isArchived) return;
+
                     final courseCode = courseCodeController.text.trim();
                     final courseTitle = courseTitleController.text.trim();
                     if (courseTitle.isEmpty || courseTitle.isEmpty) {
@@ -189,7 +193,7 @@ class CreateEditClassroomPage extends StatelessWidget {
               position: PopupMenuPosition.under,
               tooltip: 'Classroom Options',
               itemBuilder: (BuildContext context) => [
-                if(classroom.isArchived) ...[
+                if (classroom.isArchived) ...[
                   const PopupMenuItem(
                     value: 'restore',
                     child: Text('Restore'),
@@ -206,9 +210,19 @@ class CreateEditClassroomPage extends StatelessWidget {
                   ),
               ],
               onSelected: (value) {
-                if (value == 'archive') {
-                  _handleClassArchive(context,
-                      courseTitle: courseTitleController.text);
+                switch (value) {
+                  case 'archive':
+                    _handleClassArchiveRestore(context, archive: true);
+                    break;
+                  case 'restore':
+                    _handleClassArchiveRestore(context, archive: false);
+                    break;
+                  case 'delete':
+                    _handleClassDelete(
+                      context,
+                      courseTitle: courseTitleController.text,
+                    );
+                    break;
                 }
               },
             ),
@@ -254,18 +268,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                         children: [
                           TextField(
                             enabled: isEdit && userRole == 'CR' ? false : true,
-                            controller: courseCodeController,
-                            style: textTheme.bodyMedium,
-                            decoration: InputDecoration(
-                              labelText: 'Course Code (e.g. CSE-4800) *',
-                              labelStyle: Get.textTheme.bodyMedium,
-                              isDense: true,
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          verticalGap(height * percentGapVerySmall),
-                          TextField(
-                            enabled: isEdit && userRole == 'CR' ? false : true,
+                            readOnly: classroom.isArchived,
                             controller: courseTitleController,
                             style: textTheme.bodyMedium,
                             decoration: InputDecoration(
@@ -278,6 +281,20 @@ class CreateEditClassroomPage extends StatelessWidget {
                           ),
                           verticalGap(height * percentGapVerySmall),
                           TextField(
+                            enabled: isEdit && userRole == 'CR' ? false : true,
+                            readOnly: classroom.isArchived,
+                            controller: courseCodeController,
+                            style: textTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              labelText: 'Course Code (e.g. CSE-4800) *',
+                              labelStyle: Get.textTheme.bodyMedium,
+                              isDense: true,
+                              alignLabelWithHint: true,
+                            ),
+                          ),
+                          verticalGap(height * percentGapVerySmall),
+                          TextField(
+                            readOnly: classroom.isArchived,
                             controller: sectionController,
                             style: textTheme.bodyMedium,
                             decoration: InputDecoration(
@@ -289,6 +306,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                           ),
                           verticalGap(height * percentGapVerySmall),
                           TextField(
+                            readOnly: classroom.isArchived,
                             controller: sessionController,
                             style: textTheme.bodyMedium,
                             decoration: InputDecoration(
@@ -315,6 +333,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                             fieldViewBuilder: (context, fieldController,
                                 focusNode, onSubmitted) {
                               return TextField(
+                                readOnly: classroom.isArchived,
                                 controller: fieldController,
                                 style: textTheme.bodyMedium,
                                 focusNode: focusNode,
@@ -423,7 +442,50 @@ class CreateEditClassroomPage extends StatelessWidget {
   }
 }
 
-void _handleClassArchive(
+void _handleClassArchiveRestore(BuildContext context, {required bool archive}) {
+  final classroomController = Get.find<ClassroomController>();
+  final classroom = Get.find<AttendanceController>().classroomData;
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text(
+          archive ? 'Archive Classroom' : 'Restore Classroom',
+          style:
+              Get.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+        ),
+        content: SizedBox(
+          width: Get.width,
+          child: Text(
+            'Do you really want to ${archive ? 'archive' : 'restore'} this classroom?',
+            style: Get.textTheme.bodyMedium,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await classroomController
+                  .archiveRestoreClassroom(classroom, archive)
+                  .then(
+                    (_) => Get.find<CloudFirestoreController>()
+                        .initialize()
+                        .then(
+                            (_) => Get.offAll(() => const DetailedHomePage())),
+                  );
+            },
+            child: const Text('Confirm'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _handleClassDelete(
   BuildContext context, {
   required String courseTitle,
 }) {
@@ -435,7 +497,7 @@ void _handleClassArchive(
     builder: (context) {
       return AlertDialog(
         title: Text(
-          'Archive Classroom',
+          'Delete Classroom',
           style:
               Get.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
         ),
@@ -445,6 +507,12 @@ void _handleClassArchive(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(
+                'Remember This process cannot be undone.',
+                style: Get.textTheme.bodyMedium!
+                    .copyWith(color: colorScheme.error),
+              ),
+              verticalGap(Get.height * percentGapSmall),
               Text(
                 'Enter the Course Title to confirm',
                 style: Get.textTheme.bodyMedium,
@@ -469,10 +537,12 @@ void _handleClassArchive(
           TextButton(
             onPressed: () async {
               if (courseTitle == deleteController.text) {
-                await classroomController.archiveClassroom(classroom).then(
-                      (_) => Get.find<CloudFirestoreController>().initialize(),
+                await classroomController.deleteClassroom().then(
+                      (_) => Get.find<CloudFirestoreController>()
+                          .initialize()
+                          .then((_) =>
+                              Get.offAll(() => const DetailedHomePage())),
                     );
-                Get.offAll(() => const HomePage());
               }
             },
             child: const Text('Confirm'),
@@ -561,6 +631,8 @@ Widget _buildWeekTimeList(
 ) {
   final classroomController = Get.find<ClassroomController>();
 
+  final classroom = Get.find<AttendanceController>().classroomData;
+
   final height = Get.height;
   final width = Get.width;
 
@@ -595,6 +667,10 @@ Widget _buildWeekTimeList(
           controller: expansionController,
           onExpansionChanged: (value) async {
             if (!classroomController.selectedWeeks[index] && value) {
+              if (classroom.isArchived) {
+                expansionController.collapse();
+                return;
+              }
               classroomController.selectedWeeks[index] = value;
               classroomController.selectedWeekTimes[weekName]['startTime'] =
                   'Off Day';
@@ -636,7 +712,11 @@ Widget _buildWeekTimeList(
               fit: BoxFit.fill,
               child: Switch.adaptive(
                 value: classroomController.selectedWeeks[index],
-                onChanged: (value) {
+                onChanged: (value) async {
+                  if (classroom.isArchived) {
+                    value = false;
+                    return;
+                  }
                   classroomController.selectedWeeks[index] = value;
                   classroomController.selectedWeekTimes[weekName]['startTime'] =
                       'Off Day';
@@ -646,7 +726,11 @@ Widget _buildWeekTimeList(
                   classroomController.selectedEndTimes[index] = 'Off Day';
                   if (value) {
                     expansionController.expand();
-                    _selectTime(context, index);
+                    await _selectTime(context, index);
+                    if (classroomController.selectedStartTimes[index] ==
+                        'Off Day') {
+                      expansionController.collapse();
+                    }
                   } else {
                     expansionController.collapse();
                   }
@@ -662,6 +746,7 @@ Widget _buildWeekTimeList(
                 Flexible(
                   flex: 1,
                   child: TextField(
+                    readOnly: classroom.isArchived,
                     keyboardType: TextInputType.none,
                     onTap:
                         isSelected ? () => _selectTime(context, index) : null,
@@ -685,6 +770,7 @@ Widget _buildWeekTimeList(
                 Flexible(
                   flex: 1,
                   child: TextField(
+                    readOnly: classroom.isArchived,
                     keyboardType: TextInputType.none,
                     onTap: isSelected
                         ? () => _selectTime(context, index, isEndTime: true)
@@ -713,7 +799,7 @@ Widget _buildWeekTimeList(
                 Flexible(
                   flex: 1,
                   child: TextField(
-                    readOnly: !isSelected,
+                    readOnly: classroom.isArchived,
                     enabled: isSelected,
                     controller: roomNoController[index],
                     decoration: InputDecoration(
@@ -740,7 +826,7 @@ Widget _buildWeekTimeList(
                 Flexible(
                   flex: 1,
                   child: TextField(
-                    readOnly: !isSelected,
+                    readOnly: classroom.isArchived,
                     enabled: isSelected,
                     controller: classCountController[index],
                     decoration: InputDecoration(

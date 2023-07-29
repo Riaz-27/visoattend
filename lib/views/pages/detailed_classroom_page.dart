@@ -33,8 +33,8 @@ class DetailedClassroomPage extends GetView<NavigationController> {
 
     return WillPopScope(
       onWillPop: () async {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         if (controller.selectedIndex == 0) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           return true;
         } else {
           controller.changeIndex(0);
@@ -55,14 +55,20 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                 return const SizedBox();
               }
               if (userRole == 'Student') {
-                return IconButton(
-                  onPressed: () {
-                    _handleLeaveClass(context);
+                return PopupMenuButton(
+                  position: PopupMenuPosition.under,
+                  tooltip: 'Classroom Options',
+                  itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem(
+                        value: 'unroll',
+                        child: Text('Unroll'),
+                      ),
+                  ],
+                  onSelected: (value) {
+                    if(value == 'unroll'){
+                      _handleLeaveClass(context);
+                    }
                   },
-                  icon: const Icon(
-                    Icons.logout_rounded,
-                    color: Colors.red,
-                  ),
                 );
               } else {
                 return IconButton(
@@ -101,16 +107,15 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                 label: 'People',
               ),
               NavigationDestination(
-                icon: Obx(
-                  () {
-                    final pendingCount = leaveRequestController.pendingLeaveRequestsCount;
-                    return Badge(
-                      isLabelVisible: pendingCount > 0,
-                      label: Text(pendingCount.toString()),
-                      child: const Icon(Icons.mail_outline_rounded),
-                    );
-                  }
-                ),
+                icon: Obx(() {
+                  final pendingCount =
+                      leaveRequestController.pendingLeaveRequestsCount;
+                  return Badge(
+                    isLabelVisible: pendingCount > 0,
+                    label: Text(pendingCount.toString()),
+                    child: const Icon(Icons.mail_outline_rounded),
+                  );
+                }),
                 selectedIcon: const Icon(Icons.mail),
                 label: 'Leave Request',
               ),
@@ -138,7 +143,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Do you really want to leave this classroom?',
+                    'Do you really want to unroll from this classroom?',
                     style: Get.textTheme.bodyMedium,
                   ),
                   verticalGap(20),

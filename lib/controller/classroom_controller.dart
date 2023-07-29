@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
+import 'package:visoattend/controller/leave_request_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
+
+import 'attendance_controller.dart';
 
 class ClassroomController extends GetxController {
   final List<String> _weekDays = [
@@ -135,16 +138,32 @@ class ClassroomController extends GetxController {
   Future<void> updateClassroom(ClassroomModel classroom) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     await cloudFirestoreController.updateClassroom(classroom);
-    int index = cloudFirestoreController.classrooms.indexWhere(
-      (dbClassroom) => classroom.classroomId == dbClassroom.classroomId,
-    );
-    cloudFirestoreController.classrooms[index] = classroom;
     cloudFirestoreController.filterClassesOfToday();
   }
 
-  Future<void> archiveClassroom(ClassroomModel classroom) async {
+  Future<void> archiveRestoreClassroom(
+      ClassroomModel classroom, bool archive) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    cloudFirestoreController.archiveClassroom(classroom);
+    await cloudFirestoreController.archiveRestoreClassroom(classroom, archive);
+  }
+
+  Future<void> deleteClassroom() async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    final attendanceController = Get.find<AttendanceController>();
+    final classroom = attendanceController.classroomData;
+    final attendances = attendanceController.attendances;
+    final classroomUsers = attendanceController.teachersData.toList() +
+        attendanceController.cRsData.toList() +
+        attendanceController.studentsData.toList();
+    final leaveRequests =
+        Get.find<LeaveRequestController>().classroomLeaveRequests;
+
+    await cloudFirestoreController.deleteClassroom(
+      classroom: classroom,
+      attendances: attendances,
+      leaveRequests: leaveRequests,
+      classroomUsers: classroomUsers,
+    );
   }
 
   Future<void> leaveClassroom(ClassroomModel classroom) async {

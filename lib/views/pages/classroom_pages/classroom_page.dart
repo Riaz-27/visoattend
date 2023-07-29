@@ -488,7 +488,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                                 SnackBar(
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50)),
+                                      borderRadius: BorderRadius.circular(15)),
                                   content: const Text(
                                     "Classroom ID copied to clipboard",
                                   ),

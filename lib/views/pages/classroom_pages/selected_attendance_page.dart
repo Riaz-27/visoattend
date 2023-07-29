@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/controller/cloud_firestore_controller.dart';
 
 import '../../../controller/attendance_controller.dart';
 import '../../../helper/constants.dart';
@@ -24,8 +25,6 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     controller.selectedAttendance = attendance;
     final studentsData = controller.filteredStudents;
     final totalStudents = controller.allStudents.length;
-    final attendanceDateTime =
-        DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
     final classroomData = controller.classroomData;
 
     final searchController = TextEditingController();
@@ -37,32 +36,70 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('d MMMM, y').format(attendanceDateTime),
-                style: Get.textTheme.bodyMedium,
-              ),
-              Row(
+          forceMaterialTransparency: true,
+          title: Obx(
+            () {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    DateFormat.jm().format(attendanceDateTime),
-                    style: Get.textTheme.bodySmall,
+                    DateFormat('d MMMM, y').format(controller.selectedDateTime),
+                    style: Get.textTheme.bodyMedium,
                   ),
-                  Text(
-                    ' | ${classroomData.courseCode}',
-                    style: Get.textTheme.bodySmall,
-                  ),
-                  Text(
-                    ' | ${classroomData.section}',
-                    style: Get.textTheme.bodySmall,
+                  Row(
+                    children: [
+                      Text(
+                        DateFormat.jm().format(controller.selectedDateTime),
+                        style: Get.textTheme.bodySmall,
+                      ),
+                      Text(
+                        ' | ${classroomData.courseCode}',
+                        style: Get.textTheme.bodySmall,
+                      ),
+                      Text(
+                        ' | ${classroomData.section}',
+                        style: Get.textTheme.bodySmall,
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+              );
+            }
           ),
-          forceMaterialTransparency: true,
+          actions: [
+            Obx(() {
+              final currentUserRole = controller.currentUserRole;
+              final currentUser =
+                  Get.find<CloudFirestoreController>().currentUser;
+              return (currentUserRole == 'Teacher' ||
+                      (currentUserRole == 'CR' &&
+                          attendance.takenBy['authUid'] == currentUser.authUid))
+                  ? PopupMenuButton(
+                      position: PopupMenuPosition.under,
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edit'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
+                      ],
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'edit':
+                            _handleEditAttendance(context);
+                            break;
+                          case 'delete':
+                            _handleDeleteAttendance(context);
+                            break;
+                        }
+                      },
+                    )
+                  : const SizedBox();
+            }),
+          ],
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
@@ -76,13 +113,16 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 CustomTextField(
-                    controller: searchController,
-                    style: textTheme.labelLarge,
-                    hintText: 'Search by ID or Name',
-                    onChanged: (value) {
-                      controller.selectedCategory = '';
-                      controller.filterSearchResult(value);
-                    }),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  controller: searchController,
+                  style: textTheme.labelLarge,
+                  hintText: 'Search by ID or Name',
+                  onChanged: (value) {
+                    controller.selectedCategory = '';
+                    controller.filterSearchResult(value);
+                  },
+                ),
                 verticalGap(height * percentGapVerySmall),
                 _buildFilterChip(),
                 verticalGap(height * percentGapVerySmall),
@@ -171,7 +211,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     final classroomData = controller.classroomData;
     return GestureDetector(
       onTap: () {
-        if(classroomData.isArchived) return;
+        if (classroomData.isArchived) return;
 
         controller.selectedAttendanceStatus = studentStatus;
 
@@ -320,6 +360,171 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
           ],
         ),
       ),
+    );
+  }
+
+  void _handleEditAttendance(BuildContext context) {
+    controller.selectedDateTime =
+        DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Edit Attendance',
+            style: Get.textTheme.titleMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: Get.width,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Change date and time of classroom',
+                  style: Get.textTheme.bodyMedium,
+                ),
+                verticalGap(height * percentGapSmall),
+                Obx(() {
+                  return Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Date', style: textTheme.bodySmall),
+                          verticalGap(height * percentGapVerySmall),
+                          _customInkWellButton(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: controller.selectedDateTime,
+                                firstDate: DateTime.now()
+                                    .add(const Duration(days: -365)),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
+                              );
+                              if (picked != null) {
+                                controller.selectedDateTime =
+                                    controller.selectedDateTime.copyWith(
+                                  day: picked.day,
+                                  month: picked.month,
+                                  year: picked.year,
+                                );
+                              }
+                            },
+                            text: DateFormat('dd MMMM, y')
+                                .format(controller.selectedDateTime),
+                          ),
+                        ],
+                      ),
+                      horizontalGap(width * percentGapLarge),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Time', style: textTheme.bodySmall),
+                          verticalGap(height * percentGapVerySmall),
+                          _customInkWellButton(
+                            onTap: () async {
+                              final picked = await showTimePicker(
+                                context: context,
+                                initialTime: TimeOfDay.fromDateTime(
+                                    controller.selectedDateTime),
+                              );
+                              if (picked != null) {
+                                controller.selectedDateTime =
+                                    controller.selectedDateTime.copyWith(
+                                  hour: picked.hour,
+                                  minute: picked.minute,
+                                );
+                              }
+                            },
+                            text: DateFormat('hh:mm a')
+                                .format(controller.selectedDateTime),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                controller.selectedDateTime =
+                    DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+                Get.back();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                attendance.dateTime =
+                    controller.selectedDateTime.millisecondsSinceEpoch;
+                await controller.updateAttendanceDateTime(attendance);
+                Get.back();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _customInkWellButton({Function()? onTap, required String text}) {
+    return InkWell(
+      customBorder: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceTint.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(text),
+      ),
+    );
+  }
+
+  void _handleDeleteAttendance(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Attendance',
+            style: Get.textTheme.titleMedium!
+                .copyWith(fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: Get.width,
+            child: Text(
+              'Do you really want to delete this attendance data?',
+              style: Get.textTheme.bodyMedium,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await controller.deleteAttendance(attendance);
+                Get.back();
+                Get.back();
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
