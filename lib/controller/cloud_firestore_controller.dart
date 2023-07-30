@@ -52,6 +52,16 @@ class CloudFirestoreController extends GetxController {
 
   List<ClassroomModel> get classesOfToday => _classesOfToday;
 
+  final _classesOfNextDay = <ClassroomModel>[].obs;
+
+  List<ClassroomModel> get classesOfNextDay => _classesOfNextDay;
+
+  final _nextClassDate = ''.obs;
+
+  String get nextClassDate => _nextClassDate.value;
+
+  set nextClassDate(dateTime) => _nextClassDate.value = dateTime;
+
   final _timeLeftToStart = [].obs;
 
   List<dynamic> get timeLeftToStart => _timeLeftToStart;
@@ -453,10 +463,52 @@ class CloudFirestoreController extends GetxController {
       dev.log('Timer Closed');
       Get.find<TimerController>().cancelTimer();
     }
+
+    //if no class found today calculate for next classes
+    _classesOfNextDay.value = [];
+    _nextClassDate.value = '';
+    if (classesOfToday.isEmpty) {
+      filterClassesOfNextDay();
+    }
+  }
+
+  void filterClassesOfNextDay() {
+    _classesOfNextDay.value = [];
+    _nextClassDate.value = '';
+
+    List<ClassroomModel> nextClasses = [];
+    String nextDate = '';
+    String weekDay = '';
+    for (int i = 1; i <= 7; i++) {
+      final dateTime = DateTime.now().add(Duration(days: i));
+      nextDate = dateTime.toString();
+      weekDay = DateFormat('EEEE').format(dateTime);
+      for (final classroom in _classrooms) {
+        if (classroom.weekTimes[weekDay]['startTime'] != 'Off Day') {
+          nextClasses.add(classroom);
+        }
+      }
+      if (nextClasses.isNotEmpty) break;
+    }
+
+    if(nextClasses.isEmpty) return;
+
+    nextClasses.sort((a, b) {
+      final aDateTime = DateTime.parse(a.weekTimes[weekDay]['startTime']);
+      final bDateTime = DateTime.parse(b.weekTimes[weekDay]['startTime']);
+      final aTime = TimeOfDay.fromDateTime(aDateTime).toString();
+      final bTime = TimeOfDay.fromDateTime(bDateTime).toString();
+
+      return aTime.compareTo(bTime);
+    });
+
+    _classesOfNextDay.value = nextClasses;
+    _nextClassDate.value = nextDate;
+    dev.log(_nextClassDate.value);
   }
 
   void updateTimeLeft() {
-    print('Running Update');
+    dev.log('Running Update');
 
     if (_timeLeftToStart.isNotEmpty) {
       filterClassesOfToday();

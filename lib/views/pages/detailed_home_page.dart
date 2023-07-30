@@ -56,7 +56,7 @@ class DetailedHomePage extends GetView<NavigationController> {
           forceMaterialTransparency: true,
           title: Column(
             children: [
-              verticalGap(height * percentGapSmall),
+              // verticalGap(height * percentGapSmall),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
