@@ -1,19 +1,15 @@
 import 'package:get/get.dart';
-import 'package:isar/isar.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
-import 'package:visoattend/controller/profile_pic_controller.dart';
-import 'package:visoattend/models/user_model.dart';
 
-import '../services/isar_service.dart';
-import '../models/entities/isar_user.dart';
+import '../../controller/cloud_firestore_controller.dart';
+import '../../helper/functions.dart';
+import '../../models/user_model.dart';
+
 import 'auth_controller.dart';
 import 'camera_service_controller.dart';
 import 'face_detector_controller.dart';
 import 'recognition_controller.dart';
 
 class UserDatabaseController extends GetxController {
-  final isarService = IsarService();
-
   final _isFront = false.obs;
 
   bool get isFront => _isFront.value;
@@ -24,26 +20,23 @@ class UserDatabaseController extends GetxController {
 
   bool get isLeft => _isLeft.value;
 
-  void resetValues(){
+  void resetValues() {
     _isFront(false);
     _isRight(false);
     _isLeft(false);
   }
 
-  Future<bool> registerRetrainUserToFirestore(UserModel user, {bool retrainModel = false}) async {
+  Future<bool> registerRetrainUserToFirestore(UserModel user,
+      {bool retrainModel = false}) async {
     final cameraServiceController = Get.find<CameraServiceController>();
     final faceDetectorController = Get.find<FaceDetectorController>();
     final recognitionController = Get.find<RecognitionController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final authController = Get.find<AuthController>();
-    final profilePicController = Get.find<ProfilePicController>();
 
-    // await faceDetectorController.doFaceDetectionOnFrame(
-    //   cameraServiceController.cameraImage,
-    //   cameraServiceController.cameraRotation!,
-    // );
     final faceAngle = faceDetectorController.faces[0].headEulerAngleY!;
-    final emb = await recognitionController.performRecognitionOnIsolateFirestore(
+    final emb =
+        await recognitionController.performRecognitionOnIsolateFirestore(
       cameraImage: cameraServiceController.cameraImage,
       faces: faceDetectorController.faces,
       cameraLensDirection: cameraServiceController.cameraLensDirection,
@@ -62,12 +55,13 @@ class UserDatabaseController extends GetxController {
     }
 
     if (_isFront.value && _isLeft.value && _isRight.value) {
+      loadingDialog('Registering...');
       //Stopping camera service
       cameraServiceController.isBusy = true;
       await cameraServiceController.cameraController.stopImageStream();
       cameraServiceController.isStopped = true;
 
-      if(retrainModel){
+      if (retrainModel) {
         await cloudFirestoreController.updateUserData(user);
       } else {
         final userCredential =
@@ -80,44 +74,10 @@ class UserDatabaseController extends GetxController {
           cloudFirestoreController.initialize();
         }
       }
+      hideLoadingDialog();
+      resetValues();
       return true;
     }
     return false;
   }
 }
-
-
-// Future<bool> saveUser(IsarUser newUser) async {
-//   final isar = await isarService.db;
-//   final alreadyExist = await checkUser(newUser.userId);
-//   if (alreadyExist) {
-//     print('User Already Exists.');
-//     return false;
-//   } else {
-//     await isar.writeTxn<int>(() => isar.isarUsers.put(newUser));
-//     return true;
-//   }
-// }
-//
-// Future<bool> checkUser(String userId) async {
-//   final isar = await isarService.db;
-//   return await isar.isarUsers.filter().userIdEqualTo(userId).count() > 0
-//       ? true
-//       : false;
-// }
-//
-// Future<IsarUser?> verifyUser(String userId, String password) async {
-//   final isar = await isarService.db;
-//   final user = await isar.isarUsers
-//       .filter()
-//       .userIdEqualTo(userId)
-//       .and()
-//       .passwordEqualTo(password)
-//       .findFirst();
-//   return user;
-// }
-//
-// Future<List<IsarUser>> getAllIsarUsers() async {
-//   final isar = await isarService.db;
-//   return isar.isarUsers.where().findAll();
-// }

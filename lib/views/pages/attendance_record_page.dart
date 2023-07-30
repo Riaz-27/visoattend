@@ -327,6 +327,7 @@ class AttendanceRecordPage extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
+        loadingDialog();
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
         cameraServiceController.isStopped = true;
@@ -336,6 +337,7 @@ class AttendanceRecordPage extends StatelessWidget {
             classCount == null || classCount == '' ? 1 : int.parse(classCount);
         final durationMs = faceDetectorController.faces.length * 100 + 500;
         await Future.delayed(Duration(milliseconds: durationMs));
+        hideLoadingDialog();
         return true;
       },
       child: Scaffold(

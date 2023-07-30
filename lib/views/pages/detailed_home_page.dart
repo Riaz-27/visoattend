@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/navigation_controller.dart';
-import 'package:visoattend/views/pages/all_classroom_page.dart';
-import 'package:visoattend/views/pages/home_page.dart';
 
-import '../../controller/auth_controller.dart';
+import '../../controller/navigation_controller.dart';
+import '../../views/pages/all_classroom_page.dart';
+import '../../views/pages/home_page.dart';
 import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../controller/profile_pic_controller.dart';
@@ -14,7 +13,6 @@ import '../../helper/constants.dart';
 import '../../helper/functions.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_form_field.dart';
-import 'auth_page.dart';
 import 'create_edit_classroom_page.dart';
 import 'profile_pages/profile_page.dart';
 
@@ -27,9 +25,6 @@ class DetailedHomePage extends GetView<NavigationController> {
     if (!cloudFirestoreController.isInitialized) {
       cloudFirestoreController.initialize();
     }
-
-    final height = Get.height;
-    final width = Get.width;
 
     final navigationPages = [const HomePage(), const AllClassroomPage()];
 
@@ -70,17 +65,17 @@ class DetailedHomePage extends GetView<NavigationController> {
                             cloudFirestoreController.currentUser.name;
                         return Text(
                           'Hi, $userName',
-                          style: Get.textTheme.titleMedium!.copyWith(
+                          style: textTheme.titleMedium!.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Get.theme.colorScheme.onSurface,
+                            color: colorScheme.onSurface,
                           ),
                         );
                       }),
                       verticalGap(height * percentGapVerySmall),
                       Text(
                         DateFormat('EEE, d MMMM y').format(DateTime.now()),
-                        style: Get.textTheme.bodySmall!.copyWith(
-                            color: Get.theme.colorScheme.onBackground
+                        style: textTheme.bodySmall!.copyWith(
+                            color: colorScheme.onBackground
                                 .withAlpha(150)),
                       ),
                     ],
@@ -95,7 +90,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                         height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Get.theme.colorScheme.outline.withOpacity(0.4),
+                          color: colorScheme.outline.withOpacity(0.4),
                           image: DecorationImage(
                             fit: BoxFit.cover,
                             image: NetworkImage(picUrl),
@@ -118,7 +113,7 @@ class DetailedHomePage extends GetView<NavigationController> {
           child: FloatingActionButton(
             onPressed: () {
               Get.bottomSheet(
-                backgroundColor: Get.theme.colorScheme.surface,
+                backgroundColor: colorScheme.surface,
                 enableDrag: true,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.only(
@@ -135,8 +130,8 @@ class DetailedHomePage extends GetView<NavigationController> {
                       CustomButton(
                         height: height * 0.055,
                         backgroundColor:
-                            Get.theme.colorScheme.secondaryContainer,
-                        textColor: Get.theme.colorScheme.onSecondaryContainer,
+                            colorScheme.secondaryContainer,
+                        textColor: colorScheme.onSecondaryContainer,
                         text: 'Join Class',
                         onPressed: () {
                           Get.back();
@@ -147,8 +142,8 @@ class DetailedHomePage extends GetView<NavigationController> {
                       CustomButton(
                         height: height * 0.055,
                         backgroundColor:
-                            Get.theme.colorScheme.secondaryContainer,
-                        textColor: Get.theme.colorScheme.onSecondaryContainer,
+                            colorScheme.secondaryContainer,
+                        textColor: colorScheme.onSecondaryContainer,
                         text: 'Create Class',
                         onPressed: () {
                           Get.to(() => const CreateEditClassroomPage());

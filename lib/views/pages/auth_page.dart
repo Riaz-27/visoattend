@@ -18,8 +18,10 @@ class AuthPage extends StatelessWidget {
       stream: authController.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          print("I HAVE DATA NOW");
           return const DetailedHomePage();
         }
+        print("I DONT HAVE DATA");
         return const LoginRegisterPage();
       },
     );

@@ -18,10 +18,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
 
     final profilePicController = Get.find<ProfilePicController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
@@ -159,10 +155,6 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _handleImageChangeButton() {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
 
     return Positioned(
       bottom: -3,
@@ -217,10 +209,6 @@ class ProfilePage extends StatelessWidget {
 
   Widget _optionsWidget(IconData icon, String text,
       {Color? color, void Function()? onTap}) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
 
     return GestureDetector(
       onTap: onTap,
@@ -267,27 +255,29 @@ class ProfilePage extends StatelessWidget {
         return AlertDialog(
           title: Text(
             'Logout',
-            style: Get.textTheme.titleMedium!
+            style: textTheme.titleMedium!
                 .copyWith(fontWeight: FontWeight.bold),
           ),
           content: SizedBox(
             width: Get.width,
             child: Text(
               'Do you really want to logout?',
-              style: Get.textTheme.bodyMedium,
+              style: textTheme.bodyMedium,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () async {
+                loadingDialog();
                 await Get.find<AuthController>().signOut();
                 Get.find<CloudFirestoreController>().isInitialized = false;
                 Get.offAll(() => const AuthPage());
+                hideLoadingDialog();
               },
               child: Text(
                 'Yes',
-                style: Get.theme.textTheme.bodyMedium!
-                    .copyWith(color: Get.theme.colorScheme.error),
+                style: textTheme.bodyMedium!
+                    .copyWith(color: colorScheme.error),
               ),
             ),
             TextButton(

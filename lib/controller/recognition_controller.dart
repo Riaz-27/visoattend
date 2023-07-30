@@ -1,8 +1,6 @@
 import 'dart:developer';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:image/image.dart' as img;
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
@@ -10,15 +8,12 @@ import '../models/recognition_model.dart';
 import '../models/user_model.dart';
 import '../services/recognition_service.dart';
 import '../services/recognition_isolate.dart';
-import '../models/entities/isar_user.dart';
-import '../services/image_converter.dart';
 
 class RecognitionController extends GetxController {
   final _performedRecognition = false.obs;
 
   bool get performedRecognition => _performedRecognition.value;
 
-  final threshold = 0.9;
   final recognitionService = RecognitionService();
 
   final _recognitionResults = <int, RecognitionModel>{}.obs;

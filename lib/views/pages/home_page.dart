@@ -1,27 +1,14 @@
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/controller/timer_controller.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
 
-import '../../controller/profile_pic_controller.dart';
 import '../../helper/functions.dart';
 import '../../models/classroom_model.dart';
-import '../../views/pages/create_edit_classroom_page.dart';
-import '../../controller/auth_controller.dart';
-import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
-import 'classroom_pages/classroom_page.dart';
-import '../../views/widgets/custom_text_form_field.dart';
-import 'all_classroom_page.dart';
-import 'auth_page.dart';
+
 import 'detailed_classroom_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -46,131 +33,142 @@ class HomePage extends StatelessWidget {
                 right: height * percentGapSmall,
                 left: height * percentGapSmall,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  verticalGap(height * percentGapSmall),
-                  // Running Class UI
-                  Obx(() {
-                    final classTimes = cloudFirestoreController.timeLeftToStart;
-                    final isRunning = classTimes.isNotEmpty
-                        ? classTimes.first < 1
-                            ? true
-                            : false
-                        : false;
-                    return (!cloudFirestoreController.isHoliday &&
-                            classroomList.isNotEmpty)
-                        ? Text(
-                            isRunning ? "Running Class" : "Next Class",
-                            style: Get.textTheme.titleSmall!
-                                .copyWith(fontWeight: FontWeight.bold),
-                          )
-                        : const SizedBox();
-                  }),
-                  verticalGap(height * percentGapSmall),
-                  GestureDetector(
-                    onTap: () {
-                      if (classroomList.isNotEmpty) {
-                        Get.to(() => DetailedClassroomPage(
-                            classroomData: classroomList.first));
-                      }
-                    },
-                    child: _topView(
-                        context: context, classroomList: classroomList),
-                  ),
-                  verticalGap(height * percentGapMedium),
-                  Obx(() {
-                    String nextDateString = '';
-                    if (classroomList.isEmpty &&
-                        cloudFirestoreController.classesOfNextDay.isEmpty) {
-                      return const SizedBox();
-                    }
-                    if (classroomList.isEmpty) {
-                      final nextDate = cloudFirestoreController.nextClassDate;
-                      final nextDateTime = DateTime.parse(nextDate).copyWith(hour: 0, minute: 0,microsecond: 1,millisecond: 0);
-                      final now = DateTime.now().copyWith(hour: 0, minute: 0,microsecond: 0,millisecond: 0);
-                      final isTomorrow = nextDateTime.difference(now).inDays == 1;
-                      nextDateString = isTomorrow? 'Tomorrow':
-                          DateFormat('EEE, dd MMMM').format(nextDateTime);
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+              child: Obx(() {
+                return cloudFirestoreController.isHomeLoading
+                    ? const SizedBox()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Next Class',
-                            style: Get.textTheme.titleSmall!
-                                .copyWith(fontWeight: FontWeight.bold),
+                          verticalGap(height * percentGapSmall),
+                          // Running Class UI
+                          Obx(() {
+                            final classTimes =
+                                cloudFirestoreController.timeLeftToStart;
+                            final isRunning = classTimes.isNotEmpty
+                                ? classTimes.first < 1
+                                    ? true
+                                    : false
+                                : false;
+                            return (!cloudFirestoreController.isHoliday &&
+                                    classroomList.isNotEmpty)
+                                ? Text(
+                                    isRunning ? "Running Class" : "Next Class",
+                                    style: textTheme.titleSmall!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  )
+                                : const SizedBox();
+                          }),
+                          verticalGap(height * percentGapSmall),
+                          GestureDetector(
+                            onTap: () {
+                              if (classroomList.isNotEmpty) {
+                                Get.to(() => DetailedClassroomPage(
+                                    classroomData: classroomList.first));
+                              }
+                            },
+                            child: _topView(
+                                context: context, classroomList: classroomList),
                           ),
-                          const Spacer(),
-                          Text(
-                            nextDateString,
-                            style: Get.textTheme.bodySmall!
-                                .copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      );
-                    }
-                    return Text(
-                      "Later Today",
-                      style: Get.textTheme.titleSmall!
-                          .copyWith(fontWeight: FontWeight.bold),
-                    );
-                  }),
-                  verticalGap(height * percentGapSmall),
-                  Flexible(
-                    child: Obx(
-                      () {
-                        if (classroomList.length == 1) {
-                          return const Text('No more classes today!');
-                        }
-                        return ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: classroomList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            if (index == 0) {
+                          verticalGap(height * percentGapMedium),
+                          Obx(() {
+                            String nextDateString = '';
+                            if (classroomList.isEmpty &&
+                                cloudFirestoreController
+                                    .classesOfNextDay.isEmpty) {
                               return const SizedBox();
                             }
-                            return GestureDetector(
-                              // onTap: () => Get.to(() => ClassroomPage(
-                              //     classroomData: classroomList[index])),
-                              onTap: () => Get.to(() => DetailedClassroomPage(
-                                    classroomData: classroomList[index],
-                                  )),
-                              child: _buildCustomCard(
-                                classroom: classroomList[index],
-                                index: index,
-                              ),
+                            if (classroomList.isEmpty) {
+                              final nextDate =
+                                  cloudFirestoreController.nextClassDate;
+                              final nextDateTime = DateTime.parse(nextDate);
+                              nextDateString = DateFormat('EEE, dd MMMM')
+                                      .format(nextDateTime);
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Next Class',
+                                    style: textTheme.titleSmall!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    nextDateString,
+                                    style: textTheme.bodySmall!
+                                        .copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              );
+                            }
+                            return Text(
+                              "Later Today",
+                              style: textTheme.titleSmall!
+                                  .copyWith(fontWeight: FontWeight.bold),
                             );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  Flexible(
-                    child: Obx(() {
-                      final nextClassList =
-                          cloudFirestoreController.classesOfNextDay;
-                      return ListView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: nextClassList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return GestureDetector(
-                            onTap: () => Get.to(
-                              () => DetailedClassroomPage(
-                                classroomData: nextClassList[index],
+                          }),
+                          verticalGap(height * percentGapSmall),
+                          if (classroomList.isNotEmpty)
+                            Flexible(
+                              child: Obx(
+                                () {
+                                  if (classroomList.length == 1) {
+                                    return const Text('No more classes today!');
+                                  }
+                                  return ListView.builder(
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemCount: classroomList.length,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      if (index == 0) {
+                                        return const SizedBox();
+                                      }
+                                      return GestureDetector(
+                                        onTap: () => Get.to(
+                                          () => DetailedClassroomPage(
+                                            classroomData: classroomList[index],
+                                          ),
+                                        ),
+                                        child: _buildCustomCard(
+                                          classroom: classroomList[index],
+                                          index: index,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
                               ),
                             ),
-                            child: _buildNextClassCard(
-                                classroom: nextClassList[index]),
-                          );
-                        },
+                          if (cloudFirestoreController
+                              .classesOfNextDay.isNotEmpty)
+                            Flexible(
+                              child: Obx(() {
+                                final nextClassList =
+                                    cloudFirestoreController.classesOfNextDay;
+                                return ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  shrinkWrap: true,
+                                  itemCount: nextClassList.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return GestureDetector(
+                                      onTap: () => Get.to(
+                                        () => DetailedClassroomPage(
+                                          classroomData: nextClassList[index],
+                                        ),
+                                      ),
+                                      child: _buildNextClassCard(
+                                          classroom: nextClassList[index]),
+                                    );
+                                  },
+                                );
+                              }),
+                            ),
+                        ],
                       );
-                    }),
-                  ),
-                ],
-              ),
+              }),
             ),
           ),
         ),
@@ -195,7 +193,7 @@ class HomePage extends StatelessWidget {
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        color: colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
         padding: EdgeInsets.all(height * percentGapSmall),
@@ -208,15 +206,15 @@ class HomePage extends StatelessWidget {
                 children: [
                   Text(
                     classroom.courseTitle,
-                    style: Get.textTheme.titleSmall!
+                    style: textTheme.titleSmall!
                         .copyWith(fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
                   verticalGap(height * percentGapVerySmall),
                   Text(
                     classroom.courseCode,
-                    style: Get.textTheme.titleSmall!.copyWith(
-                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                    style: textTheme.titleSmall!.copyWith(
+                      color: colorScheme.onBackground.withAlpha(150),
                     ),
                   ),
                 ],
@@ -243,7 +241,7 @@ class HomePage extends StatelessWidget {
                   }
                   return Text(
                     timeLeftText,
-                    style: Get.textTheme.titleSmall!.copyWith(
+                    style: textTheme.titleSmall!.copyWith(
                       fontWeight: FontWeight.bold,
                       color: textColor,
                     ),
@@ -252,8 +250,8 @@ class HomePage extends StatelessWidget {
                 verticalGap(height * percentGapVerySmall),
                 Text(
                   '$startTime - $endTime',
-                  style: Get.textTheme.titleSmall!.copyWith(
-                      color: Get.theme.colorScheme.onBackground.withAlpha(150)),
+                  style: textTheme.titleSmall!
+                      .copyWith(color: colorScheme.onBackground.withAlpha(150)),
                 ),
               ],
             ),
@@ -280,7 +278,7 @@ class HomePage extends StatelessWidget {
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        color: colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
         padding: EdgeInsets.all(height * percentGapSmall),
@@ -293,12 +291,12 @@ class HomePage extends StatelessWidget {
                 children: [
                   Text(
                     '$startTime - $endTime',
-                    style: Get.textTheme.bodySmall,
+                    style: textTheme.bodySmall,
                   ),
-                  verticalGap(height*percentGapVerySmall),
+                  verticalGap(height * percentGapVerySmall),
                   Text(
                     classroom.courseTitle,
-                    style: Get.textTheme.titleSmall!
+                    style: textTheme.titleSmall!
                         .copyWith(fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -307,13 +305,11 @@ class HomePage extends StatelessWidget {
                     children: [
                       Text(
                         classroom.courseCode,
-                        style: Get.textTheme.titleSmall!.copyWith(
-                          color:
-                              Get.theme.colorScheme.onBackground.withAlpha(150),
+                        style: textTheme.titleSmall!.copyWith(
+                          color: colorScheme.onBackground.withAlpha(150),
                         ),
                       ),
                       const Spacer(),
-
                     ],
                   ),
                 ],
@@ -346,9 +342,9 @@ class HomePage extends StatelessWidget {
       String percentText =
           totalClasses > 0 ? '${(percent * 100).toStringAsFixed(0)}%' : 'N/A';
       String status = 'Collegiate';
-      Color color = Get.theme.colorScheme.primary;
+      Color color = colorScheme.primary;
       if (percent < 0.6) {
-        color = Get.theme.colorScheme.error;
+        color = colorScheme.error;
         status = 'Dis-Collegiate';
       } else if (percent < 0.7) {
         color = Colors.orange;
@@ -358,7 +354,7 @@ class HomePage extends StatelessWidget {
         percentText = totalClasses.toString();
         percent = 1.0;
         status = 'classes taken';
-        color = Get.theme.colorScheme.onSurfaceVariant;
+        color = colorScheme.onSurfaceVariant;
       }
 
       /// data for Home class details
@@ -419,7 +415,7 @@ class HomePage extends StatelessWidget {
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+          color: colorScheme.surfaceVariant.withAlpha(100),
         ),
         padding: EdgeInsets.only(
           top: 3,
@@ -448,20 +444,19 @@ class HomePage extends StatelessWidget {
                         percent: percent,
                         circularStrokeCap: CircularStrokeCap.round,
                         progressColor: color,
-                        backgroundColor:
-                            Get.theme.colorScheme.onBackground.withAlpha(15),
+                        backgroundColor: colorScheme.onBackground.withAlpha(15),
                         animation: true,
                         center: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               percentText,
-                              style: Get.textTheme.titleLarge,
+                              style: textTheme.titleLarge,
                             ),
                             Text(
                               status,
-                              style: Get.textTheme.labelSmall!
-                                  .copyWith(color: color),
+                              style:
+                                  textTheme.labelSmall!.copyWith(color: color),
                             ),
                           ],
                         ),
@@ -481,7 +476,7 @@ class HomePage extends StatelessWidget {
                             : classroomList.isEmpty
                                 ? 'No more classes today'
                                 : classroom.courseTitle,
-                        style: Get.textTheme.labelMedium!
+                        style: textTheme.labelMedium!
                             .copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -492,19 +487,19 @@ class HomePage extends StatelessWidget {
                             cloudFirestoreController.isHoliday
                                 ? 'Enjoy your Holiday!'
                                 : classroom.courseCode,
-                            style: Get.textTheme.labelMedium,
+                            style: textTheme.labelMedium,
                           ),
                           if (classroomList.isNotEmpty) ...[
                             horizontalGap(width * percentGapSmall),
                             Text(
                               'Section: ',
-                              style: Get.textTheme.labelSmall!.copyWith(
-                                  color: Get.theme.colorScheme.onBackground
-                                      .withAlpha(150)),
+                              style: textTheme.labelSmall!.copyWith(
+                                  color:
+                                      colorScheme.onBackground.withAlpha(150)),
                             ),
                             Text(
                               classroom.section,
-                              style: Get.textTheme.labelMedium,
+                              style: textTheme.labelMedium,
                             ),
                           ]
                         ],
@@ -520,13 +515,13 @@ class HomePage extends StatelessWidget {
                               ),
                               Text(
                                 'Room No: ',
-                                style: Get.textTheme.labelSmall!.copyWith(
-                                    color: Get.theme.colorScheme.onBackground
+                                style: textTheme.labelSmall!.copyWith(
+                                    color: colorScheme.onBackground
                                         .withAlpha(150)),
                               ),
                               Text(
                                 roomNo,
-                                style: Get.textTheme.labelMedium,
+                                style: textTheme.labelMedium,
                               ),
                             ]
                           ],
@@ -540,19 +535,19 @@ class HomePage extends StatelessWidget {
                               children: [
                                 Text(
                                   isRunning ? 'Started' : 'Starts at',
-                                  style: Get.textTheme.labelSmall!.copyWith(
-                                    color: Get.theme.colorScheme.onBackground
-                                        .withAlpha(150),
+                                  style: textTheme.labelSmall!.copyWith(
+                                    color:
+                                        colorScheme.onBackground.withAlpha(150),
                                   ),
                                 ),
                                 verticalGap(height * percentGapVerySmall),
                                 Text(
                                   startTime,
-                                  style: Get.textTheme.labelMedium,
+                                  style: textTheme.labelMedium,
                                 ),
                                 // Text(
                                 //   startTimeLeftText,
-                                //   style: Get.textTheme.labelMedium!.copyWith(
+                                //   style: textTheme.labelMedium!.copyWith(
                                 //     color: startTextColor,
                                 //   ),
                                 // ),
@@ -564,19 +559,19 @@ class HomePage extends StatelessWidget {
                               children: [
                                 Text(
                                   'Ends at',
-                                  style: Get.textTheme.labelSmall!.copyWith(
-                                    color: Get.theme.colorScheme.onBackground
-                                        .withAlpha(150),
+                                  style: textTheme.labelSmall!.copyWith(
+                                    color:
+                                        colorScheme.onBackground.withAlpha(150),
                                   ),
                                 ),
                                 verticalGap(height * percentGapVerySmall),
                                 Text(
                                   endTime,
-                                  style: Get.textTheme.labelMedium,
+                                  style: textTheme.labelMedium,
                                 ),
                                 // Text(
                                 //   endTimeLeftText,
-                                //   style: Get.textTheme.labelMedium!.copyWith(
+                                //   style: textTheme.labelMedium!.copyWith(
                                 //     color: endTextColor,
                                 //   ),
                                 // ),
@@ -595,7 +590,7 @@ class HomePage extends StatelessWidget {
               verticalGap(height * percentGapSmall),
               Text(
                 timeLeftText,
-                style: Get.textTheme.bodySmall!,
+                style: textTheme.bodySmall!,
               ),
               verticalGap(height * percentGapVerySmall),
               LinearPercentIndicator(
@@ -606,8 +601,7 @@ class HomePage extends StatelessWidget {
                 barRadius: const Radius.circular(3),
                 percent: timePercent,
                 progressColor: colorScheme.primary,
-                backgroundColor:
-                    Get.theme.colorScheme.onBackground.withOpacity(0.1),
+                backgroundColor: colorScheme.onBackground.withOpacity(0.1),
               ),
               verticalGap(height * percentGapVerySmall),
             ],

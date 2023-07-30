@@ -12,7 +12,6 @@ import 'package:image/image.dart' as img;
 import 'package:visoattend/models/recognition_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
-import '../models/entities/isar_user.dart';
 import 'image_converter.dart';
 
 /// For the firestore database data

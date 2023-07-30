@@ -43,7 +43,9 @@ class FaceDetectorPainter extends CustomPainter {
         final faceAngle = face.headEulerAngleY!;
         if (i > 1 ||
             faceAngle > 35 ||
-            faceAngle < -35 || (faceAngle > -15 && faceAngle <-10) || (faceAngle < 15 && faceAngle >10) ) {
+            faceAngle < -35 ||
+            (faceAngle > -15 && faceAngle < -10) ||
+            (faceAngle < 15 && faceAngle > 10)) {
           color = colorScheme.error;
         }
 
@@ -60,7 +62,8 @@ class FaceDetectorPainter extends CustomPainter {
           // text = 'Unknown';
           color = colorScheme.error;
         } else {
-          text = '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
+          text =
+              '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
           // text = '${value.userOrNot.userId}';
           color = Colors.green.shade600;
         }
@@ -80,9 +83,14 @@ class FaceDetectorPainter extends CustomPainter {
         );
         tp.layout();
         tp.paint(
-            canvas,
-            Offset(
-                value.position.left * scaleX, value.position.bottom * scaleY-5));
+          canvas,
+          Offset(
+            camDirection == CameraLensDirection.front
+                ? (value.position.width - value.position.right) * scaleX
+                : value.position.left * scaleX,
+            value.position.bottom * scaleY - 5,
+          ),
+        );
 
         final path = facePath(value.position, scaleX, scaleY);
         canvas.drawPath(path, paint..color = color);
@@ -116,7 +124,11 @@ class FaceDetectorPainter extends CustomPainter {
     }
     path.addPath(
       singlePath,
-      Offset(rect.left * scaleX, rect.top * scaleY),
+      Offset(
+          camDirection == CameraLensDirection.front
+              ? (imageSize.width - rect.right) * scaleX
+              : rect.left * scaleX,
+          rect.top * scaleY),
     );
 
     return path;

@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/controller/auth_controller.dart';
-import 'package:visoattend/models/user_model.dart';
-import 'package:visoattend/views/pages/auth_page.dart';
-import 'package:visoattend/views/pages/reset_password_page.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
 
+import '../../controller/auth_controller.dart';
+import '../../models/user_model.dart';
+import '../../views/pages/reset_password_page.dart';
+import '../../views/widgets/custom_button.dart';
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/constants.dart';
 import '../../helper/functions.dart';
-import '../../models/entities/isar_user.dart';
-import '../../controller/user_database_controller.dart';
 import '../widgets/custom_text_form_field.dart';
+
+import 'auth_page.dart';
 import 'face_register_page.dart';
-import 'classroom_pages/classroom_page.dart';
 
 class LoginRegisterPage extends StatelessWidget {
   const LoginRegisterPage({Key? key, this.isSignUp = false}) : super(key: key);
@@ -26,19 +24,16 @@ class LoginRegisterPage extends StatelessWidget {
     //     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
     final validEmail = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,5}');
 
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController userIdController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final TextEditingController confirmPasswordController =
-        TextEditingController();
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final userIdController = TextEditingController();
+    final passwordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
 
     final authController = Get.find<AuthController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     final formKey = GlobalKey<FormState>();
-    final height = Get.height;
-    final width = Get.width;
 
     String? emailValidatorString;
     String? userValidatorString;
@@ -96,7 +91,8 @@ class LoginRegisterPage extends StatelessWidget {
         authController.tempPassword = password;
         final user = UserModel(
           authUid: 'null',
-          profilePic: 'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7',
+          profilePic:
+              'https://firebasestorage.googleapis.com/v0/b/visoattend.appspot.com/o/profile_pics%2Fdefault_profile.jpg?alt=media&token=0ff37477-4ac1-41df-8522-73a5eacceee7',
           userId: userId,
           name: name,
           email: email,
@@ -110,6 +106,7 @@ class LoginRegisterPage extends StatelessWidget {
           faceDataLeft: [],
           faceDataRight: [],
         );
+        hideLoadingDialog();
         Get.to(() => FaceRegisterPage(user: user));
       } else {
         final bool emailValid = validEmail.hasMatch(userId);
@@ -131,7 +128,7 @@ class LoginRegisterPage extends StatelessWidget {
           );
           cloudFirestoreController.currentUser = userData!;
           await cloudFirestoreController.getUserClassrooms();
-          Get.offAll(() => const AuthPage());
+          // Get.offAll(() => const AuthPage());
         } else {
           Get.snackbar(
             'Invalid user',
@@ -140,6 +137,7 @@ class LoginRegisterPage extends StatelessWidget {
             animationDuration: const Duration(milliseconds: 200),
           );
         }
+        hideLoadingDialog();
       }
     }
 
@@ -174,22 +172,27 @@ class LoginRegisterPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (!isSignUp) ...[
-                    Text(
-                      'VisoAttend',
-                      style: Get.textTheme.titleLarge!
-                          .copyWith(fontWeight: FontWeight.bold),
+                    SizedBox(
+                      width: width * 0.55,
+                      child: Image.asset('assets/icons/text_icon.png'),
                     ),
-                    verticalGap(height * percentGapSmall),
+                    // Text(
+                    //   'VisoAttend',
+                    //   style: Get.textTheme.titleLarge!
+                    //       .copyWith(fontWeight: FontWeight.bold),
+                    // ),
+                    verticalGap(height * percentGapMedium),
                     Text(
-                      'Welcome  Back Please sign in to continue',
-                      style: Get.textTheme.titleMedium,
+                      'Welcome Back Please sign in to continue',
+                      style: textTheme.titleMedium!
+                          .copyWith(fontSize: width * 0.04),
                     ),
                     verticalGap(height * percentGapLarge),
                   ],
                   if (isSignUp) ...[
                     Text(
                       'Create Account',
-                      style: Get.textTheme.titleLarge!
+                      style: textTheme.titleLarge!
                           .copyWith(fontWeight: FontWeight.bold),
                     ),
                     verticalGap(height * percentGapLarge),
@@ -219,10 +222,12 @@ class LoginRegisterPage extends StatelessWidget {
                     verticalGap(height * percentGapMedium),
                   ],
                   CustomTextFormField(
-                    labelText: isSignUp? 'Student/Teacher Metric ID' :'Metric ID / Email',
+                    labelText: isSignUp
+                        ? 'Student/Teacher Metric ID'
+                        : 'Metric ID / Email',
                     controller: userIdController,
                     validator: (value) {
-                      if(value == null || value.isEmpty) {
+                      if (value == null || value.isEmpty) {
                         return 'Field cannot be empty';
                       }
                       if (isSignUp) {
@@ -276,8 +281,8 @@ class LoginRegisterPage extends StatelessWidget {
                           },
                           child: Text(
                             'Forgotten Password?',
-                            style: Get.textTheme.labelMedium!.copyWith(
-                              color: Get.theme.colorScheme.secondary,
+                            style: textTheme.labelMedium!.copyWith(
+                              color: colorScheme.secondary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -286,27 +291,18 @@ class LoginRegisterPage extends StatelessWidget {
                     ),
                     verticalGap(height * percentGapMedium),
                   ],
-                  Obx(
-                    () {
-                      return authController.isLoading
-                          ? const SizedBox(
-                              height: 25,
-                              width: 25,
-                              child: CircularProgressIndicator(),
-                            )
-                          : CustomButton(
-                              text: isSignUp ? 'Sign Up' : 'Sign In',
-                              onPressed: () async {
-                                authController.isLoading = true;
-                                await validateEmail(emailController.text);
-                                await validateUser(userIdController.text);
-                                if (formKey.currentState!.validate()) {
-                                  await handleSignInOrSignUp();
-                                } else {
-                                  authController.isLoading = false;
-                                }
-                              },
-                            );
+                  CustomButton(
+                    text: isSignUp ? 'Sign Up' : 'Sign In',
+                    onPressed: () async {
+                      loadingDialog('Loading...');
+                      authController.isLoading = true;
+                      await validateEmail(emailController.text);
+                      await validateUser(userIdController.text);
+                      if (formKey.currentState!.validate()) {
+                        await handleSignInOrSignUp();
+                      } else {
+                        authController.isLoading = false;
+                      }
                     },
                   ),
                   verticalGap(height * percentGapSmall),
@@ -320,7 +316,7 @@ class LoginRegisterPage extends StatelessWidget {
                           isSignUp
                               ? 'Already have an account?'
                               : "Don't have an account?",
-                          style: Get.textTheme.labelLarge,
+                          style: textTheme.labelLarge,
                         ),
                       ),
                       TextButton(
@@ -336,8 +332,8 @@ class LoginRegisterPage extends StatelessWidget {
                         },
                         child: Text(
                           isSignUp ? 'Sign In' : 'Sign up',
-                          style: Get.textTheme.labelLarge!.copyWith(
-                            color: Get.theme.colorScheme.secondary,
+                          style: textTheme.labelLarge!.copyWith(
+                            color: colorScheme.secondary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

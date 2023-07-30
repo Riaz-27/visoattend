@@ -31,130 +31,134 @@ class PeoplePage extends GetView<AttendanceController> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Teachers',
-                style:
-                    textTheme.titleMedium!.copyWith(color: colorScheme.primary),
-              ),
-              Divider(
-                thickness: 1,
-                color: colorScheme.primary,
-              ),
-              verticalGap(height * percentGapSmall),
-              Flexible(
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: controller.teachersData.length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        _buildUsersList(
-                          controller.teachersData[index],
-                          userRole: 'Teacher',
-                          forTeacher: true,
-                        ),
-                        if (controller.teachersData.length > 1)
-                          const Divider(
-                            thickness: 0.3,
-                          )
-                      ],
-                    );
-                  },
-                ),
-              ),
-              verticalGap(height * percentGapMedium),
-              if (classroom.cRs.isNotEmpty) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'CRs',
-                      style: textTheme.titleMedium!
-                          .copyWith(color: colorScheme.primary),
-                    ),
-                    Text(
-                      '${classroom.cRs.length} Students',
-                      style: textTheme.titleSmall!
-                          .copyWith(color: colorScheme.primary),
-                    ),
-                  ],
-                ),
-                Divider(
-                  thickness: 1,
-                  color: colorScheme.primary,
-                ),
-                verticalGap(height * percentGapSmall),
-                Flexible(
-                  child: ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: controller.cRsData.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          _buildUsersList(
-                            controller.cRsData[index],
-                            userRole: 'CR',
-                          ),
-                          if (controller.cRsData.length > 1)
-                            const Divider(
-                              thickness: 0.3,
-                            )
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                verticalGap(height * percentGapMedium),
-              ],
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Obx(
+            () {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    currentUserRole == 'Teacher' ? 'Students' : 'Classmates',
-                    style: textTheme.titleMedium!
-                        .copyWith(color: colorScheme.primary),
+                    'Teachers',
+                    style:
+                        textTheme.titleMedium!.copyWith(color: colorScheme.primary),
                   ),
-                  Text(
-                    '${classroom.students.length} Students',
-                    style: textTheme.titleSmall!
-                        .copyWith(color: colorScheme.primary),
+                  Divider(
+                    thickness: 1,
+                    color: colorScheme.primary,
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Flexible(
+                    child: ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: controller.teachersData.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            _buildUsersList(
+                              controller.teachersData[index],
+                              userRole: 'Teacher',
+                              forTeacher: true,
+                            ),
+                            if (controller.teachersData.length > 1)
+                              const Divider(
+                                thickness: 0.3,
+                              )
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  verticalGap(height * percentGapMedium),
+                  if (classroom.cRs.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'CRs',
+                          style: textTheme.titleMedium!
+                              .copyWith(color: colorScheme.primary),
+                        ),
+                        Text(
+                          '${classroom.cRs.length} Students',
+                          style: textTheme.titleSmall!
+                              .copyWith(color: colorScheme.primary),
+                        ),
+                      ],
+                    ),
+                    Divider(
+                      thickness: 1,
+                      color: colorScheme.primary,
+                    ),
+                    verticalGap(height * percentGapSmall),
+                    Flexible(
+                      child: ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: controller.cRsData.length,
+                        itemBuilder: (context, index) {
+                          return Column(
+                            children: [
+                              _buildUsersList(
+                                controller.cRsData[index],
+                                userRole: 'CR',
+                              ),
+                              if (controller.cRsData.length > 1)
+                                const Divider(
+                                  thickness: 0.3,
+                                )
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    verticalGap(height * percentGapMedium),
+                  ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        currentUserRole == 'Teacher' ? 'Students' : 'Classmates',
+                        style: textTheme.titleMedium!
+                            .copyWith(color: colorScheme.primary),
+                      ),
+                      Text(
+                        '${classroom.students.length} Students',
+                        style: textTheme.titleSmall!
+                            .copyWith(color: colorScheme.primary),
+                      ),
+                    ],
+                  ),
+                  Divider(
+                    thickness: 1,
+                    color: colorScheme.primary,
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Flexible(
+                    child: ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: controller.studentsData.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            _buildUsersList(
+                              controller.studentsData[index],
+                              userRole: 'Student',
+                            ),
+                            if (controller.studentsData.length > 1)
+                              const Divider(
+                                thickness: 0.3,
+                              )
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ],
-              ),
-              Divider(
-                thickness: 1,
-                color: colorScheme.primary,
-              ),
-              verticalGap(height * percentGapSmall),
-              Flexible(
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: controller.studentsData.length,
-                  itemBuilder: (context, index) {
-                    return Column(
-                      children: [
-                        _buildUsersList(
-                          controller.studentsData[index],
-                          userRole: 'Student',
-                        ),
-                        if (controller.studentsData.length > 1)
-                          const Divider(
-                            thickness: 0.3,
-                          )
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ],
+              );
+            }
           ),
         ),
       ),
@@ -263,7 +267,7 @@ class PeoplePage extends GetView<AttendanceController> {
                     style: textTheme.bodyMedium!,
                   ),
                   Text(
-                    user.userId,
+                    forTeacher? user.semesterOrDesignation : user.userId,
                     style: textTheme.bodySmall,
                   ),
                 ],

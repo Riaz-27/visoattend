@@ -8,7 +8,7 @@
         </intent>
     </queries>
     <application
-        android:label="visoattend"
+        android:label="VisoAttend"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

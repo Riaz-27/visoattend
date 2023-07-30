@@ -7,7 +7,6 @@ import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
 import 'package:visoattend/views/pages/home_page.dart';
 
 import '../../controller/face_detector_controller.dart';
-import '../../models/entities/isar_user.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/user_database_controller.dart';
 import '../../models/user_model.dart';

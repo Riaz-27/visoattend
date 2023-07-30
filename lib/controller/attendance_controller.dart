@@ -1,17 +1,16 @@
+import 'dart:developer' as dev;
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/user_database_controller.dart';
-import 'package:visoattend/models/leave_request_model.dart';
 
+
+import '../models/leave_request_model.dart';
 import '../models/attendance_model.dart';
 import '../models/classroom_model.dart';
 import '../models/recognition_model.dart';
 import '../models/user_model.dart';
-import 'camera_service_controller.dart';
 import 'cloud_firestore_controller.dart';
-import 'face_detector_controller.dart';
 import 'leave_request_controller.dart';
-import 'recognition_controller.dart';
 import 'timer_controller.dart';
 
 class AttendanceController extends GetxController {
@@ -106,10 +105,10 @@ class AttendanceController extends GetxController {
     _attendanceCount.value =
         classCount == null || classCount == '' ? 1 : int.parse(classCount);
 
-    print(
+    dev.log(
         'The current user is : ${cloudFirestoreController.currentUser.authUid}');
-    print('The current user is : $currentUserRole');
-    print('The clasroom Data : ${classroomData.openAttendance}');
+    dev.log('The current user is : $currentUserRole');
+    dev.log('The clasroom Data : ${classroomData.openAttendance}');
     if (forLive) {
       return;
     }
@@ -137,7 +136,7 @@ class AttendanceController extends GetxController {
     final now = DateTime.now();
     final dbDateTime = DateTime.parse(dbOpenAttendance);
     final timeDiff = dbDateTime.difference(now).inSeconds;
-    print('Time Diff : $timeDiff');
+    dev.log('Time Diff : $timeDiff');
     if (timeDiff > 0) {
       timerController.startAttendanceTimer(timeDiff);
     } else {
@@ -165,7 +164,7 @@ class AttendanceController extends GetxController {
       allStudentsUid.add(student['authUid']);
     }
     if ((allCRsUid + allStudentsUid).isEmpty) {
-      print('No Students in this class');
+      dev.log('No Students in this class');
       return;
     }
     _cRsData.value =
@@ -431,5 +430,10 @@ class AttendanceController extends GetxController {
     );
     _attendances.remove(attendance);
     _filteredAttendances.remove(attendance);
+  }
+
+  void resetAllValues() {
+    _selectedAttendance.value = AttendanceModel.empty();
+
   }
 }

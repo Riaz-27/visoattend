@@ -9,6 +9,7 @@ import 'package:visoattend/controller/attendance_controller.dart';
 
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/controller/profile_pic_controller.dart';
+import 'package:visoattend/helper/functions.dart';
 import 'package:visoattend/models/classroom_model.dart';
 import 'package:visoattend/models/user_model.dart';
 
@@ -21,9 +22,9 @@ class CloudFirestoreController extends GetxController {
 
   FirebaseFirestore get firestoreInstance => _firestoreInstance;
 
-  final _isLoading = false.obs;
+  final _isHomeLoading = false.obs;
 
-  bool get isLoading => _isLoading.value;
+  bool get isHomeLoading => _isHomeLoading.value;
 
   final _currentUser = UserModel.empty().obs;
 
@@ -81,17 +82,25 @@ class CloudFirestoreController extends GetxController {
   set isInitialized(value) => _isInitialized.value = value;
 
   Future<void> initialize() async {
+    _isHomeLoading.value = true;
     await resetValues();
     await setCurrentUser();
     await getUserClassrooms().then((_) => filterClassesOfToday());
+    _isHomeLoading.value = false;
   }
 
   Future<void> resetValues() async {
-    _isLoading(false);
     _currentUser(UserModel.empty());
     _classrooms([]);
     _isHoliday(true);
     homeClassId = '';
+    _classrooms.clear();
+    _nextClassDate.value = '';
+    _classesOfNextDay.clear();
+    _filteredClassroom.clear();
+    _archivedClassrooms.clear();
+    _timeLeftToStart.clear();
+    _timeLeftToEnd.clear();
   }
 
   /// User data control
