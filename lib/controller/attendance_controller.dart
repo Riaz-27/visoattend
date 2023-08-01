@@ -48,8 +48,6 @@ class AttendanceController extends GetxController {
 
   Map<String, RecognitionModel> matchedStudents = {}; // String is user.authUid
 
-  // int openAttendanceTimerSec = 300;
-
   final _attendanceCount = 1.obs;
 
   int get attendanceCount => _attendanceCount.value;
@@ -83,6 +81,9 @@ class AttendanceController extends GetxController {
 
     final classIndex = cloudFirestoreController.classrooms.indexWhere(
         (classroom) => classroom.classroomId == classroomData.classroomId);
+
+    if(classIndex < 0) return;
+
     cloudFirestoreController.classrooms[classIndex] = classroomData;
     cloudFirestoreController.filterClassesOfToday();
   }

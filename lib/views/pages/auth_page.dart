@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:visoattend/controller/auth_controller.dart';
 import 'package:visoattend/views/pages/detailed_home_page.dart';
-import 'package:visoattend/views/pages/home_page.dart';
 
 import 'login_register_page.dart';
 
@@ -18,10 +18,8 @@ class AuthPage extends StatelessWidget {
       stream: authController.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print("I HAVE DATA NOW");
           return const DetailedHomePage();
         }
-        print("I DONT HAVE DATA");
         return const LoginRegisterPage();
       },
     );

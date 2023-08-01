@@ -336,6 +336,11 @@ class CloudFirestoreController extends GetxController {
   }
 
   Future<void> getUserClassrooms() async {
+    _classrooms.value = [];
+    _filteredClassroom.value = [];
+    _archivedClassrooms.value = [];
+    _filteredArchivedClassroom.value = [];
+
     if (_currentUser.value.authUid == '') {
       dev.log('No User Found!');
       return;
@@ -402,9 +407,12 @@ class CloudFirestoreController extends GetxController {
   }
 
   void filterClassesOfToday() {
+    _classesOfToday.value = [];
+    _timeLeftToStart.value = [];
+    _timeLeftToEnd.value = [];
+
     // Getting the class
     dev.log('Classes Filtered');
-    _classesOfToday.value = [];
     final allClasses = _classrooms;
     if (_classrooms.isEmpty) {
       return;

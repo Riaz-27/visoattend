@@ -58,13 +58,13 @@ class FaceDetectorPainter extends CustomPainter {
         Color color;
 
         if (value.userOrNot is String) {
-          text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
-          // text = 'Unknown';
+          // text = '${value.userOrNot} ${value.distance.toStringAsFixed(2)}';
+          text = 'Unknown';
           color = colorScheme.error;
         } else {
           text =
-              '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
-          // text = '${value.userOrNot.userId}';
+              // '${value.userOrNot.userId} ${value.distance.toStringAsFixed(2)}';
+          text = '${value.userOrNot.userId}';
           color = Colors.green.shade600;
         }
 

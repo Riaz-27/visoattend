@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:visoattend/views/pages/detailed_classroom_page.dart';
 
 import '../../controller/navigation_controller.dart';
 import '../../views/pages/all_classroom_page.dart';
@@ -55,7 +56,7 @@ class DetailedHomePage extends GetView<NavigationController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  horizontalGap(width*percentGapSmall),
+                  horizontalGap(width * percentGapSmall),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,14 +76,14 @@ class DetailedHomePage extends GetView<NavigationController> {
                       Text(
                         DateFormat('EEE, d MMMM y').format(DateTime.now()),
                         style: textTheme.bodySmall!.copyWith(
-                            color: colorScheme.onBackground
-                                .withAlpha(150)),
+                            color: colorScheme.onBackground.withAlpha(150)),
                       ),
                     ],
                   ),
                   const Spacer(),
                   Obx(() {
-                    final picUrl = Get.find<ProfilePicController>().profilePicUrl;
+                    final picUrl =
+                        Get.find<ProfilePicController>().profilePicUrl;
                     return GestureDetector(
                       onTap: () => Get.to(() => const ProfilePage()),
                       child: Container(
@@ -99,7 +100,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                       ),
                     );
                   }),
-                  horizontalGap(width*percentGapMedium)
+                  horizontalGap(width * percentGapMedium)
                 ],
               ),
             ],
@@ -129,8 +130,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                     children: [
                       CustomButton(
                         height: height * 0.055,
-                        backgroundColor:
-                            colorScheme.secondaryContainer,
+                        backgroundColor: colorScheme.secondaryContainer,
                         textColor: colorScheme.onSecondaryContainer,
                         text: 'Join Class',
                         onPressed: () {
@@ -141,8 +141,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                       verticalGap(height * percentGapSmall),
                       CustomButton(
                         height: height * 0.055,
-                        backgroundColor:
-                            colorScheme.secondaryContainer,
+                        backgroundColor: colorScheme.secondaryContainer,
                         textColor: colorScheme.onSecondaryContainer,
                         text: 'Create Class',
                         onPressed: () {
@@ -183,6 +182,7 @@ class DetailedHomePage extends GetView<NavigationController> {
   }
 
   void _handleJoinClass() {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final TextEditingController classroomIdController = TextEditingController();
     final height = Get.height;
     Get.bottomSheet(
@@ -212,8 +212,24 @@ class DetailedHomePage extends GetView<NavigationController> {
               height: height * 0.055,
               text: 'Join Class',
               onPressed: () async {
+                loadingDialog('Joining...');
                 await Get.find<ClassroomController>()
                     .joinClassroom(classroomIdController.text);
+                final classroomData = cloudFirestoreController.classrooms
+                    .firstWhereOrNull((classroom) =>
+                        classroom.classroomId == classroomIdController.text);
+                hideLoadingDialog();
+                if (classroomData == null) {
+                  errorDialog(
+                    title: 'Failed to join classroom',
+                    msg: 'The classroom code is invalid',
+                  );
+                } else {
+                  Get.back();
+                  Get.to(
+                    () => DetailedClassroomPage(classroomData: classroomData),
+                  );
+                }
               },
             ),
           ],

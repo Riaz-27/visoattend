@@ -19,7 +19,7 @@ void loadingDialog([String? msg]) {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 8),
-            Text(msg?? ''),
+            Text(msg ?? ''),
           ],
         ),
       ),
@@ -27,6 +27,22 @@ void loadingDialog([String? msg]) {
   );
 }
 
+void errorDialog({required String title, required String msg}) {
+  Get.dialog(
+    barrierDismissible: false,
+    AlertDialog(
+      title: Text(title),
+      content: Text(msg),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Ok'),
+        ),
+      ],
+    ),
+  );
+}
+
 void hideLoadingDialog() {
-  if(Get.isDialogOpen??false) Get.back();
+  if (Get.isDialogOpen ?? false) Get.back();
 }

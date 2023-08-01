@@ -132,7 +132,9 @@ class ClassroomController extends GetxController {
     await cloudFirestoreController.joinClassroom(classroomId);
     await cloudFirestoreController
         .updateUserClassroom({classroomId: 'Student'});
-    await cloudFirestoreController.initialize();
+    await cloudFirestoreController
+        .getUserClassrooms()
+        .then((_) => cloudFirestoreController.filterClassesOfToday());
   }
 
   Future<void> updateClassroom(ClassroomModel classroom) async {

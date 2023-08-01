@@ -61,7 +61,7 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
   NormalizeOp preProcessNormalizeOp = NormalizeOp(127.5, 127.5);
   final outputBuffer =
   TensorBuffer.createFixedSize(outputShape, TfLiteType.float32);
-  const threshold = 0.75;
+  const threshold = 0.76;
 
   List<double> emb = [];
   Map<int, RecognitionModel> recognitionResults = {};

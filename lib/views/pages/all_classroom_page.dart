@@ -15,8 +15,6 @@ class AllClassroomPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final height = Get.height;
-    final width = Get.width;
     final searchController = TextEditingController();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 

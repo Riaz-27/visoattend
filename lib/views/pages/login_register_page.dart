@@ -128,7 +128,7 @@ class LoginRegisterPage extends StatelessWidget {
           );
           cloudFirestoreController.currentUser = userData!;
           await cloudFirestoreController.getUserClassrooms();
-          // Get.offAll(() => const AuthPage());
+          Get.offAll(() => const AuthPage());
         } else {
           Get.snackbar(
             'Invalid user',
@@ -301,6 +301,7 @@ class LoginRegisterPage extends StatelessWidget {
                       if (formKey.currentState!.validate()) {
                         await handleSignInOrSignUp();
                       } else {
+                        hideLoadingDialog();
                         authController.isLoading = false;
                       }
                     },
