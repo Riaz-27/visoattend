@@ -30,21 +30,13 @@ class AccountDetailsPage extends StatelessWidget {
     final mobileController = TextEditingController(text: currentUser.mobile);
     final genderController = TextEditingController(text: currentUser.gender);
     final dobController = TextEditingController(text: currentUser.dob);
+    final batchController = TextEditingController(text: '');
     final semesterOrDesignationController =
         TextEditingController(text: currentUser.semesterOrDesignation);
     final departmentController =
         TextEditingController(text: currentUser.department);
 
-    final semesterDesignationOptions = [
-      '1st',
-      '2nd',
-      '3rd',
-      '4th',
-      '5th',
-      '6th',
-      '7th',
-      '8th',
-      'Outgoing',
+    final designationOptions = [
       'Chairman  & Associate Professor',
       'Professor',
       'Associate Professor',
@@ -65,9 +57,9 @@ class AccountDetailsPage extends StatelessWidget {
       'Electronic and Telecommunication Engineering (ETE)',
       'Civil Engineering (CE)',
       'Pharmacy',
-      'Business Administration',
-      'Economics & Banking',
-      'Department of Law',
+      'Business Administration (BBA)',
+      'Economics & Banking (EB)',
+      'Law',
       'English Language and Literature (ELL)',
       'Arabic Language and Literature (ALL)',
       'Library and Information Science  (LIS)',
@@ -199,10 +191,15 @@ class AccountDetailsPage extends StatelessWidget {
                 ],
               ),
               verticalGap(height * percentGapSmall),
+              CustomInput(
+                controller: batchController,
+                title: 'Batch',
+              ),
+              verticalGap(height * percentGapSmall),
               _autocompleteField(
                   controller: semesterOrDesignationController,
-                  options: semesterDesignationOptions,
-                  title: 'Semester or Designation'),
+                  options: designationOptions,
+                  title: 'Designation'),
               verticalGap(height * percentGapSmall),
               _autocompleteField(
                   controller: departmentController,

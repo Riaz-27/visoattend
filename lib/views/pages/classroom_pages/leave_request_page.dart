@@ -23,43 +23,49 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
     final isTeacher = attendanceController.currentUserRole == 'Teacher';
 
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.only(
-          right: height * percentGapSmall,
-          left: height * percentGapSmall,
-        ),
-        child: Obx(
-          () {
-            return controller.classroomLeaveRequests.isEmpty
-                ? const Center(
-                    child: Text('No leave request application found'),
-                  )
-                : ListView.builder(
-                    itemCount: controller.classroomLeaveRequests.length,
-                    itemBuilder: (context, index) {
-                      final leaveRequest =
-                          controller.classroomLeaveRequests[index];
-                      final user = isTeacher
-                          ? controller
-                              .leaveRequestsUser[leaveRequest.leaveRequestId]!
-                          : cloudFirestoreController.currentUser;
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.loadLeaveRequestData();
+        },
+        child: Padding(
+          padding: EdgeInsets.only(
+            right: height * percentGapSmall,
+            left: height * percentGapSmall,
+          ),
+          child: Obx(
+            () {
+              return controller.classroomLeaveRequests.isEmpty
+                  ? const Center(
+                      child: Text('No leave request application found'),
+                    )
+                  : ListView.builder(
+                      itemCount: controller.classroomLeaveRequests.length,
+                      itemBuilder: (context, index) {
+                        final leaveRequest =
+                            controller.classroomLeaveRequests[index];
+                        final user = isTeacher
+                            ? controller
+                                .leaveRequestsUser[leaveRequest.leaveRequestId]!
+                            : cloudFirestoreController.currentUser;
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 15),
-                        child: _buildLeaveRequestList(
-                          context,
-                          leaveRequestIndex: index,
-                          user: user,
-                        ),
-                      );
-                    },
-                  );
-          },
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 15),
+                          child: _buildLeaveRequestList(
+                            context,
+                            leaveRequestIndex: index,
+                            user: user,
+                          ),
+                        );
+                      },
+                    );
+            },
+          ),
         ),
       ),
       floatingActionButton: Obx(
         () {
-          return attendanceController.currentUserRole != 'Teacher'
+          return attendanceController.currentUserRole != 'Teacher' &&
+                  !attendanceController.classroomData.isArchived
               ? FloatingActionButton(
                   onPressed: () =>
                       Get.to(() => const ApplyLeavePage(isSelectedClass: true)),

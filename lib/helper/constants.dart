@@ -17,3 +17,6 @@ final colorScheme = Get.theme.colorScheme;
 final textTheme = Get.theme.textTheme;
 final height = Get.height;
 final width = Get.width;
+
+final loadColor = colorScheme.onSurface.withOpacity(0.15);
+final loadColorLight = colorScheme.onSurface.withOpacity(0.1);

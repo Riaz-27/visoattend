@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/views/pages/detailed_classroom_page.dart';
+import 'package:visoattend/views/widgets/shimmer_loading.dart';
 
+import '../../views/pages/detailed_classroom_page.dart';
 import '../../controller/navigation_controller.dart';
 import '../../views/pages/all_classroom_page.dart';
 import '../../views/pages/home_page.dart';
@@ -24,7 +25,10 @@ class DetailedHomePage extends GetView<NavigationController> {
   Widget build(BuildContext context) {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     if (!cloudFirestoreController.isInitialized) {
-      cloudFirestoreController.initialize();
+      cloudFirestoreController.isHomeLoading = true;
+      cloudFirestoreController.initialize().then((_) {
+        cloudFirestoreController.isHomeLoading = false;
+      });
     }
 
     final navigationPages = [const HomePage(), const AllClassroomPage()];
@@ -50,61 +54,67 @@ class DetailedHomePage extends GetView<NavigationController> {
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
-          title: Column(
-            children: [
-              // verticalGap(height * percentGapSmall),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  horizontalGap(width * percentGapSmall),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          title: Obx(() {
+            return cloudFirestoreController.isHomeLoading
+                ? _loadingWidget()
+                : Column(
                     children: [
-                      Obx(() {
-                        final userName =
-                            cloudFirestoreController.currentUser.name;
-                        return Text(
-                          'Hi, $userName',
-                          style: textTheme.titleMedium!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                      // verticalGap(height * percentGapSmall),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          horizontalGap(width * percentGapSmall),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Obx(() {
+                                final userName =
+                                    cloudFirestoreController.currentUser.name;
+                                return Text(
+                                  'Hi, $userName',
+                                  style: textTheme.titleMedium!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                );
+                              }),
+                              verticalGap(height * percentGapVerySmall),
+                              Text(
+                                DateFormat('EEE, d MMMM y')
+                                    .format(DateTime.now()),
+                                style: textTheme.bodySmall!.copyWith(
+                                    color: colorScheme.onBackground
+                                        .withAlpha(150)),
+                              ),
+                            ],
                           ),
-                        );
-                      }),
-                      verticalGap(height * percentGapVerySmall),
-                      Text(
-                        DateFormat('EEE, d MMMM y').format(DateTime.now()),
-                        style: textTheme.bodySmall!.copyWith(
-                            color: colorScheme.onBackground.withAlpha(150)),
+                          const Spacer(),
+                          Obx(() {
+                            final picUrl =
+                                Get.find<ProfilePicController>().profilePicUrl;
+                            return GestureDetector(
+                              onTap: () => Get.to(() => const ProfilePage()),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: colorScheme.outline.withOpacity(0.4),
+                                  image: DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: NetworkImage(picUrl),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                          horizontalGap(width * percentGapMedium)
+                        ],
                       ),
                     ],
-                  ),
-                  const Spacer(),
-                  Obx(() {
-                    final picUrl =
-                        Get.find<ProfilePicController>().profilePicUrl;
-                    return GestureDetector(
-                      onTap: () => Get.to(() => const ProfilePage()),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colorScheme.outline.withOpacity(0.4),
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(picUrl),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                  horizontalGap(width * percentGapMedium)
-                ],
-              ),
-            ],
-          ),
+                  );
+          }),
         ),
         body: Obx(() {
           return navigationPages[controller.selectedHomeIndex];
@@ -160,8 +170,9 @@ class DetailedHomePage extends GetView<NavigationController> {
         bottomNavigationBar: Obx(() {
           return NavigationBar(
             selectedIndex: controller.selectedHomeIndex,
-            onDestinationSelected: (index) =>
-                controller.selectedHomeIndex = index,
+            onDestinationSelected: (index) {
+              controller.selectedHomeIndex = index;
+            },
             height: 65,
             destinations: const [
               NavigationDestination(
@@ -172,7 +183,7 @@ class DetailedHomePage extends GetView<NavigationController> {
               NavigationDestination(
                 icon: Icon(Icons.collections_bookmark_outlined),
                 selectedIcon: Icon(Icons.collections_bookmark),
-                label: 'All Classes',
+                label: 'Classrooms',
               ),
             ],
           );
@@ -235,6 +246,31 @@ class DetailedHomePage extends GetView<NavigationController> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _loadingWidget() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            horizontalGap(width * percentGapSmall),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ShimmerLoading(height: 15, width: 150),
+                verticalGap(height * percentGapVerySmall),
+                ShimmerLoading(height: 12, width: 100, color: loadColorLight),
+              ],
+            ),
+            const Spacer(),
+            const ShimmerLoading(height: 40, width: 40, radius: 100),
+            horizontalGap(width * percentGapMedium)
+          ],
+        ),
+      ],
     );
   }
 }

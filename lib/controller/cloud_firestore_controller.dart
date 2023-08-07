@@ -26,6 +26,8 @@ class CloudFirestoreController extends GetxController {
 
   bool get isHomeLoading => _isHomeLoading.value;
 
+  set isHomeLoading(value) => _isHomeLoading.value = value;
+
   final _currentUser = UserModel.empty().obs;
 
   UserModel get currentUser => _currentUser.value;
@@ -81,17 +83,20 @@ class CloudFirestoreController extends GetxController {
 
   set isInitialized(value) => _isInitialized.value = value;
 
+  //Storing classroom teacher name and profile pic
+  final _classroomTeacherInfo = <String, Map<String, String>>{}.obs;
+
+  Map<String, Map<String, String>> get classroomTeacherInfo =>
+      _classroomTeacherInfo;
+
   Future<void> initialize() async {
-    _isHomeLoading.value = true;
     await resetValues();
     await setCurrentUser();
     await getUserClassrooms().then((_) => filterClassesOfToday());
-    _isHomeLoading.value = false;
   }
 
   Future<void> resetValues() async {
     _currentUser(UserModel.empty());
-    _classrooms([]);
     _isHoliday(true);
     homeClassId = '';
     _classrooms.clear();
@@ -101,6 +106,7 @@ class CloudFirestoreController extends GetxController {
     _archivedClassrooms.clear();
     _timeLeftToStart.clear();
     _timeLeftToEnd.clear();
+    classroomTeacherInfo.clear();
   }
 
   /// User data control
@@ -373,6 +379,17 @@ class CloudFirestoreController extends GetxController {
           } else {
             classes.add(classroom);
           }
+
+          // Getting teacher name and profile pic for view
+          final teacherDoc = await _firestoreInstance
+              .collection(userCollection)
+              .doc(classroom.teachers[0]['authUid'])
+              .get();
+          final teacherUserData = UserModel.fromJson(teacherDoc.data()!);
+          classroomTeacherInfo[teacherUserData.authUid] = {
+            'name': teacherUserData.name,
+            'profilePic': teacherUserData.profilePic,
+          };
         }
       } catch (e) {
         dev.log(e.toString());
@@ -508,7 +525,7 @@ class CloudFirestoreController extends GetxController {
       if (nextClasses.isNotEmpty) break;
     }
 
-    if(nextClasses.isEmpty) return;
+    if (nextClasses.isEmpty) return;
 
     nextClasses.sort((a, b) {
       final aDateTime = DateTime.parse(a.weekTimes[weekDay]['startTime']);

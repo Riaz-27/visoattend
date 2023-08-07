@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:visoattend/views/widgets/shimmer_loading.dart';
 
 import '../../helper/functions.dart';
 import '../../models/classroom_model.dart';
@@ -33,142 +34,158 @@ class HomePage extends StatelessWidget {
                 right: height * percentGapSmall,
                 left: height * percentGapSmall,
               ),
-              child: Obx(() {
-                return cloudFirestoreController.isHomeLoading
-                    ? const SizedBox()
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          verticalGap(height * percentGapSmall),
-                          // Running Class UI
-                          Obx(() {
-                            final classTimes =
-                                cloudFirestoreController.timeLeftToStart;
-                            final isRunning = classTimes.isNotEmpty
-                                ? classTimes.first < 1
-                                    ? true
-                                    : false
-                                : false;
-                            return (!cloudFirestoreController.isHoliday &&
-                                    classroomList.isNotEmpty)
-                                ? Text(
-                                    isRunning ? "Running Class" : "Next Class",
-                                    style: textTheme.titleSmall!
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  )
-                                : const SizedBox();
-                          }),
-                          verticalGap(height * percentGapSmall),
-                          GestureDetector(
-                            onTap: () {
-                              if (classroomList.isNotEmpty) {
-                                Get.to(() => DetailedClassroomPage(
-                                    classroomData: classroomList.first));
+              child: Obx(
+                () {
+                  return cloudFirestoreController.isHomeLoading
+                      ? _loadingWidget()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            verticalGap(height * percentGapSmall),
+                            // Running Class UI
+                            Obx(() {
+                              final classTimes =
+                                  cloudFirestoreController.timeLeftToStart;
+                              final isRunning = classTimes.isNotEmpty
+                                  ? classTimes.first < 1
+                                      ? true
+                                      : false
+                                  : false;
+                              return (!cloudFirestoreController.isHoliday &&
+                                      classroomList.isNotEmpty)
+                                  ? Text(
+                                      isRunning
+                                          ? "Running Class"
+                                          : "Next Class",
+                                      style: textTheme.titleSmall!.copyWith(
+                                          fontWeight: FontWeight.bold),
+                                    )
+                                  : const SizedBox();
+                            }),
+                            verticalGap(height * percentGapSmall),
+                            GestureDetector(
+                              onTap: () {
+                                if (classroomList.isNotEmpty) {
+                                  Get.to(
+                                    () => DetailedClassroomPage(
+                                        classroomData: classroomList.first),
+                                  );
+                                }
+                              },
+                              child: _topView(
+                                  context: context,
+                                  classroomList: classroomList),
+                            ),
+                            verticalGap(height * percentGapMedium),
+                            Obx(() {
+                              String nextDateString = '';
+                              if (classroomList.isEmpty &&
+                                  cloudFirestoreController
+                                      .classesOfNextDay.isEmpty) {
+                                return const SizedBox();
                               }
-                            },
-                            child: _topView(
-                                context: context, classroomList: classroomList),
-                          ),
-                          verticalGap(height * percentGapMedium),
-                          Obx(() {
-                            String nextDateString = '';
-                            if (classroomList.isEmpty &&
-                                cloudFirestoreController
-                                    .classesOfNextDay.isEmpty) {
-                              return const SizedBox();
-                            }
-                            if (classroomList.isEmpty) {
-                              final nextDate =
-                                  cloudFirestoreController.nextClassDate;
-                              final nextDateTime = DateTime.parse(nextDate);
-                              nextDateString = DateFormat('EEE, dd MMMM')
+                              if (classroomList.isEmpty) {
+                                final nextDate =
+                                    cloudFirestoreController.nextClassDate;
+                                final nextDateTime = DateTime.parse(nextDate);
+                                final tomorrowDate =
+                                    DateTime.now().add(const Duration(days: 1));
+                                if (nextDateTime.day == tomorrowDate.day) {
+                                  nextDateString = 'Tomorrow';
+                                } else {
+                                  nextDateString = DateFormat('EEE, dd MMMM')
                                       .format(nextDateTime);
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Next Class',
-                                    style: textTheme.titleSmall!
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    nextDateString,
-                                    style: textTheme.bodySmall!
-                                        .copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
+                                }
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Next Class',
+                                      style: textTheme.titleSmall!.copyWith(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Spacer(),
+                                    Text(
+                                      nextDateString,
+                                      style: textTheme.bodySmall!.copyWith(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                );
+                              }
+                              return Text(
+                                "Later Today",
+                                style: textTheme.titleSmall!
+                                    .copyWith(fontWeight: FontWeight.bold),
                               );
-                            }
-                            return Text(
-                              "Later Today",
-                              style: textTheme.titleSmall!
-                                  .copyWith(fontWeight: FontWeight.bold),
-                            );
-                          }),
-                          verticalGap(height * percentGapSmall),
-                          if (classroomList.isNotEmpty)
-                            Flexible(
-                              child: Obx(
-                                () {
-                                  if (classroomList.length == 1) {
-                                    return const Text('No more classes today!');
-                                  }
+                            }),
+                            verticalGap(height * percentGapSmall),
+                            if (classroomList.isNotEmpty)
+                              Flexible(
+                                child: Obx(
+                                  () {
+                                    if (classroomList.length == 1) {
+                                      return const Text(
+                                          'No more classes today!');
+                                    }
+                                    return ListView.builder(
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      shrinkWrap: true,
+                                      itemCount: classroomList.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        if (index == 0) {
+                                          return const SizedBox();
+                                        }
+                                        return GestureDetector(
+                                          onTap: () => Get.to(
+                                            () => DetailedClassroomPage(
+                                              classroomData:
+                                                  classroomList[index],
+                                            ),
+                                          ),
+                                          child: _buildCustomCard(
+                                            classroom: classroomList[index],
+                                            index: index,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            if (cloudFirestoreController
+                                .classesOfNextDay.isNotEmpty)
+                              Flexible(
+                                child: Obx(() {
+                                  final nextClassList =
+                                      cloudFirestoreController.classesOfNextDay;
                                   return ListView.builder(
                                     physics:
                                         const NeverScrollableScrollPhysics(),
                                     shrinkWrap: true,
-                                    itemCount: classroomList.length,
+                                    itemCount: nextClassList.length,
                                     itemBuilder:
                                         (BuildContext context, int index) {
-                                      if (index == 0) {
-                                        return const SizedBox();
-                                      }
                                       return GestureDetector(
                                         onTap: () => Get.to(
                                           () => DetailedClassroomPage(
-                                            classroomData: classroomList[index],
+                                            classroomData: nextClassList[index],
                                           ),
                                         ),
-                                        child: _buildCustomCard(
-                                          classroom: classroomList[index],
-                                          index: index,
-                                        ),
+                                        child: _buildNextClassCard(
+                                            classroom: nextClassList[index]),
                                       );
                                     },
                                   );
-                                },
+                                }),
                               ),
-                            ),
-                          if (cloudFirestoreController
-                              .classesOfNextDay.isNotEmpty)
-                            Flexible(
-                              child: Obx(() {
-                                final nextClassList =
-                                    cloudFirestoreController.classesOfNextDay;
-                                return ListView.builder(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  shrinkWrap: true,
-                                  itemCount: nextClassList.length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    return GestureDetector(
-                                      onTap: () => Get.to(
-                                        () => DetailedClassroomPage(
-                                          classroomData: nextClassList[index],
-                                        ),
-                                      ),
-                                      child: _buildNextClassCard(
-                                          classroom: nextClassList[index]),
-                                    );
-                                  },
-                                );
-                              }),
-                            ),
-                        ],
-                      );
-              }),
+                          ],
+                        );
+                },
+              ),
             ),
           ),
         ),
@@ -182,12 +199,13 @@ class HomePage extends StatelessWidget {
   }) {
     final height = Get.height;
 
-    final weekStartTime = classroom
-        .weekTimes[DateFormat('EEEE').format(DateTime.now())]['startTime'];
-    final weekEndTime = classroom
-        .weekTimes[DateFormat('EEEE').format(DateTime.now())]['endTime'];
+    final weekday = DateFormat('EEEE').format(DateTime.now());
+    final weekStartTime = classroom.weekTimes[weekday]['startTime'];
+    final weekEndTime = classroom.weekTimes[weekday]['endTime'];
     final startTime = DateFormat.jm().format(DateTime.parse(weekStartTime));
     final endTime = DateFormat.jm().format(DateTime.parse(weekEndTime));
+    final roomNo = classroom.weekTimes[weekday]['room'];
+    final classSession = classroom.session.split(',').first;
 
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
@@ -204,57 +222,138 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    classroom.courseTitle,
-                    style: textTheme.titleSmall!
-                        .copyWith(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
+                  // Row(
+                  //   children: [
+                  //     // Text(
+                  //     //   '$startTime - $endTime',
+                  //     //   style: textTheme.bodySmall,
+                  //     // ),
+                  //     const Spacer(),
+                  //     Obx(() {
+                  //       final timeLeft = Get.find<CloudFirestoreController>()
+                  //           .timeLeftToStart[index];
+                  //       final timeLeftHour = (timeLeft / 60).floor();
+                  //       final timeLeftMin = timeLeft % 60;
+                  //       String timeLeftText = '';
+                  //       Color textColor = Colors.green;
+                  //       if (timeLeftHour > 0) {
+                  //         timeLeftText += '${timeLeftHour}h ';
+                  //       }
+                  //       timeLeftText += '${timeLeftMin}m Left';
+                  //       if (timeLeftHour == 0 && timeLeftMin <= 5) {
+                  //         textColor = Colors.red;
+                  //       } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+                  //         textColor = Colors.orange;
+                  //       }
+                  //       return Text(
+                  //         timeLeftText,
+                  //         style: textTheme.bodySmall!.copyWith(
+                  //           fontWeight: FontWeight.bold,
+                  //           color: textColor,
+                  //         ),
+                  //       );
+                  //     }),
+                  //   ],
+                  // ),
+                  // verticalGap(height * percentGapVerySmall),
+                  Row(
+                    children: [
+                      Text(
+                        classroom.courseTitle,
+                        style: textTheme.titleSmall!
+                            .copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      horizontalGap(width * 0.08),
+                      const Spacer(),
+                      Obx(() {
+                        final timeLeft = Get.find<CloudFirestoreController>()
+                            .timeLeftToStart[index];
+                        final timeLeftHour = (timeLeft / 60).floor();
+                        final timeLeftMin = timeLeft % 60;
+                        String timeLeftText = '';
+                        Color textColor = Colors.green;
+                        if (timeLeftHour > 0) {
+                          timeLeftText += '${timeLeftHour}h ';
+                        }
+                        timeLeftText += '${timeLeftMin}m left';
+                        if (timeLeftHour == 0 && timeLeftMin <= 5) {
+                          textColor = Colors.red;
+                        } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+                          textColor = Colors.orange;
+                        }
+                        return Text(
+                          timeLeftText,
+                          style: textTheme.bodySmall!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                   verticalGap(height * percentGapVerySmall),
+                  // Text(
+                  //   classroom.courseCode,
+                  //   style: textTheme.titleSmall!.copyWith(
+                  //     color: colorScheme.onBackground.withAlpha(150),
+                  //   ),
+                  // ),
                   Text(
-                    classroom.courseCode,
-                    style: textTheme.titleSmall!.copyWith(
-                      color: colorScheme.onBackground.withAlpha(150),
+                    '$startTime - $endTime',
+                    style: Get.textTheme.titleSmall!.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                      letterSpacing: 0.4,
                     ),
+                  ),
+                  Wrap(
+                    children: [
+                      _customClassroomTag(text: classroom.courseCode),
+                      if (roomNo != '') _customClassroomTag(text: roomNo),
+                      if (classroom.section != '')
+                        _customClassroomTag(text: classroom.section),
+                      if (classSession != '')
+                        _customClassroomTag(text: classSession),
+                    ],
                   ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Obx(() {
-                  final timeLeft = Get.find<CloudFirestoreController>()
-                      .timeLeftToStart[index];
-                  final timeLeftHour = (timeLeft / 60).floor();
-                  final timeLeftMin = timeLeft % 60;
-                  String timeLeftText = '';
-                  Color textColor = Colors.green;
-                  if (timeLeftHour > 0) {
-                    timeLeftText += '${timeLeftHour}h ';
-                  }
-                  timeLeftText += '${timeLeftMin}m Left';
-                  if (timeLeftHour == 0 && timeLeftMin <= 5) {
-                    textColor = Colors.red;
-                  } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
-                    textColor = Colors.orange;
-                  }
-                  return Text(
-                    timeLeftText,
-                    style: textTheme.titleSmall!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  );
-                }),
-                verticalGap(height * percentGapVerySmall),
-                Text(
-                  '$startTime - $endTime',
-                  style: textTheme.titleSmall!
-                      .copyWith(color: colorScheme.onBackground.withAlpha(150)),
-                ),
-              ],
-            ),
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.end,
+            //   children: [
+            //     Obx(() {
+            //       final timeLeft = Get.find<CloudFirestoreController>()
+            //           .timeLeftToStart[index];
+            //       final timeLeftHour = (timeLeft / 60).floor();
+            //       final timeLeftMin = timeLeft % 60;
+            //       String timeLeftText = '';
+            //       Color textColor = Colors.green;
+            //       if (timeLeftHour > 0) {
+            //         timeLeftText += '${timeLeftHour}h ';
+            //       }
+            //       timeLeftText += '${timeLeftMin}m Left';
+            //       if (timeLeftHour == 0 && timeLeftMin <= 5) {
+            //         textColor = Colors.red;
+            //       } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
+            //         textColor = Colors.orange;
+            //       }
+            //       return Text(
+            //         timeLeftText,
+            //         style: textTheme.titleSmall!.copyWith(
+            //           fontWeight: FontWeight.bold,
+            //           color: textColor,
+            //         ),
+            //       );
+            //     }),
+            //     verticalGap(height * percentGapVerySmall),
+            //     Text(
+            //       '$startTime - $endTime',
+            //       style: textTheme.titleSmall!
+            //           .copyWith(color: colorScheme.onBackground.withAlpha(150)),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),
@@ -270,6 +369,8 @@ class HomePage extends StatelessWidget {
 
     final weekStartTime = classroom.weekTimes[nextWeekDay]['startTime'];
     final weekEndTime = classroom.weekTimes[nextWeekDay]['endTime'];
+    final roomNo = classroom.weekTimes[nextWeekDay]['room'];
+    final classSession = classroom.session.split(',').first;
 
     final startTime = DateFormat.jm().format(DateTime.parse(weekStartTime));
     final endTime = DateFormat.jm().format(DateTime.parse(weekEndTime));
@@ -289,11 +390,17 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$startTime - $endTime',
-                    style: textTheme.bodySmall,
-                  ),
-                  verticalGap(height * percentGapVerySmall),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.end,
+                  //   children: [
+                  //     Text(
+                  //       '$startTime - $endTime',
+                  //       style: textTheme.bodySmall,
+                  //       textAlign: TextAlign.right,
+                  //     ),
+                  //   ],
+                  // ),
+                  // verticalGap(height * percentGapVerySmall),
                   Text(
                     classroom.courseTitle,
                     style: textTheme.titleSmall!
@@ -301,15 +408,21 @@ class HomePage extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   verticalGap(height * percentGapVerySmall),
-                  Row(
+                  Text(
+                    '$startTime - $endTime',
+                    style: Get.textTheme.titleSmall!.copyWith(
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  Wrap(
                     children: [
-                      Text(
-                        classroom.courseCode,
-                        style: textTheme.titleSmall!.copyWith(
-                          color: colorScheme.onBackground.withAlpha(150),
-                        ),
-                      ),
-                      const Spacer(),
+                      _customClassroomTag(text: classroom.courseCode),
+                      if (roomNo != '') _customClassroomTag(text: roomNo),
+                      if (classroom.section != '')
+                        _customClassroomTag(text: classroom.section),
+                      if (classSession != '')
+                        _customClassroomTag(text: classSession),
                     ],
                   ),
                 ],
@@ -317,6 +430,27 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _customClassroomTag(
+      {Color? bgColor, Color? textColor, required String text}) {
+    return Container(
+      margin: EdgeInsets.only(top: height * percentGapSmall, right: 10),
+      padding: const EdgeInsets.symmetric(
+        vertical: 5,
+        horizontal: 8,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: bgColor ?? colorScheme.surfaceVariant.withOpacity(0.7),
+      ),
+      child: Text(
+        text,
+        style: textTheme.labelMedium!.copyWith(
+            color: textColor ?? colorScheme.onSurface.withOpacity(0.8),
+            fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -381,8 +515,7 @@ class HomePage extends StatelessWidget {
               ? true
               : false
           : false;
-      print(timeLeftToStart);
-      print(timeLeftToEnd);
+
       String timeLeftText = '';
       double timePercent = 0;
       if (timeLeftToStart.isNotEmpty) {
@@ -609,5 +742,156 @@ class HomePage extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Widget _loadingWidget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        verticalGap(height * percentGapSmall),
+        _loadingTopView(),
+        verticalGap(height * percentGapMedium),
+        Flexible(
+          child: ListView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: 3,
+            itemBuilder: (BuildContext context, int index) {
+              return _loadBuildCustomCard();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _loadingTopView() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: loadColor.withOpacity(0.04),
+      ),
+      padding: EdgeInsets.only(
+        top: 3,
+        bottom: 15,
+        left: height * percentGapSmall,
+        right: height * percentGapSmall,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              horizontalGap(width * percentGapVerySmall),
+              Column(
+                children: [
+                  verticalGap(height * percentGapSmall),
+                  ShimmerLoading(
+                    height: height * 0.12,
+                    width: height * 0.12,
+                    radius: 100,
+                  )
+                ],
+              ),
+              horizontalGap(width * 0.05),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    verticalGap(height * percentGapSmall),
+                    ShimmerLoading(width: width * 0.5,color: loadColorLight),
+                    verticalGap(height * percentGapVerySmall),
+                    ShimmerLoading(
+                      width: width * 0.3,
+                      height: 12,
+                      color: loadColorLight,
+                    ),
+                    verticalGap(height * percentGapSmall),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShimmerLoading(
+                              width: width * 0.16,
+                              height: 10,
+                            ),
+                            verticalGap(height * percentGapVerySmall),
+                            ShimmerLoading(
+                              width: width * 0.16,
+                              height: 12,
+                              color: loadColorLight,
+                            ),
+                          ],
+                        ),
+                        horizontalGap(height * percentGapLarge),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShimmerLoading(
+                              width: width * 0.16,
+                              height: 10,
+                            ),
+                            verticalGap(height * percentGapVerySmall),
+                            ShimmerLoading(width: width * 0.16, height: 12,color: loadColorLight,),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          verticalGap(height * percentGapSmall),
+          ShimmerLoading(height: 10, width: width * 0.2),
+          verticalGap(height * percentGapVerySmall),
+          ShimmerLoading(
+            height: 6,
+            width: width,
+            radius: 100,
+          ),
+          verticalGap(height * percentGapVerySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _loadBuildCustomCard() {
+    return Container(
+      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: loadColor.withOpacity(0.04),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(height * percentGapSmall),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerLoading(width: width * 0.5,color: loadColorLight),
+                  verticalGap(height * percentGapVerySmall),
+                  ShimmerLoading(
+                    width: width * 0.3,
+                    height: 14,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

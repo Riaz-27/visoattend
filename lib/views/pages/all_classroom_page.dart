@@ -25,13 +25,13 @@ class AllClassroomPage extends StatelessWidget {
     return Scaffold(
       appBar: isArchived
           ? AppBar(
-        forceMaterialTransparency: true,
-        centerTitle: true,
-        title: Text(
-          'Archived Classes',
-          style: textTheme.titleMedium,
-        ),
-      )
+              forceMaterialTransparency: true,
+              centerTitle: true,
+              title: Text(
+                'Archived Classes',
+                style: textTheme.titleMedium,
+              ),
+            )
           : null,
       body: SafeArea(
         child: Padding(
@@ -46,24 +46,58 @@ class AllClassroomPage extends StatelessWidget {
             children: [
               verticalGap(height * percentGapSmall),
               CustomTextFormField(
-                labelText: 'Search Class',
+                labelText: 'Search Classroom',
                 controller: searchController,
                 contentPadding:
-                const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                onChanged: (value) =>
-                isArchived
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                onChanged: (value) => isArchived
                     ? cloudFirestoreController
-                    .filterArchiveClassesSearchResult(value)
+                        .filterArchiveClassesSearchResult(value)
                     : cloudFirestoreController
-                    .filterAllClassesSearchResult(value),
+                        .filterAllClassesSearchResult(value),
               ),
               verticalGap(height * percentGapSmall),
               Obx(() {
-                return Text(
-                  isArchived
-                      ? 'Archived Classes (${classroomList.length})'
-                      : 'All Classes (${classroomList.length})',
-                  style: Get.textTheme.bodySmall,
+                final archivedClasses =
+                    cloudFirestoreController.archivedClassrooms.length;
+                if (isArchived || archivedClasses == 0) {
+                  return const SizedBox();
+                }
+                return InkWell(
+                  onTap: () =>
+                      Get.to(() => const AllClassroomPage(isArchived: true)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color:
+                          Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.archive_rounded,
+                            color: colorScheme.secondary,
+                          ),
+                          horizontalGap(width * percentGapMedium),
+                          Text(
+                            'Archived Classrooms',
+                            style: textTheme.bodyMedium,
+                          ),
+                          const Spacer(),
+                          Text(
+                            archivedClasses.toString(),
+                            style: textTheme.titleMedium!.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          horizontalGap(width * percentGapSmall),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               }),
               verticalGap(height * percentGapSmall),
@@ -74,7 +108,7 @@ class AllClassroomPage extends StatelessWidget {
                     itemBuilder: (_, index) {
                       return GestureDetector(
                         onTap: () {
-                          if(isArchived){
+                          if (isArchived) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 behavior: SnackBarBehavior.floating,
@@ -85,12 +119,11 @@ class AllClassroomPage extends StatelessWidget {
                               ),
                             );
                           }
-                          Get.to(() =>
-                              DetailedClassroomPage(
-                                  classroomData: classroomList[index]));
+                          Get.to(() => DetailedClassroomPage(
+                              classroomData: classroomList[index]));
                         },
                         child:
-                        _buildCustomCard(classroom: classroomList[index]),
+                            _buildCustomCard(classroom: classroomList[index]),
                       );
                     },
                   );
@@ -106,14 +139,16 @@ class AllClassroomPage extends StatelessWidget {
   Widget _buildCustomCard({
     required ClassroomModel classroom,
   }) {
-    final height = Get.height;
-    final width = Get.width;
+    final classSession = classroom.session.split(',').first;
+
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
 
     return Container(
       margin: EdgeInsets.only(bottom: height * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -130,34 +165,98 @@ class AllClassroomPage extends StatelessWidget {
                         .copyWith(fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    classroom.courseCode,
-                    style: Get.textTheme.titleSmall!.copyWith(
-                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
-                    ),
+                  // Text(
+                  //   classroom.courseCode,
+                  //   style: Get.textTheme.titleSmall!.copyWith(
+                  //     color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                  //   ),
+                  // ),
+                  verticalGap(height * 0.01),
+                  Row(
+                    children: [
+                      Obx(() {
+                        final teacherProfileUrl = cloudFirestoreController
+                            .classroomTeacherInfo[classroom.teachers[0]['authUid']]!['profilePic']!;
+                        return Container(
+                          width: 25,
+                          height: 25,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.outline.withOpacity(0.4),
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(teacherProfileUrl),
+                            ),
+                          ),
+                        );
+                      }),
+                      horizontalGap(width * percentGapMedium),
+                      Obx(
+                        () {
+                          final teacherName = cloudFirestoreController
+                              .classroomTeacherInfo[classroom.teachers[0]['authUid']]!['name']!;
+                          return Text(
+                            teacherName,
+                            style: Get.textTheme.titleSmall!.copyWith(
+                              color: colorScheme.onSurface.withOpacity(0.9),
+                            ),
+                          );
+                        }
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      _customClassroomTag(text: classroom.courseCode),
+                      if (classroom.section != '')
+                        _customClassroomTag(text: classroom.section),
+                      if (classSession != '')
+                        _customClassroomTag(text: classSession),
+                    ],
                   ),
                 ],
               ),
             ),
-            horizontalGap(width * percentGapVerySmall),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  classroom.section,
-                  style: Get.textTheme.titleSmall!
-                      .copyWith(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  classroom.session,
-                  style: Get.textTheme.titleSmall!.copyWith(
-                    color: Get.theme.colorScheme.onBackground.withAlpha(150),
-                  ),
-                ),
-              ],
-            ),
+            // horizontalGap(width * percentGapVerySmall),
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.end,
+            //   children: [
+            //     Text(
+            //       classroom.section,
+            //       style: Get.textTheme.titleSmall!
+            //           .copyWith(fontWeight: FontWeight.bold),
+            //     ),
+            //     Text(
+            //       classroom.session,
+            //       style: Get.textTheme.titleSmall!.copyWith(
+            //         color: Get.theme.colorScheme.onBackground.withAlpha(150),
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _customClassroomTag(
+      {Color? bgColor, Color? textColor, required String text}) {
+    return Container(
+      margin: EdgeInsets.only(top: height * percentGapSmall, right: 10),
+      padding: const EdgeInsets.symmetric(
+        vertical: 5,
+        horizontal: 8,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: bgColor ?? colorScheme.surfaceVariant.withOpacity(0.7),
+      ),
+      child: Text(
+        text,
+        style: textTheme.labelMedium!.copyWith(
+            color: textColor ?? colorScheme.onSurface.withOpacity(0.8),
+            fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -26,10 +26,10 @@ class AttendanceRecordPage extends StatelessWidget {
     final recognitionController = Get.find<RecognitionController>();
     final attendanceController = Get.find<AttendanceController>();
 
-    final height = Get.height;
-    final width = Get.width;
     List<Widget> stackChildren = [];
     cameraServiceController.isSignUp = false;
+
+    String loadingMsg = 'Please wait...';
 
     //camera view
     stackChildren.add(
@@ -140,9 +140,10 @@ class AttendanceRecordPage extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () async {
                     await attendanceController.setMatchedStudents().then((_) =>
-                        attendanceController
-                            .saveDataToFirestore()
-                            .then((_) => Navigator.of(context).maybePop()));
+                        attendanceController.saveDataToFirestore().then((_) {
+                          loadingMsg = 'Saving...';
+                          Navigator.of(context).maybePop();
+                        }));
                   },
                   child: Stack(
                     alignment: Alignment.center,
@@ -327,7 +328,7 @@ class AttendanceRecordPage extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
-        loadingDialog();
+        loadingDialog(loadingMsg);
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
         cameraServiceController.isStopped = true;
@@ -335,7 +336,7 @@ class AttendanceRecordPage extends StatelessWidget {
             .weekTimes[DateFormat('EEEE').format(DateTime.now())]['classCount'];
         attendanceController.attendanceCount =
             classCount == null || classCount == '' ? 1 : int.parse(classCount);
-        final durationMs = faceDetectorController.faces.length * 100 + 500;
+        final durationMs = faceDetectorController.faces.length * 120 + 500;
         await Future.delayed(Duration(milliseconds: durationMs));
         hideLoadingDialog();
         return true;

@@ -122,22 +122,37 @@ class LoginRegisterPage extends StatelessWidget {
           }
         }
         if (email != '') {
-          await authController.signInWithEmailAndPassword(
+          await authController
+              .signInWithEmailAndPassword(
             email: email,
             password: password,
-          );
-          cloudFirestoreController.currentUser = userData!;
-          await cloudFirestoreController.getUserClassrooms();
-          Get.offAll(() => const AuthPage());
+          )
+              .then((value) {
+            hideLoadingDialog();
+            if (!value) {
+              errorDialog(
+                title: 'Login Failed',
+                msg: 'User not found with this credentials.',
+              );
+            }
+          });
+          // if (success) {
+          //   // cloudFirestoreController.currentUser = userData!;
+          //   // Get.offAll(() => const AuthPage());
+          // } else {
+          //   hideLoadingDialog();
+          //   errorDialog(
+          //     title: 'Login Failed',
+          //     msg: 'User not found with this credentials.',
+          //   );
+          // }
         } else {
-          Get.snackbar(
-            'Invalid user',
-            'User not found with this credentials',
-            colorText: Colors.red,
-            animationDuration: const Duration(milliseconds: 200),
+          hideLoadingDialog();
+          errorDialog(
+            title: 'Login Failed',
+            msg: 'User not found with this credentials.',
           );
         }
-        hideLoadingDialog();
       }
     }
 
@@ -181,13 +196,18 @@ class LoginRegisterPage extends StatelessWidget {
                     //   style: Get.textTheme.titleLarge!
                     //       .copyWith(fontWeight: FontWeight.bold),
                     // ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(height * percentGapSmall),
                     Text(
-                      'Welcome Back Please sign in to continue',
-                      style: textTheme.titleMedium!
-                          .copyWith(fontSize: width * 0.04),
+                      'Welcome Back',
+                      style: textTheme.bodySmall!
+                          .copyWith(fontSize: width * 0.035),
                     ),
-                    verticalGap(height * percentGapLarge),
+                    Text(
+                      'Please sign in to continue',
+                      style: textTheme.bodySmall!
+                          .copyWith(fontSize: width * 0.035),
+                    ),
+                    verticalGap(height * percentGapMedium),
                   ],
                   if (isSignUp) ...[
                     Text(
@@ -200,10 +220,11 @@ class LoginRegisterPage extends StatelessWidget {
                       labelText: 'Full Name (According to the registration)',
                       controller: nameController,
                       validator: (value) {
-                        if (value!.isEmpty ||
-                            !RegExp(r'^[a-z A-Z]+$').hasMatch(value)) {
-                          print('The Value: $value');
-                          return 'Name should only contains letters.';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your name.';
+                        }
+                        if (!RegExp(r'^[a-z A-Z.]+$').hasMatch(value)) {
+                          return 'Only letters and space are allowed.';
                         }
                         return null;
                       },
@@ -213,8 +234,11 @@ class LoginRegisterPage extends StatelessWidget {
                       labelText: 'Email',
                       controller: emailController,
                       validator: (value) {
-                        if (value!.isEmpty || !validEmail.hasMatch(value)) {
-                          return 'Email is not valid';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email address.';
+                        }
+                        if (!validEmail.hasMatch(value)) {
+                          return 'Email is not valid.';
                         }
                         return emailValidatorString;
                       },
@@ -222,17 +246,21 @@ class LoginRegisterPage extends StatelessWidget {
                     verticalGap(height * percentGapMedium),
                   ],
                   CustomTextFormField(
-                    labelText: isSignUp
-                        ? 'Student/Teacher Metric ID'
-                        : 'Metric ID / Email',
+                    labelText: isSignUp ? 'Student/Teacher ID' : 'ID / Email',
                     controller: userIdController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Field cannot be empty';
+                        if (isSignUp) {
+                          return 'Please enter your student/teacher ID';
+                        }
+                        return 'Please enter your student/teacher ID or email';
+                      }
+                      if (value.length < 5) {
+                        return 'ID must have at least 5 characters.';
                       }
                       if (isSignUp) {
                         if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
-                          return 'User ID must be letters or number';
+                          return 'ID must be letters or number';
                         }
                         return userValidatorString;
                       }
@@ -246,10 +274,12 @@ class LoginRegisterPage extends StatelessWidget {
                     isPassword: true,
                     maxLines: 1,
                     validator: (value) {
-                      if (isSignUp &&
-                          (value!.isEmpty ||
-                              confirmPasswordController.text != value)) {
-                        return 'Password do not match';
+                      if (value == null || value.trim().isEmpty) {
+                        if (isSignUp) return 'Please enter a password.';
+                        return 'Please enter your password.';
+                      }
+                      if (value.trim().length < 6) {
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
@@ -262,8 +292,10 @@ class LoginRegisterPage extends StatelessWidget {
                       isPassword: true,
                       maxLines: 1,
                       validator: (value) {
-                        if (value!.isEmpty ||
-                            passwordController.text != value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please re-enter the password.';
+                        }
+                        if (passwordController.text != value) {
                           return 'Password do not match';
                         }
                         return null;
@@ -294,7 +326,7 @@ class LoginRegisterPage extends StatelessWidget {
                   CustomButton(
                     text: isSignUp ? 'Sign Up' : 'Sign In',
                     onPressed: () async {
-                      loadingDialog('Loading...');
+                      loadingDialog('Please wait...');
                       authController.isLoading = true;
                       await validateEmail(emailController.text);
                       await validateUser(userIdController.text);

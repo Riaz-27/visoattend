@@ -54,6 +54,11 @@ class AttendanceController extends GetxController {
 
   set attendanceCount(int value) => _attendanceCount.value = value;
 
+  final _isAttendanceLoading = false.obs;
+
+  bool get isAttendanceLoading => _isAttendanceLoading.value;
+  set isAttendanceLoading(value) => _isAttendanceLoading.value = value;
+
   @override
   onInit() {
     ever(_attendances, (_) => calculateMissedClass());
@@ -72,6 +77,11 @@ class AttendanceController extends GetxController {
   InternalFinalCallback<void> get onDelete {
     Get.find<TimerController>().cancelAttendanceTimer();
     return super.onDelete;
+  }
+
+  Future<void> loadDataOfClassroom(ClassroomModel classroom) async {
+    await updateValues(classroom);
+    await getUsersData();
   }
 
   void updateRootClassesValue() {
@@ -109,7 +119,7 @@ class AttendanceController extends GetxController {
     dev.log(
         'The current user is : ${cloudFirestoreController.currentUser.authUid}');
     dev.log('The current user is : $currentUserRole');
-    dev.log('The clasroom Data : ${classroomData.openAttendance}');
+    dev.log('The classroom Data : ${classroomData.openAttendance}');
     if (forLive) {
       return;
     }

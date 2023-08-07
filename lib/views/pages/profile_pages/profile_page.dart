@@ -134,13 +134,6 @@ class ProfilePage extends StatelessWidget {
                 ),
                 verticalGap(height * percentGapSmall),
                 _optionsWidget(
-                  onTap: () =>
-                      Get.to(() => const AllClassroomPage(isArchived: true)),
-                  Icons.archive_outlined,
-                  'Archived classes',
-                ),
-                verticalGap(height * percentGapSmall),
-                _optionsWidget(
                   onTap: () => showConfirmDialog(context),
                   Icons.logout_rounded,
                   'Logout',

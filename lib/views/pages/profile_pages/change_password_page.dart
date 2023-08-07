@@ -63,6 +63,9 @@ class ChangePasswordPage extends StatelessWidget {
                   title: 'Old Password',
                   isPassword: true,
                   validator: (value) {
+                    if(value == null || value.isEmpty){
+                      return 'Please enter your current password.';
+                    }
                     return oldPasswordValidateText;
                   },
                 ),
@@ -72,9 +75,8 @@ class ChangePasswordPage extends StatelessWidget {
                   title: 'New Password',
                   isPassword: true,
                   validator: (value) {
-                    if (value!.isEmpty ||
-                        confirmNewPasswordController.text != value) {
-                      return 'Password do not match';
+                    if(value == null || value.isEmpty){
+                      return 'Please enter a new password.';
                     }
                     return null;
                   },
@@ -85,7 +87,10 @@ class ChangePasswordPage extends StatelessWidget {
                   title: 'Confirm Password',
                   isPassword: true,
                   validator: (value) {
-                    if (value!.isEmpty || newPasswordController.text != value) {
+                    if(newPasswordController.text != '' && value!.isEmpty){
+                      return 'Please re-enter the password';
+                    }
+                    if (newPasswordController.text != value) {
                       return 'Password do not match';
                     }
                     return null;

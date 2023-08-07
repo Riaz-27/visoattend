@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/controller/classroom_controller.dart';
-import 'package:visoattend/controller/navigation_controller.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/pages/classroom_pages/leave_request_page.dart';
-import 'package:visoattend/views/pages/classroom_pages/people_page.dart';
-import 'package:visoattend/views/pages/create_edit_classroom_page.dart';
 
+import '../../controller/classroom_controller.dart';
+import '../../controller/navigation_controller.dart';
+import '../../helper/functions.dart';
+import '../../views/pages/classroom_pages/leave_request_page.dart';
+import '../../views/pages/classroom_pages/people_page.dart';
+import '../../views/pages/create_edit_classroom_page.dart';
 import '../../controller/attendance_controller.dart';
 import '../../controller/leave_request_controller.dart';
 import '../../models/classroom_model.dart';
@@ -20,10 +20,11 @@ class DetailedClassroomPage extends GetView<NavigationController> {
   @override
   Widget build(BuildContext context) {
     final attendanceController = Get.find<AttendanceController>();
-    final leaveRequestController = Get.find<LeaveRequestController>();
-    attendanceController.updateValues(classroomData).then((_) =>
-        attendanceController.getUsersData().then((_) =>
-            leaveRequestController.getAndFilterClassroomLeaveRequests()));
+    // final leaveRequestController = Get.find<LeaveRequestController>();
+    // attendanceController.updateValues(classroomData).then((_) =>
+    //     attendanceController.getUsersData().then((_) =>
+    //         leaveRequestController.getAndFilterClassroomLeaveRequests()));
+    loadData();
 
     final navigationPages = [
       const ClassroomPage(),
@@ -59,13 +60,13 @@ class DetailedClassroomPage extends GetView<NavigationController> {
                   position: PopupMenuPosition.under,
                   tooltip: 'Classroom Options',
                   itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem(
-                        value: 'unroll',
-                        child: Text('Unroll'),
-                      ),
+                    const PopupMenuItem(
+                      value: 'unenroll',
+                      child: Text('Unenroll'),
+                    ),
                   ],
                   onSelected: (value) {
-                    if(value == 'unroll'){
+                    if (value == 'unenroll') {
                       _handleLeaveClass(context);
                     }
                   },
@@ -124,6 +125,16 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         }),
       ),
     );
+  }
+
+  Future<void> loadData() async {
+    final attendanceController = Get.find<AttendanceController>();
+    final leaveRequestController = Get.find<LeaveRequestController>();
+
+    attendanceController.isAttendanceLoading = true;
+    await attendanceController.loadDataOfClassroom(classroomData);
+    await leaveRequestController.loadLeaveRequestData();
+    attendanceController.isAttendanceLoading = false;
   }
 
   void _handleLeaveClass(BuildContext context) {

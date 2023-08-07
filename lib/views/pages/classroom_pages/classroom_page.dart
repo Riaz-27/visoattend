@@ -8,6 +8,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:visoattend/controller/timer_controller.dart';
 import 'package:visoattend/models/attendance_model.dart';
 import 'package:visoattend/views/pages/classroom_pages/selected_attendance_page.dart';
+import 'package:visoattend/views/widgets/shimmer_loading.dart';
 import '../../../controller/attendance_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
@@ -22,162 +23,191 @@ class ClassroomPage extends GetView<AttendanceController> {
 
   @override
   Widget build(BuildContext context) {
-    final height = Get.height;
-    final width = Get.width;
-
     final searchController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
-
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: height * percentGapSmall,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _topView(context: context),
-              verticalGap(height * percentGapSmall),
-              Obx(() {
-                return Text(
-                  'Attendances (${controller.filteredAttendances.length})',
-                  style: Get.textTheme.bodySmall!
-                      .copyWith(fontWeight: FontWeight.bold),
-                );
-              }),
-              verticalGap(height * percentGapVerySmall),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: width * 0.4,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(50),
-                      border: Border.all(color: Get.theme.colorScheme.outline),
-                    ),
-                    child: Row(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final attendanceController = Get.find<AttendanceController>();
+          await attendanceController
+              .updateValues(attendanceController.classroomData);
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: height * percentGapSmall,
+          ),
+          child: SingleChildScrollView(
+            child: Obx(() {
+              return controller.isAttendanceLoading
+                  ? _loadWidget()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Flexible(
-                          child: CustomTextField(
-                            controller: searchController,
-                            style: Get.theme.textTheme.bodySmall,
-                            disableBorder: true,
-                            hintText: 'All Times',
-                            onChanged: (value) {
-                              controller.filterAttendances(value);
-                            },
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () async {
-                            final firstDate = controller.attendances.isEmpty
-                                ? DateTime.now()
-                                : DateTime.fromMillisecondsSinceEpoch(
-                                    controller.attendances.last.dateTime);
-
-                            final pickedDate = await showDatePicker(
-                              selectableDayPredicate: (dateTime) => true,
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: firstDate,
-                              lastDate: DateTime.now(),
-                            );
-                            selectedDate = pickedDate ?? DateTime.now();
-                            final dateText = pickedDate != null
-                                ? DateFormat('dd MMMM y').format(pickedDate)
-                                : '';
-                            searchController.text = dateText;
-                            controller.filterAttendances(dateText);
-                          },
-                          child: Container(
-                            color: Colors.transparent,
-                            height: 28,
-                            width: 40,
-                            child: const Icon(
-                              Icons.date_range,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Obx(() {
-                    return controller.currentUserRole == 'Teacher' ||
-                            (controller.currentUserRole == 'CR' &&
-                                controller.classroomData.openAttendance !=
-                                    'off')
-                        ? GestureDetector(
-                            onTap: () async {
-                              final classroomData = controller.classroomData;
-                              final attendances = controller.attendances;
-                              final reportGenerateService =
-                                  ReportGenerateService(
-                                classroomData: classroomData,
-                                attendances: attendances,
-                              );
-                              final pdfData =
-                                  await reportGenerateService.generateReport(
-                                      department: classroomData.department);
-                              final dateTimeNow = DateFormat('ddMMy_hhmmss')
-                                  .format(DateTime.now());
-                              print('The date string : $dateTimeNow');
-                              reportGenerateService.savePdfFile(
-                                  '${classroomData.courseCode}_$dateTimeNow',
-                                  pdfData);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: kSmall, vertical: kVerySmall),
+                        _topView(context: context),
+                        verticalGap(height * percentGapSmall),
+                        Obx(() {
+                          return Text(
+                            'Attendances (${controller.filteredAttendances.length})',
+                            style: Get.textTheme.bodySmall!
+                                .copyWith(fontWeight: FontWeight.bold),
+                          );
+                        }),
+                        verticalGap(height * percentGapVerySmall),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              width: width * 0.4,
+                              height: 28,
                               decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(50),
-                                  color:
-                                      Get.theme.colorScheme.secondaryContainer),
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(
+                                    color: Get.theme.colorScheme.outline),
+                              ),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    Icons.file_download_outlined,
-                                    size: 16,
-                                    color: Get.theme.colorScheme.secondary,
+                                  Flexible(
+                                    child: CustomTextField(
+                                      controller: searchController,
+                                      style: Get.theme.textTheme.bodySmall,
+                                      disableBorder: true,
+                                      hintText: 'All Times',
+                                      onChanged: (value) {
+                                        controller.filterAttendances(value);
+                                      },
+                                    ),
                                   ),
-                                  Text(
-                                    "Report",
-                                    style: Get.textTheme.bodySmall!.copyWith(
-                                        color: Get.theme.colorScheme.secondary,
-                                        fontWeight: FontWeight.bold),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final firstDate = controller
+                                              .attendances.isEmpty
+                                          ? DateTime.now()
+                                          : DateTime.fromMillisecondsSinceEpoch(
+                                              controller
+                                                  .attendances.last.dateTime);
+
+                                      final pickedDate = await showDatePicker(
+                                        selectableDayPredicate: (dateTime) =>
+                                            true,
+                                        context: context,
+                                        initialDate: selectedDate,
+                                        firstDate: firstDate,
+                                        lastDate: DateTime.now(),
+                                      );
+                                      selectedDate =
+                                          pickedDate ?? DateTime.now();
+                                      final dateText = pickedDate != null
+                                          ? DateFormat('dd MMMM y')
+                                              .format(pickedDate)
+                                          : '';
+                                      searchController.text = dateText;
+                                      controller.filterAttendances(dateText);
+                                    },
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      height: 28,
+                                      width: 40,
+                                      child: const Icon(
+                                        Icons.date_range,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          )
-                        : const SizedBox();
-                  }),
-                ],
-              ),
-              verticalGap(height * percentGapSmall),
-              Flexible(
-                child: Obx(() {
-                  return ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: controller.filteredAttendances.length,
-                    itemBuilder: (context, index) {
-                      return _buildAttendanceListView(
-                          attendance: controller.filteredAttendances[index]);
-                    },
-                  );
-                }),
-              ),
-            ],
+                            Obx(() {
+                              return controller.currentUserRole == 'Teacher' ||
+                                      (controller.currentUserRole == 'CR' &&
+                                          controller.classroomData
+                                                  .openAttendance !=
+                                              'off')
+                                  ? GestureDetector(
+                                      onTap: () async {
+                                        final classroomData =
+                                            controller.classroomData;
+                                        final attendances =
+                                            controller.attendances;
+                                        final reportGenerateService =
+                                            ReportGenerateService(
+                                          classroomData: classroomData,
+                                          attendances: attendances,
+                                        );
+                                        final pdfData =
+                                            await reportGenerateService
+                                                .generateReport(
+                                                    department: classroomData
+                                                        .department);
+                                        final dateTimeNow =
+                                            DateFormat('ddMMy_hhmmss')
+                                                .format(DateTime.now());
+                                        print('The date string : $dateTimeNow');
+                                        reportGenerateService.savePdfFile(
+                                            '${classroomData.courseCode}_$dateTimeNow',
+                                            pdfData);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: kSmall,
+                                            vertical: kVerySmall),
+                                        decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(50),
+                                            color: Get.theme.colorScheme
+                                                .secondaryContainer),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.file_download_outlined,
+                                              size: 16,
+                                              color: Get
+                                                  .theme.colorScheme.secondary,
+                                            ),
+                                            Text(
+                                              "Report",
+                                              style: Get.textTheme.bodySmall!
+                                                  .copyWith(
+                                                      color: Get
+                                                          .theme
+                                                          .colorScheme
+                                                          .secondary,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox();
+                            }),
+                          ],
+                        ),
+                        verticalGap(height * percentGapSmall),
+                        Flexible(
+                          child: Obx(() {
+                            return ListView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: controller.filteredAttendances.length,
+                              itemBuilder: (context, index) {
+                                return _buildAttendanceListView(
+                                    attendance:
+                                        controller.filteredAttendances[index]);
+                              },
+                            );
+                          }),
+                        ),
+                      ],
+                    );
+            }),
           ),
         ),
       ),
       floatingActionButton: Obx(() {
-        return controller.classroomData.isArchived
+        return controller.classroomData.isArchived ||
+                controller.isAttendanceLoading
             ? const SizedBox()
             : _bottomFloatingButton(context);
       }),
@@ -186,8 +216,6 @@ class ClassroomPage extends GetView<AttendanceController> {
   }
 
   Widget _buildAttendanceListView({required AttendanceModel attendance}) {
-    final height = Get.height;
-    final width = Get.width;
     final dateTime = DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
     final isToday = DateFormat('dMy').format(dateTime) ==
         DateFormat('dMy').format(DateTime.now());
@@ -209,6 +237,10 @@ class ClassroomPage extends GetView<AttendanceController> {
         totalStudents++;
       }
     }
+    final takenBy = (controller.teachersData.toList() +
+            controller.cRsData.toList() +
+            controller.studentsData.toList())
+        .firstWhere((user) => attendance.takenBy['authUid'] == user.authUid);
 
     return GestureDetector(
       onTap: () {
@@ -262,7 +294,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                       style: Get.textTheme.titleSmall!.copyWith(color: color),
                     ),
                     Text(
-                      'by ${attendance.takenBy['name']}',
+                      'by ${takenBy.name}',
                       style: Get.textTheme.bodySmall,
                     ),
                   ],
@@ -272,7 +304,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'by ${attendance.takenBy['name'] == currentUser.name ? 'you' : attendance.takenBy['name']}',
+                      'by ${takenBy.authUid == currentUser.authUid ? 'you' : takenBy.name}',
                       style: Get.textTheme.titleSmall,
                     ),
                     Text(
@@ -303,11 +335,7 @@ class ClassroomPage extends GetView<AttendanceController> {
   Widget _topView({
     required BuildContext context,
   }) {
-    final height = Get.height;
-    final width = Get.width;
-
     return Container(
-      height: height * 0.28,
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -478,7 +506,8 @@ class ClassroomPage extends GetView<AttendanceController> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  controller.currentUserRole == 'Teacher' && !classroom.isArchived
+                  controller.currentUserRole == 'Teacher' &&
+                          !classroom.isArchived
                       ? GestureDetector(
                           onTap: () async {
                             await Clipboard.setData(
@@ -826,6 +855,131 @@ class ClassroomPage extends GetView<AttendanceController> {
           ],
         );
       },
+    );
+  }
+
+  /// For Initial loading view
+  Widget _loadWidget() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _loadTopView(),
+        verticalGap(height * percentGapSmall),
+        Flexible(
+          child: ListView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return _loadAttendanceListView();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _loadTopView() {
+    return Container(
+      // height: height * 0.28,
+      width: width,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: loadColor.withOpacity(0.04),
+      ),
+      padding: const EdgeInsets.all(kSmall),
+      child: Row(
+        children: [
+          horizontalGap(width * percentGapVerySmall),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              verticalGap(height * percentGapSmall),
+              ShimmerLoading(
+                width: height * 0.14,
+                height: height * 0.14,
+                radius: 100,
+              ),
+              verticalGap(height * percentGapSmall),
+            ],
+          ),
+          horizontalGap(width * 0.05),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                verticalGap(height * percentGapSmall),
+                ShimmerLoading(width: width * 0.5, color: loadColorLight),
+                verticalGap(height * percentGapVerySmall),
+                ShimmerLoading(width: width * 0.25, height: 10),
+                verticalGap(height * percentGapVerySmall),
+                ShimmerLoading(width: width * 0.15, height: 10),
+                verticalGap(height * percentGapMedium),
+                ShimmerLoading(width: width * 0.3, height: 10),
+                verticalGap(height * 0.015),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerLoading(width: width * 0.15, height: 12),
+                    horizontalGap(width * 0.08),
+                    ShimmerLoading(width: width * 0.15, height: 12),
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _loadAttendanceListView() {
+    return Container(
+      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        color: loadColor.withOpacity(0.04),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(kSmall),
+        child: Row(
+          children: [
+            ShimmerLoading(
+              width: width * 0.1,
+              height: 50,
+              color: loadColorLight,
+            ),
+            horizontalGap(width * percentGapSmall),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerLoading(
+                  width: width * 0.3,
+                  height: 12,
+                  color: loadColorLight,
+                ),
+                verticalGap(height * percentGapVerySmall),
+                ShimmerLoading(width: width * 0.2, height: 10),
+              ],
+            ),
+            const Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ShimmerLoading(
+                  width: width * 0.15,
+                  height: 12,
+                  color: loadColorLight,
+                ),
+                verticalGap(height * percentGapVerySmall),
+                ShimmerLoading(width: width * 0.25, height: 10),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

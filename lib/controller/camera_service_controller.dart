@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:developer' as dev;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +66,7 @@ class CameraServiceController extends GetxController {
 
       print('Camera rotation: $_cameraRotation');
 
-      attendanceController.totalRecognized.clear();
+      // attendanceController.totalRecognized.clear();
 
       _cameraController.startImageStream((image) async {
         if (!isBusy) {
@@ -87,7 +87,6 @@ class CameraServiceController extends GetxController {
             )
                 .then((value) {
               attendanceController.totalRecognized.addAll(value);
-
               isBusy = false;
             });
           } else {

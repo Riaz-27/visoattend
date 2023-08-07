@@ -11,6 +11,11 @@ class LeaveRequestController extends GetxController {
 
   List<ClassroomModel> get selectedClassrooms => _selectedClassrooms;
 
+  final _isLeaveRequestLoading = false.obs;
+
+  bool get isLeaveRequestLoading => _isLeaveRequestLoading.value;
+  set isLeaveRequestLoading(value) => _isLeaveRequestLoading.value = value;
+
   final _availableClassrooms = <ClassroomModel>[].obs;
 
   List<ClassroomModel> get availableClassrooms => _availableClassrooms;
@@ -30,6 +35,10 @@ class LeaveRequestController extends GetxController {
   final _leaveRequestsUser = <String, UserModel>{}.obs;
 
   Map<String, UserModel> get leaveRequestsUser => _leaveRequestsUser;
+
+  Future<void> loadLeaveRequestData() async {
+    await getAndFilterClassroomLeaveRequests();
+  }
 
   void setValues({bool isSelectedClass = false}) {
     final attendanceController = Get.find<AttendanceController>();

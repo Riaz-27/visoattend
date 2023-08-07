@@ -29,6 +29,8 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
     final searchController = TextEditingController();
 
+    print(attendance.attendanceId.toString());
+
     return WillPopScope(
       onWillPop: () async {
         controller.selectedCategory = '';

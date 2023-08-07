@@ -21,7 +21,7 @@ class AuthController extends GetxController {
 
   String tempPassword = '';
 
-  Future<void> signInWithEmailAndPassword({
+  Future<bool> signInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
@@ -31,15 +31,12 @@ class AuthController extends GetxController {
         email: email,
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
-      Get.snackbar(
-        'Something Went Wrong',
-        e.toString(),
-        colorText: Colors.red,
-        animationDuration: const Duration(milliseconds: 200),
-      );
+      _isLoading(false);
+      return true;
+    } catch (e) {
+      print('Login Problem : $e}');
+      return false;
     }
-    _isLoading(false);
   }
 
   Future<UserCredential?> createUserWithEmailAndPassword({
@@ -81,16 +78,15 @@ class AuthController extends GetxController {
 
     try {
       await currentUser!.reauthenticateWithCredential(cred);
-    } catch (_){
-      return 'Invalid password';
+    } catch (_) {
+      return 'Wrong password.';
     }
     return null;
   }
 
   Future<bool> changePassword(String newPassword) async {
     try {
-      await
-        currentUser!.updatePassword(newPassword);
+      await currentUser!.updatePassword(newPassword);
     } catch (_) {
       return false;
     }
