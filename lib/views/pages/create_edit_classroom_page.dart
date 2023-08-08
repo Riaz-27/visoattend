@@ -237,11 +237,11 @@ class CreateEditClassroomPage extends StatelessWidget {
             children: [
               Text('Classroom Details', style: textTheme.bodySmall),
               verticalGap(height * percentGapSmall),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+              Container(
                 decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: colorScheme.surfaceVariant.withOpacity(0.6)),
+                  borderRadius: BorderRadius.circular(15),
+                  color: colorScheme.surfaceVariant.withOpacity(0.6),
+                ),
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                 child: ListTileTheme(
@@ -420,6 +420,9 @@ class CreateEditClassroomPage extends StatelessWidget {
               verticalGap(height * percentGapSmall),
               Flexible(
                 child: ListView.builder(
+                  padding: classroom.isArchived
+                      ? const EdgeInsets.only(bottom: 80)
+                      : EdgeInsets.zero,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: 7,
@@ -468,6 +471,7 @@ void _handleClassArchiveRestore(BuildContext context, {required bool archive}) {
           ),
           TextButton(
             onPressed: () async {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
               await classroomController
                   .archiveRestoreClassroom(classroom, archive)
                   .then(
@@ -491,7 +495,7 @@ void _handleClassDelete(
 }) {
   final deleteController = TextEditingController();
   final classroomController = Get.find<ClassroomController>();
-  final classroom = Get.find<AttendanceController>().classroomData;
+
   showDialog(
     context: context,
     builder: (context) {
@@ -537,6 +541,7 @@ void _handleClassDelete(
           TextButton(
             onPressed: () async {
               if (courseTitle == deleteController.text) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 await classroomController.deleteClassroom().then(
                       (_) => Get.find<CloudFirestoreController>()
                           .initialize()

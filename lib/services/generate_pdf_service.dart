@@ -13,11 +13,11 @@ import 'package:visoattend/models/user_model.dart';
 import '../models/attendance_model.dart';
 import '../models/classroom_model.dart';
 
-class ReportGenerateService {
+class GeneratePdfService {
   final ClassroomModel classroomData;
   final List<AttendanceModel> attendances;
 
-  ReportGenerateService({
+  GeneratePdfService({
     required this.classroomData,
     required this.attendances,
   });
@@ -79,7 +79,7 @@ class ReportGenerateService {
   }
 
   Future<void> savePdfFile(String filename, Uint8List byteList) async {
-    final output = await getApplicationDocumentsDirectory();
+    final output = await getApplicationSupportDirectory();
     var filePath = "${output.path}/$filename.pdf";
     final file = File(filePath);
     await file.writeAsBytes(byteList);
@@ -114,7 +114,10 @@ class ReportGenerateService {
     final courseCode = classroom.courseCode;
     final session = classroom.session;
     final section = classroom.section;
-    final instructor = classroom.teachers[0]['name'];
+
+    final attendanceController = Get.find<AttendanceController>();
+    final instructor = attendanceController.teachersData.firstWhere(
+        (teacher) => teacher.authUid == classroom.teachers[0]['authUid']).name;
 
     return pw.Column(
       children: [
@@ -269,7 +272,7 @@ class ReportGenerateService {
       'Presents',
       'Leaves',
       'Absents',
-      'Percentage',
+      'Percentage(%)',
       'Marks',
       'Comments',
     ];
@@ -310,9 +313,9 @@ class ReportGenerateService {
         int roundedPercentage = (percentage * 100).round();
 
         if (roundedPercentage < 60) {
-          disCollegiateRow.add(i+1);
+          disCollegiateRow.add(i + 1);
         } else if (roundedPercentage < 70) {
-          nonCollegiateRow.add(i+1);
+          nonCollegiateRow.add(i + 1);
         }
 
         perRow.add(studentsPresents[i].toString());
@@ -337,7 +340,7 @@ class ReportGenerateService {
         3: const pw.FlexColumnWidth(2),
         4: const pw.FlexColumnWidth(2),
         5: const pw.FlexColumnWidth(2),
-        6: const pw.FlexColumnWidth(3),
+        6: const pw.FlexColumnWidth(3.3),
         7: const pw.FlexColumnWidth(2),
         8: const pw.FlexColumnWidth(6),
       },

@@ -33,103 +33,108 @@ class AllClassroomPage extends StatelessWidget {
               ),
             )
           : null,
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: height * percentGapVerySmall,
-            right: height * percentGapSmall,
-            left: height * percentGapSmall,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              verticalGap(height * percentGapSmall),
-              CustomTextFormField(
-                labelText: 'Search Classroom',
-                controller: searchController,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                onChanged: (value) => isArchived
-                    ? cloudFirestoreController
-                        .filterArchiveClassesSearchResult(value)
-                    : cloudFirestoreController
-                        .filterAllClassesSearchResult(value),
-              ),
-              verticalGap(height * percentGapSmall),
-              Obx(() {
-                final archivedClasses =
-                    cloudFirestoreController.archivedClassrooms.length;
-                if (isArchived || archivedClasses == 0) {
-                  return const SizedBox();
-                }
-                return InkWell(
-                  onTap: () =>
-                      Get.to(() => const AllClassroomPage(isArchived: true)),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color:
-                          Get.theme.colorScheme.surfaceVariant.withAlpha(150),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.archive_rounded,
-                            color: colorScheme.secondary,
-                          ),
-                          horizontalGap(width * percentGapMedium),
-                          Text(
-                            'Archived Classrooms',
-                            style: textTheme.bodyMedium,
-                          ),
-                          const Spacer(),
-                          Text(
-                            archivedClasses.toString(),
-                            style: textTheme.titleMedium!.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          horizontalGap(width * percentGapSmall),
-                        ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await cloudFirestoreController.initialize();
+        },
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: height * percentGapVerySmall,
+              right: height * percentGapSmall,
+              left: height * percentGapSmall,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                verticalGap(height * percentGapSmall),
+                CustomTextFormField(
+                  labelText: 'Search Classroom',
+                  controller: searchController,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                  onChanged: (value) => isArchived
+                      ? cloudFirestoreController
+                          .filterArchiveClassesSearchResult(value)
+                      : cloudFirestoreController
+                          .filterAllClassesSearchResult(value),
+                ),
+                verticalGap(height * percentGapSmall),
+                Obx(() {
+                  final archivedClasses =
+                      cloudFirestoreController.archivedClassrooms.length;
+                  if (isArchived || archivedClasses == 0) {
+                    return const SizedBox();
+                  }
+                  return InkWell(
+                    onTap: () =>
+                        Get.to(() => const AllClassroomPage(isArchived: true)),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color:
+                            Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.archive_rounded,
+                              color: colorScheme.secondary,
+                            ),
+                            horizontalGap(width * percentGapMedium),
+                            Text(
+                              'Archived Classrooms',
+                              style: textTheme.bodyMedium,
+                            ),
+                            const Spacer(),
+                            Text(
+                              archivedClasses.toString(),
+                              style: textTheme.titleMedium!.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            horizontalGap(width * percentGapSmall),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
-              verticalGap(height * percentGapSmall),
-              Expanded(
-                child: Obx(() {
-                  return ListView.builder(
-                    itemCount: classroomList.length,
-                    itemBuilder: (_, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          if (isArchived) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                behavior: SnackBarBehavior.floating,
-                                duration: Duration(days: 365),
-                                content: Text(
-                                  "This class has been archived. You can't add or edit anything.",
-                                ),
-                              ),
-                            );
-                          }
-                          Get.to(() => DetailedClassroomPage(
-                              classroomData: classroomList[index]));
-                        },
-                        child:
-                            _buildCustomCard(classroom: classroomList[index]),
-                      );
-                    },
                   );
                 }),
-              ),
-            ],
+                verticalGap(height * percentGapSmall),
+                Expanded(
+                  child: Obx(() {
+                    return ListView.builder(
+                      itemCount: classroomList.length,
+                      itemBuilder: (_, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            if (isArchived) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(days: 365),
+                                  content: Text(
+                                    "This class has been archived. You can't add or edit anything.",
+                                  ),
+                                ),
+                              );
+                            }
+                            Get.to(() => DetailedClassroomPage(
+                                classroomData: classroomList[index]));
+                          },
+                          child:
+                              _buildCustomCard(classroom: classroomList[index]),
+                        );
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -193,10 +198,10 @@ class AllClassroomPage extends StatelessWidget {
                       horizontalGap(width * percentGapMedium),
                       Obx(
                         () {
-                          final teacherName = cloudFirestoreController
-                              .classroomTeacherInfo[classroom.teachers[0]['authUid']]!['name']!;
+                          final teacherUid = cloudFirestoreController.classroomTeacherInfo[classroom.teachers[0]['authUid']];
+                          final teacherName = teacherUid == null? '' : teacherUid['name'];
                           return Text(
-                            teacherName,
+                            teacherName??'',
                             style: Get.textTheme.titleSmall!.copyWith(
                               color: colorScheme.onSurface.withOpacity(0.9),
                             ),

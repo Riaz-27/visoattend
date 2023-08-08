@@ -162,14 +162,15 @@ class AttendanceController extends GetxController {
     List<String> allTeachersUid = [];
     List<String> allCRsUid = [];
     List<String> allStudentsUid = [];
-    for (var student in classroomData.teachers) {
-      allTeachersUid.add(student['authUid']);
+    for (var teacher in classroomData.teachers) {
+      allTeachersUid.add(teacher['authUid']);
     }
+
     _teachersData.value =
         await cloudFirestoreController.getUsersOfClassroom(allTeachersUid);
 
-    for (var student in classroomData.cRs) {
-      allCRsUid.add(student['authUid']);
+    for (var cr in classroomData.cRs) {
+      allCRsUid.add(cr['authUid']);
     }
     for (var student in classroomData.students) {
       allStudentsUid.add(student['authUid']);
@@ -184,7 +185,7 @@ class AttendanceController extends GetxController {
         await cloudFirestoreController.getUsersOfClassroom(allStudentsUid);
 
     // sorting by id
-    _teachersData.sort((a, b) => a.userId.compareTo(b.userId));
+    // _teachersData.sort((a, b) => a.userId.compareTo(b.userId));
     _cRsData.sort((a, b) => a.userId.compareTo(b.userId));
     _studentsData.sort((a, b) => a.userId.compareTo(b.userId));
   }

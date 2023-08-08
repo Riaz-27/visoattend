@@ -7,7 +7,8 @@ class UserModel {
   String mobile;
   String gender;
   String dob;
-  String semesterOrDesignation;
+  String batch;
+  String designation;
   String department;
   Map<String,dynamic> classrooms;
   List<dynamic> faceDataFront; // List<double>
@@ -23,7 +24,8 @@ class UserModel {
     required this.mobile,
     required this.gender,
     required this.dob,
-    required this.semesterOrDesignation,
+    required this.batch,
+    required this.designation,
     required this.department,
     required this.classrooms,
     required this.faceDataFront,
@@ -41,7 +43,8 @@ class UserModel {
       mobile: '',
       gender: '',
       dob: '',
-      semesterOrDesignation: '',
+      batch: '',
+      designation: '',
       department: '',
       classrooms: {},
       faceDataFront: [],
@@ -60,7 +63,8 @@ class UserModel {
       mobile: json['mobile'],
       gender: json['gender'],
       dob: json['dob'],
-      semesterOrDesignation: json['semesterOrDesignation'],
+      batch: json['batch'],
+      designation: json['designation'],
       department: json['department'],
       classrooms: Map<String,dynamic>.from(json['classrooms']),
       faceDataFront: json['faceDataFront'],
@@ -79,7 +83,8 @@ class UserModel {
       'mobile': mobile,
       'gender': gender,
       'dob': dob,
-      'semesterOrDesignation': semesterOrDesignation,
+      'batch': batch,
+      'designation': designation,
       'department': department,
       'classrooms': classrooms,
       'faceDataFront': faceDataFront,

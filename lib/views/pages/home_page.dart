@@ -197,8 +197,6 @@ class HomePage extends StatelessWidget {
     required ClassroomModel classroom,
     required int index,
   }) {
-    final height = Get.height;
-
     final weekday = DateFormat('EEEE').format(DateTime.now());
     final weekStartTime = classroom.weekTimes[weekday]['startTime'];
     final weekEndTime = classroom.weekTimes[weekday]['endTime'];
@@ -264,11 +262,14 @@ class HomePage extends StatelessWidget {
                             .copyWith(fontWeight: FontWeight.bold),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      horizontalGap(width * 0.08),
-                      const Spacer(),
                       Obx(() {
-                        final timeLeft = Get.find<CloudFirestoreController>()
-                            .timeLeftToStart[index];
+                        final cloudFirestoreController =
+                            Get.find<CloudFirestoreController>();
+                        if(cloudFirestoreController.timeLeftToStart.isEmpty){
+                          return const SizedBox();
+                        }
+                        final timeLeft =
+                            cloudFirestoreController.timeLeftToStart[index];
                         final timeLeftHour = (timeLeft / 60).floor();
                         final timeLeftMin = timeLeft % 60;
                         String timeLeftText = '';
@@ -282,11 +283,14 @@ class HomePage extends StatelessWidget {
                         } else if (timeLeftHour == 0 && timeLeftMin <= 15) {
                           textColor = Colors.orange;
                         }
-                        return Text(
-                          timeLeftText,
-                          style: textTheme.bodySmall!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+                        return Expanded(
+                          child: Text(
+                            timeLeftText,
+                            style: textTheme.bodySmall!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                            textAlign: TextAlign.right,
                           ),
                         );
                       }),
@@ -805,7 +809,7 @@ class HomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     verticalGap(height * percentGapSmall),
-                    ShimmerLoading(width: width * 0.5,color: loadColorLight),
+                    ShimmerLoading(width: width * 0.5, color: loadColorLight),
                     verticalGap(height * percentGapVerySmall),
                     ShimmerLoading(
                       width: width * 0.3,
@@ -840,7 +844,11 @@ class HomePage extends StatelessWidget {
                               height: 10,
                             ),
                             verticalGap(height * percentGapVerySmall),
-                            ShimmerLoading(width: width * 0.16, height: 12,color: loadColorLight,),
+                            ShimmerLoading(
+                              width: width * 0.16,
+                              height: 12,
+                              color: loadColorLight,
+                            ),
                           ],
                         ),
                       ],
@@ -880,7 +888,7 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShimmerLoading(width: width * 0.5,color: loadColorLight),
+                  ShimmerLoading(width: width * 0.5, color: loadColorLight),
                   verticalGap(height * percentGapVerySmall),
                   ShimmerLoading(
                     width: width * 0.3,

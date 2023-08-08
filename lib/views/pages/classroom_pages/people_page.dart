@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
-import 'package:visoattend/controller/navigation_controller.dart';
-import 'package:visoattend/helper/constants.dart';
-import 'package:visoattend/services/report_generate_service.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
 
+import '../../../controller/cloud_firestore_controller.dart';
+import '../../../controller/navigation_controller.dart';
+import '../../../helper/constants.dart';
+import '../../../views/widgets/custom_button.dart';
 import '../../../controller/attendance_controller.dart';
-import '../../../controller/profile_pic_controller.dart';
 import '../../../helper/functions.dart';
-import '../../../models/classroom_model.dart';
 import '../../../models/user_model.dart';
 
 class PeoplePage extends GetView<AttendanceController> {
@@ -20,9 +17,6 @@ class PeoplePage extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     final classroom = controller.classroomData;
-    final height = Get.height;
-    final width = Get.width;
-    final colorScheme = Get.theme.colorScheme;
     final textTheme = Get.textTheme;
 
     final currentUserRole = controller.currentUserRole;
@@ -30,105 +24,62 @@ class PeoplePage extends GetView<AttendanceController> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
+          await controller.updateValues(controller.classroomData);
           await controller.getUsersData();
         },
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
-            child: Obx(
-              () {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Teachers',
-                      style:
-                          textTheme.titleMedium!.copyWith(color: colorScheme.primary),
+            child: Obx(() {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Teachers',
+                    style: textTheme.titleMedium!
+                        .copyWith(color: colorScheme.primary),
+                  ),
+                  Divider(
+                    thickness: 1,
+                    color: colorScheme.primary,
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Flexible(
+                    child: ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: controller.teachersData.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            _buildUsersList(
+                              controller.teachersData[index],
+                              userRole: 'Teacher',
+                              forTeacher: true,
+                            ),
+                            if (controller.teachersData.length > 1)
+                              const Divider(
+                                thickness: 0.3,
+                              )
+                          ],
+                        );
+                      },
                     ),
-                    Divider(
-                      thickness: 1,
-                      color: colorScheme.primary,
-                    ),
-                    verticalGap(height * percentGapSmall),
-                    Flexible(
-                      child: ListView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: controller.teachersData.length,
-                        itemBuilder: (context, index) {
-                          return Column(
-                            children: [
-                              _buildUsersList(
-                                controller.teachersData[index],
-                                userRole: 'Teacher',
-                                forTeacher: true,
-                              ),
-                              if (controller.teachersData.length > 1)
-                                const Divider(
-                                  thickness: 0.3,
-                                )
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    verticalGap(height * percentGapMedium),
-                    if (classroom.cRs.isNotEmpty) ...[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'CRs',
-                            style: textTheme.titleMedium!
-                                .copyWith(color: colorScheme.primary),
-                          ),
-                          Text(
-                            '${classroom.cRs.length} Students',
-                            style: textTheme.titleSmall!
-                                .copyWith(color: colorScheme.primary),
-                          ),
-                        ],
-                      ),
-                      Divider(
-                        thickness: 1,
-                        color: colorScheme.primary,
-                      ),
-                      verticalGap(height * percentGapSmall),
-                      Flexible(
-                        child: ListView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: controller.cRsData.length,
-                          itemBuilder: (context, index) {
-                            return Column(
-                              children: [
-                                _buildUsersList(
-                                  controller.cRsData[index],
-                                  userRole: 'CR',
-                                ),
-                                if (controller.cRsData.length > 1)
-                                  const Divider(
-                                    thickness: 0.3,
-                                  )
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      verticalGap(height * percentGapMedium),
-                    ],
+                  ),
+                  verticalGap(height * percentGapMedium),
+                  if (classroom.cRs.isNotEmpty) ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          currentUserRole == 'Teacher' ? 'Students' : 'Classmates',
+                          'CRs',
                           style: textTheme.titleMedium!
                               .copyWith(color: colorScheme.primary),
                         ),
                         Text(
-                          '${classroom.students.length} Students',
+                          '${classroom.cRs.length} Students',
                           style: textTheme.titleSmall!
                               .copyWith(color: colorScheme.primary),
                         ),
@@ -143,15 +94,15 @@ class PeoplePage extends GetView<AttendanceController> {
                       child: ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: controller.studentsData.length,
+                        itemCount: controller.cRsData.length,
                         itemBuilder: (context, index) {
                           return Column(
                             children: [
                               _buildUsersList(
-                                controller.studentsData[index],
-                                userRole: 'Student',
+                                controller.cRsData[index],
+                                userRole: 'CR',
                               ),
-                              if (controller.studentsData.length > 1)
+                              if (controller.cRsData.length > 1)
                                 const Divider(
                                   thickness: 0.3,
                                 )
@@ -160,10 +111,57 @@ class PeoplePage extends GetView<AttendanceController> {
                         },
                       ),
                     ),
+                    verticalGap(height * percentGapMedium),
                   ],
-                );
-              }
-            ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        currentUserRole == 'Teacher'
+                            ? 'Students'
+                            : 'Classmates',
+                        style: textTheme.titleMedium!
+                            .copyWith(color: colorScheme.primary),
+                      ),
+                      Text(
+                        '${classroom.students.length} Students',
+                        style: textTheme.titleSmall!
+                            .copyWith(color: colorScheme.primary),
+                      ),
+                    ],
+                  ),
+                  Divider(
+                    thickness: 1,
+                    color: colorScheme.primary,
+                  ),
+                  verticalGap(height * percentGapSmall),
+                  Flexible(
+                    child: ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: controller.classroomData.isArchived
+                          ? const EdgeInsets.only(bottom: 80)
+                          : EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: controller.studentsData.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            _buildUsersList(
+                              controller.studentsData[index],
+                              userRole: 'Student',
+                            ),
+                            if (controller.studentsData.length > 1)
+                              const Divider(
+                                thickness: 0.3,
+                              )
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            }),
           ),
         ),
       ),
@@ -175,12 +173,6 @@ class PeoplePage extends GetView<AttendanceController> {
     required String userRole,
     bool forTeacher = false,
   }) {
-    final classroom = controller.classroomData;
-    final height = Get.height;
-    final width = Get.width;
-    final textTheme = Get.textTheme;
-    final colorScheme = Get.theme.colorScheme;
-
     final isTeacher = controller.currentUserRole == 'Teacher';
 
     final currentUserAuthUid =
@@ -190,11 +182,13 @@ class PeoplePage extends GetView<AttendanceController> {
     double percent = 0;
     int missedClasses = 0;
     int totalClasses = controller.attendances.length;
+
     return InkWell(
       onTap: () {
         if (!isTeacher ||
             currentUserAuthUid == user.authUid ||
-            user.authUid == controller.teachersData.first.authUid) {
+            user.authUid ==
+                controller.classroomData.teachers.first['authUid']) {
           return;
         }
         Get.find<CloudFirestoreController>().selectedUserRole = userRole;
@@ -212,7 +206,9 @@ class PeoplePage extends GetView<AttendanceController> {
         color: colorScheme.surface,
         child: Obx(() {
           missedClasses = controller.getUserMissedClassesCount(user.authUid);
-          percent = totalClasses > 0 ? (totalClasses - missedClasses) / totalClasses : 0;
+          percent = totalClasses > 0
+              ? (totalClasses - missedClasses) / totalClasses
+              : 0;
           String status = 'Collegiate';
           if (percent < 0.6) {
             color = colorScheme.error;
@@ -272,7 +268,7 @@ class PeoplePage extends GetView<AttendanceController> {
                     style: textTheme.bodyMedium!,
                   ),
                   Text(
-                    forTeacher? user.semesterOrDesignation : user.userId,
+                    forTeacher ? user.designation : user.userId,
                     style: textTheme.bodySmall,
                   ),
                 ],
@@ -310,10 +306,6 @@ class PeoplePage extends GetView<AttendanceController> {
     required int totalClasses,
     required Color color,
   }) {
-    final height = Get.height;
-    final width = Get.width;
-    final textTheme = Get.theme.textTheme;
-    final colorScheme = Get.theme.colorScheme;
     String status = 'Collegiate';
     if (percent < 0.6) {
       status = 'Dis-Collegiate';
@@ -368,20 +360,21 @@ class PeoplePage extends GetView<AttendanceController> {
                       ),
                     ),
                   ),
-                  horizontalGap(width*percentGapMedium),
+                  horizontalGap(width * percentGapMedium),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         user.name,
-                        style: textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+                        style: textTheme.titleMedium!
+                            .copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         user.userId,
                         style: textTheme.bodyMedium,
                       ),
-                      verticalGap(height*percentGapVerySmall),
+                      verticalGap(height * percentGapVerySmall),
                       Row(
                         children: [
                           Text(
@@ -394,7 +387,7 @@ class PeoplePage extends GetView<AttendanceController> {
                           ),
                         ],
                       ),
-                      verticalGap(height*percentGapVerySmall),
+                      verticalGap(height * percentGapVerySmall),
                       Row(
                         children: [
                           Text(
@@ -423,17 +416,17 @@ class PeoplePage extends GetView<AttendanceController> {
                         'Mobile',
                         style: textTheme.bodySmall,
                       ),
-                      verticalGap(height*percentGapVerySmall),
+                      verticalGap(height * percentGapVerySmall),
                       Text(
-                        user.mobile==''? 'Number not set' : user.mobile,
+                        user.mobile == '' ? 'Number not set' : user.mobile,
                         style: textTheme.bodyMedium,
                       ),
                     ],
                   ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () async{
-                      if(user.mobile == '') {
+                    onTap: () async {
+                      if (user.mobile == '') {
                         return;
                       }
                       await launchPhoneDialer(user.mobile);
@@ -443,12 +436,16 @@ class PeoplePage extends GetView<AttendanceController> {
                       width: 40,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(50),
-                        color:user.mobile == ''? colorScheme.outline.withOpacity(0.3): colorScheme.surfaceVariant,
+                        color: user.mobile == ''
+                            ? colorScheme.outline.withOpacity(0.3)
+                            : colorScheme.surfaceVariant,
                       ),
                       child: Icon(
                         Icons.call,
                         size: 25,
-                        color:user.mobile == ''? colorScheme.outline: colorScheme.primary,
+                        color: user.mobile == ''
+                            ? colorScheme.outline
+                            : colorScheme.primary,
                       ),
                     ),
                   ),
@@ -467,7 +464,9 @@ class PeoplePage extends GetView<AttendanceController> {
                       value: 'Teacher',
                       groupValue: cloudFirestoreController.selectedUserRole,
                       onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
+                        if (!controller.classroomData.isArchived) {
+                          cloudFirestoreController.selectedUserRole = value!;
+                        }
                       },
                       title: const Text('Teacher'),
                     ),
@@ -476,7 +475,9 @@ class PeoplePage extends GetView<AttendanceController> {
                       value: 'CR',
                       groupValue: cloudFirestoreController.selectedUserRole,
                       onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
+                        if (!controller.classroomData.isArchived) {
+                          cloudFirestoreController.selectedUserRole = value!;
+                        }
                       },
                       title: const Text('CR'),
                     ),
@@ -485,7 +486,9 @@ class PeoplePage extends GetView<AttendanceController> {
                       value: 'Student',
                       groupValue: cloudFirestoreController.selectedUserRole,
                       onChanged: (value) {
-                        cloudFirestoreController.selectedUserRole = value!;
+                        if (!controller.classroomData.isArchived) {
+                          cloudFirestoreController.selectedUserRole = value!;
+                        }
                       },
                       title: const Text('Student'),
                     ),
@@ -511,6 +514,9 @@ class PeoplePage extends GetView<AttendanceController> {
                     width: width * 0.4,
                     text: 'Confirm',
                     onPressed: () async {
+                      if (controller.classroomData.isArchived) {
+                        return;
+                      }
                       await cloudFirestoreController.changeUserRole(
                         user: {
                           'authUid': user.authUid,
@@ -521,7 +527,7 @@ class PeoplePage extends GetView<AttendanceController> {
                         currentRole: userRole,
                       );
                       Get.back();
-                      Get.find<NavigationController>().changeIndex(0);
+                      await controller.getUsersData();
                     },
                   ),
                 ],
@@ -534,16 +540,13 @@ class PeoplePage extends GetView<AttendanceController> {
   }
 
   Future<void> launchPhoneDialer(String contactNumber) async {
-    final Uri phoneUri = Uri(
-        scheme: "tel",
-        path: contactNumber
-    );
+    final Uri phoneUri = Uri(scheme: "tel", path: contactNumber);
     try {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
       }
     } catch (error) {
-      throw("Cannot dial");
+      throw ("Cannot dial");
     }
   }
 }

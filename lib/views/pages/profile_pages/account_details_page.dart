@@ -30,9 +30,9 @@ class AccountDetailsPage extends StatelessWidget {
     final mobileController = TextEditingController(text: currentUser.mobile);
     final genderController = TextEditingController(text: currentUser.gender);
     final dobController = TextEditingController(text: currentUser.dob);
-    final batchController = TextEditingController(text: '');
-    final semesterOrDesignationController =
-        TextEditingController(text: currentUser.semesterOrDesignation);
+    final batchController = TextEditingController(text: currentUser.batch);
+    final designationController =
+        TextEditingController(text: currentUser.designation);
     final departmentController =
         TextEditingController(text: currentUser.department);
 
@@ -45,6 +45,7 @@ class AccountDetailsPage extends StatelessWidget {
       'Assistant Lecturer',
       'Medical Physicist',
       'Adjunct Lecturer',
+      'Teacher Assistant'
     ];
 
     final departmentOptions = [
@@ -83,8 +84,10 @@ class AccountDetailsPage extends StatelessWidget {
               cloudFirestoreController.currentUser.gender =
                   genderController.text;
               cloudFirestoreController.currentUser.dob = dobController.text;
-              cloudFirestoreController.currentUser.semesterOrDesignation =
-                  semesterOrDesignationController.text;
+              cloudFirestoreController.currentUser.batch =
+                  batchController.text;
+              cloudFirestoreController.currentUser.designation =
+                  designationController.text;
               cloudFirestoreController.currentUser.department =
                   departmentController.text;
 
@@ -197,7 +200,7 @@ class AccountDetailsPage extends StatelessWidget {
               ),
               verticalGap(height * percentGapSmall),
               _autocompleteField(
-                  controller: semesterOrDesignationController,
+                  controller: designationController,
                   options: designationOptions,
                   title: 'Designation'),
               verticalGap(height * percentGapSmall),

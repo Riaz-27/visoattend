@@ -4,16 +4,17 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:visoattend/services/generate_excel_service.dart';
 
-import 'package:visoattend/controller/timer_controller.dart';
-import 'package:visoattend/models/attendance_model.dart';
-import 'package:visoattend/views/pages/classroom_pages/selected_attendance_page.dart';
-import 'package:visoattend/views/widgets/shimmer_loading.dart';
+import '../../../controller/timer_controller.dart';
+import '../../../models/attendance_model.dart';
+import '../../../views/pages/classroom_pages/selected_attendance_page.dart';
+import '../../../views/widgets/shimmer_loading.dart';
 import '../../../controller/attendance_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
-import '../../../services/report_generate_service.dart';
+import '../../../services/generate_pdf_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../attendance_record_page.dart';
@@ -32,6 +33,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           final attendanceController = Get.find<AttendanceController>();
           await attendanceController
               .updateValues(attendanceController.classroomData);
+          await attendanceController.getUsersData();
         },
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -125,29 +127,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                                                   .openAttendance !=
                                               'off')
                                   ? GestureDetector(
-                                      onTap: () async {
-                                        final classroomData =
-                                            controller.classroomData;
-                                        final attendances =
-                                            controller.attendances;
-                                        final reportGenerateService =
-                                            ReportGenerateService(
-                                          classroomData: classroomData,
-                                          attendances: attendances,
-                                        );
-                                        final pdfData =
-                                            await reportGenerateService
-                                                .generateReport(
-                                                    department: classroomData
-                                                        .department);
-                                        final dateTimeNow =
-                                            DateFormat('ddMMy_hhmmss')
-                                                .format(DateTime.now());
-                                        print('The date string : $dateTimeNow');
-                                        reportGenerateService.savePdfFile(
-                                            '${classroomData.courseCode}_$dateTimeNow',
-                                            pdfData);
-                                      },
+                                      onTap: _generateReport,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: kSmall,
@@ -189,6 +169,9 @@ class ClassroomPage extends GetView<AttendanceController> {
                           child: Obx(() {
                             return ListView.builder(
                               physics: const NeverScrollableScrollPhysics(),
+                              padding: controller.classroomData.isArchived
+                                  ? const EdgeInsets.only(bottom: 80)
+                                  : EdgeInsets.zero,
                               shrinkWrap: true,
                               itemCount: controller.filteredAttendances.length,
                               itemBuilder: (context, index) {
@@ -212,6 +195,67 @@ class ClassroomPage extends GetView<AttendanceController> {
             : _bottomFloatingButton(context);
       }),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Future<void> _generateReport() async {
+    Get.bottomSheet(
+      backgroundColor: colorScheme.surface,
+      enableDrag: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(15),
+          topLeft: Radius.circular(15),
+        ),
+      ),
+      Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: kSmall, vertical: kMedium),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomButton(
+              height: height * 0.055,
+              backgroundColor: colorScheme.secondaryContainer,
+              textColor: colorScheme.onSecondaryContainer,
+              text: 'Generate PDF Report',
+              onPressed: () async {
+                Get.back();
+                final classroomData = controller.classroomData;
+                final attendances = controller.attendances;
+                final reportGenerateService = GeneratePdfService(
+                  classroomData: classroomData,
+                  attendances: attendances,
+                );
+                final pdfData = await reportGenerateService.generateReport(
+                    department: classroomData.department);
+                final dateTimeNow =
+                    DateFormat('ddMMy_hhmmss').format(DateTime.now());
+
+                reportGenerateService.savePdfFile(
+                    '${classroomData.courseCode}_$dateTimeNow', pdfData);
+              },
+            ),
+            verticalGap(height * percentGapSmall),
+            CustomButton(
+              height: height * 0.055,
+              backgroundColor: colorScheme.secondaryContainer,
+              textColor: colorScheme.onSecondaryContainer,
+              text: 'Generate Excel Report',
+              onPressed: () async {
+                Get.back();
+                final excelService = GenerateExcelService();
+                final dateTimeNow =
+                DateFormat('ddMMy_hhmmss').format(DateTime.now());
+                await excelService.generateReport('${controller.classroomData.courseCode}_$dateTimeNow');
+
+                // excelService.saveExcelFile(
+                //     '${controller.classroomData.courseCode}_$dateTimeNow', excelData);
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -947,7 +991,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           children: [
             ShimmerLoading(
               width: width * 0.1,
-              height: 50,
+              height: 40,
               color: loadColorLight,
             ),
             horizontalGap(width * percentGapSmall),

@@ -39,6 +39,10 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                       child: Text('No leave request application found'),
                     )
                   : ListView.builder(
+                      shrinkWrap: true,
+                      padding: attendanceController.classroomData.isArchived
+                          ? const EdgeInsets.only(bottom: 80)
+                          : EdgeInsets.zero,
                       itemCount: controller.classroomLeaveRequests.length,
                       itemBuilder: (context, index) {
                         final leaveRequest =
