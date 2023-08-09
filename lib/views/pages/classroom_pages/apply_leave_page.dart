@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
-import 'package:visoattend/controller/leave_request_controller.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/models/leave_request_model.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
-import 'package:visoattend/views/widgets/custom_input.dart';
 
+import '../../../controller/cloud_firestore_controller.dart';
+import '../../../controller/leave_request_controller.dart';
+import '../../../helper/functions.dart';
+import '../../../models/leave_request_model.dart';
+import '../../../views/widgets/custom_button.dart';
+import '../../../views/widgets/custom_input.dart';
 import '../../../helper/constants.dart';
 import '../../../models/classroom_model.dart';
 import '../../widgets/custom_text_form_field.dart';
@@ -20,7 +20,6 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
 
   @override
   Widget build(BuildContext context) {
-    final classroomsTextController = TextEditingController();
     final reasonTextController = TextEditingController();
     final fromDateTextController = TextEditingController();
     final toDateTextController = TextEditingController();
@@ -38,7 +37,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
       appBar: AppBar(
         title: Text(
           'Apply for leave',
-          style: textTheme.bodyMedium,
+          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
         ),
         forceMaterialTransparency: true,
         centerTitle: true,
@@ -46,7 +45,8 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
       body: Form(
         key: formKey,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: height * percentGapSmall),
+          padding:
+              EdgeInsets.symmetric(horizontal: deviceHeight * percentGapSmall),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -61,10 +61,10 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                       child: Text(
                         'Classrooms*',
                         style: textTheme.bodyMedium!
-                            .copyWith(color: textTheme.bodySmall!.color),
+                            .copyWith(color: textColorLight),
                       ),
                     ),
-                    verticalGap(height * percentGapVerySmall),
+                    verticalGap(deviceHeight * percentGapVerySmall),
                     Obx(() {
                       return Wrap(
                         crossAxisAlignment: WrapCrossAlignment.start,
@@ -74,11 +74,11 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                             .toList(),
                       );
                     }),
-                    verticalGap(height * percentGapSmall),
+                    verticalGap(deviceHeight * percentGapSmall),
                     _autocompleteField(),
                   ],
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomInput(
                   controller: reasonTextController,
                   title: 'Reason*',
@@ -86,7 +86,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                       ? 'The field cannot be empty'
                       : null,
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 Row(
                   children: [
                     Expanded(
@@ -118,7 +118,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                             : null,
                       ),
                     ),
-                    horizontalGap(height * percentGapMedium),
+                    horizontalGap(deviceHeight * percentGapMedium),
                     Expanded(
                       flex: 1,
                       child: CustomInput(
@@ -137,7 +137,9 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                             lastDate:
                                 DateTime.now().add(const Duration(days: 365)),
                           );
-                          picked = picked?.add(const Duration(days: 1)).add(const Duration(milliseconds: -1));
+                          picked = picked
+                              ?.add(const Duration(days: 1))
+                              .add(const Duration(milliseconds: -1));
                           toDateString =
                               picked != null ? picked.toString() : '';
                           toDateTextController.text = picked != null
@@ -151,7 +153,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                     ),
                   ],
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomInput(
                   controller: descriptionTextController,
                   title: 'Description',
@@ -159,7 +161,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                   maxLength: 200,
                   maxLines: 6,
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomButton(
                   text: 'Apply',
                   onPressed: () async {
@@ -178,7 +180,8 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                       );
                       await controller.saveLeaveRequestData(leaveRequest);
                       Get.back();
-                      Fluttertoast.showToast(msg: 'Leave request sent to selected classes');
+                      Fluttertoast.showToast(
+                          msg: 'Leave request sent to selected classes');
                     }
                   },
                 )
@@ -207,7 +210,7 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
           children: [
             Text(
               classroom.courseTitle,
-              style: textTheme.labelMedium,
+              style: textTheme.labelMedium!.copyWith(color: textColorDefault),
               overflow: TextOverflow.ellipsis,
             ),
             GestureDetector(
@@ -252,11 +255,10 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
           controller: fieldController,
           focusNode: focusNode,
           hintText: 'Add more classroom',
-          hintStyle: textTheme.labelMedium!
-              .copyWith(color: colorScheme.onBackground.withOpacity(0.5)),
+          hintStyle: textTheme.labelMedium!.copyWith(color: textColorLight),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-          style: textTheme.labelMedium,
+          style: textTheme.labelMedium!.copyWith(color: textColorDefault),
           fillColor: colorScheme.surfaceVariant.withOpacity(0.4),
           maxLines: 1,
           validator: (value) {
@@ -272,8 +274,8 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
           alignment: Alignment.topLeft,
           child: Material(
             child: Container(
-              margin: EdgeInsets.only(top: height * percentGapVerySmall),
-              width: width * 0.9,
+              margin: EdgeInsets.only(top: deviceHeight * percentGapVerySmall),
+              width: deviceWidth * 0.9,
               decoration: BoxDecoration(
                 color: colorScheme.surfaceVariant.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(15),
@@ -296,9 +298,16 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(option.courseTitle,
-                                style: textTheme.bodyMedium),
-                            Text(option.courseCode, style: textTheme.bodySmall),
+                            Text(
+                              option.courseTitle,
+                              style: textTheme.bodyMedium!
+                                  .copyWith(color: textColorDefault),
+                            ),
+                            Text(
+                              option.courseCode,
+                              style: textTheme.bodySmall!
+                                  .copyWith(color: textColorLight),
+                            ),
                           ],
                         ),
                         verticalGap(10),

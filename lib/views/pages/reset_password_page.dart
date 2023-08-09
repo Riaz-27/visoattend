@@ -30,11 +30,9 @@ class ResetPasswordPage extends StatelessWidget {
       emailValidatorString = null;
     }
 
-    final height = Get.size.height;
-
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: height * 0.025),
+        padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
         child: Form(
           key: formKey,
           child: Center(
@@ -45,10 +43,11 @@ class ResetPasswordPage extends StatelessWidget {
                   Text(
                     "Enter the email associated with your account and we’ll send an email with instructions toreset your password",
                     textAlign: TextAlign.center,
-                    style: Get.textTheme.bodyMedium!.copyWith(
-                        color: Get.theme.colorScheme.onSurface.withAlpha(150)),
+                    style: textTheme.bodyMedium!.copyWith(
+                      color: textColorLight,
+                    ),
                   ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(deviceHeight * percentGapMedium),
                   CustomTextFormField(
                     labelText: 'Enter your email address',
                     controller: emailController,
@@ -59,7 +58,7 @@ class ResetPasswordPage extends StatelessWidget {
                       return emailValidatorString;
                     },
                   ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(deviceHeight * percentGapMedium),
                   CustomButton(
                     text: 'Reset Password',
                     onPressed: () async {

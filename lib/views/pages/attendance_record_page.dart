@@ -1,19 +1,14 @@
-import 'dart:collection';
-import 'dart:isolate';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/helper/constants.dart';
-import 'package:visoattend/helper/functions.dart';
 
+import '../../helper/constants.dart';
+import '../../helper/functions.dart';
 import '../../controller/attendance_controller.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/face_detector_controller.dart';
 import '../../controller/recognition_controller.dart';
-import '../../controller/user_database_controller.dart';
-import '../../models/recognition_model.dart';
 import '../widgets/face_detector_painter.dart';
 
 class AttendanceRecordPage extends StatelessWidget {
@@ -26,16 +21,21 @@ class AttendanceRecordPage extends StatelessWidget {
     final recognitionController = Get.find<RecognitionController>();
     final attendanceController = Get.find<AttendanceController>();
 
+    attendanceController.totalRecognized.clear();
+    attendanceController.matchedStudents.clear();
+
     List<Widget> stackChildren = [];
     cameraServiceController.isSignUp = false;
 
     String loadingMsg = 'Please wait...';
 
+
+
     //camera view
     stackChildren.add(
       Positioned(
-        height: height,
-        width: width,
+        height: deviceHeight,
+        width: deviceWidth,
         child: Obx(() {
           // final size = Get.size;
           // final deviceRatio = size.width / size.height;
@@ -80,8 +80,8 @@ class AttendanceRecordPage extends StatelessWidget {
       Positioned(
         top: 0.0,
         left: 0.0,
-        width: width,
-        height: height,
+        width: deviceWidth,
+        height: deviceHeight,
         child: Obx(() {
           final resultOnCurrentFrame = recognitionController.recognitionResults;
           return resultOnCurrentFrame.isNotEmpty
@@ -226,7 +226,7 @@ class AttendanceRecordPage extends StatelessWidget {
                         return Text(
                           attendanceController.attendanceCount.toString(),
                           textAlign: TextAlign.center,
-                          style: Get.textTheme.titleSmall!.copyWith(
+                          style: textTheme.titleSmall!.copyWith(
                             color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
@@ -250,7 +250,7 @@ class AttendanceRecordPage extends StatelessWidget {
                   ],
                 ),
               ),
-              horizontalGap(width * percentGapLarge)
+              horizontalGap(deviceWidth * percentGapLarge)
               // Expanded(
               //   flex: 1,
               //   child: GestureDetector(

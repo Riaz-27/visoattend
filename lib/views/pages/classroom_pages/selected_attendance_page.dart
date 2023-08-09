@@ -18,18 +18,12 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
   @override
   Widget build(BuildContext context) {
-    final height = Get.height;
-    final width = Get.width;
-    final textTheme = Get.textTheme;
-
     controller.selectedAttendance = attendance;
     final studentsData = controller.filteredStudents;
     final totalStudents = controller.allStudents.length;
     final classroomData = controller.classroomData;
 
     final searchController = TextEditingController();
-
-    print(attendance.attendanceId.toString());
 
     return WillPopScope(
       onWillPop: () async {
@@ -39,35 +33,41 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
       child: Scaffold(
         appBar: AppBar(
           forceMaterialTransparency: true,
-          title: Obx(
-            () {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    DateFormat('d MMMM, y').format(controller.selectedDateTime),
-                    style: Get.textTheme.bodyMedium,
+          title: Obx(() {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat('d MMMM, y').format(controller.selectedDateTime),
+                  style: textTheme.bodyMedium!.copyWith(
+                    color: textColorDefault,
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        DateFormat.jm().format(controller.selectedDateTime),
-                        style: Get.textTheme.bodySmall,
+                ),
+                Row(
+                  children: [
+                    Text(
+                      DateFormat.jm().format(controller.selectedDateTime),
+                      style: textTheme.bodySmall!.copyWith(
+                        color: textColorLight,
                       ),
-                      Text(
-                        ' | ${classroomData.courseCode}',
-                        style: Get.textTheme.bodySmall,
+                    ),
+                    Text(
+                      ' | ${classroomData.courseCode}',
+                      style: textTheme.bodySmall!.copyWith(
+                        color: textColorLight,
                       ),
-                      Text(
-                        ' | ${classroomData.section}',
-                        style: Get.textTheme.bodySmall,
+                    ),
+                    Text(
+                      ' | ${classroomData.section}',
+                      style: textTheme.bodySmall!.copyWith(
+                        color: textColorLight,
                       ),
-                    ],
-                  ),
-                ],
-              );
-            }
-          ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
           actions: [
             Obx(() {
               final currentUserRole = controller.currentUserRole;
@@ -104,7 +104,8 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
           ],
         ),
         body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
+          padding:
+              EdgeInsets.symmetric(horizontal: deviceWidth * percentGapMedium),
           child: Obx(() {
             final studentsText = controller.selectedCategory == ''
                 ? '$totalStudents Students'
@@ -118,21 +119,23 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   controller: searchController,
-                  style: textTheme.labelLarge,
+                  style: textTheme.labelLarge!.copyWith(
+                    color: textColorDefault,
+                  ),
                   hintText: 'Search by ID or Name',
                   onChanged: (value) {
                     controller.selectedCategory = '';
                     controller.filterSearchResult(value);
                   },
                 ),
-                verticalGap(height * percentGapVerySmall),
+                verticalGap(deviceHeight * percentGapVerySmall),
                 _buildFilterChip(),
-                verticalGap(height * percentGapVerySmall),
+                verticalGap(deviceHeight * percentGapVerySmall),
                 Text(
                   studentsText,
-                  style: textTheme.bodySmall,
+                  style: textTheme.bodySmall!.copyWith(color: textColorLight),
                 ),
-                verticalGap(height * percentGapMedium),
+                verticalGap(deviceHeight * percentGapMedium),
                 Expanded(
                   child: ListView.builder(
                     shrinkWrap: true,
@@ -157,9 +160,6 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   }
 
   Widget _buildFilterChip() {
-    final width = Get.width;
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
     final selectedCategory = controller.selectedCategory;
 
     final chipCategories = ['Present', 'Absent'];
@@ -180,9 +180,10 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                   label: Text(
                     category,
                     style: textTheme.labelMedium!.copyWith(
-                        color: selectedCategory == category
-                            ? Colors.white
-                            : colorScheme.onBackground),
+                      color: selectedCategory == category
+                          ? Colors.white
+                          : colorScheme.onBackground,
+                    ),
                   ),
                   selected: selectedCategory == category,
                   onSelected: (selected) {
@@ -194,7 +195,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                     controller.selectedCategoryResult();
                   },
                 ),
-                horizontalGap(width * percentGapMedium),
+                horizontalGap(deviceWidth * percentGapMedium),
               ],
             ),
           )
@@ -203,11 +204,6 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   }
 
   Widget _buildUsersList(UserModel student) {
-    final height = Get.height;
-    final width = Get.width;
-    final textTheme = Get.textTheme;
-    final colorScheme = Get.theme.colorScheme;
-
     final attendance = controller.selectedAttendance;
     final studentStatus = attendance.studentsData[student.authUid] ?? 'Absent';
     final classroomData = controller.classroomData;
@@ -234,17 +230,18 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                 ),
               ),
             ),
-            horizontalGap(width * percentGapLarge),
+            horizontalGap(deviceWidth * percentGapLarge),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   student.name,
-                  style: textTheme.bodyMedium!,
+                  style:
+                      textTheme.bodyMedium!.copyWith(color: textColorDefault),
                 ),
                 Text(
                   student.userId,
-                  style: textTheme.bodySmall,
+                  style: textTheme.bodySmall!.copyWith(color: textColorLight),
                 ),
               ],
             ),
@@ -265,11 +262,6 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   }
 
   void _handleUpdateAttendanceStatus(UserModel student) {
-    final height = Get.height;
-    final width = Get.width;
-    final textTheme = Get.theme.textTheme;
-    final colorScheme = Get.theme.colorScheme;
-
     Get.bottomSheet(
       backgroundColor: colorScheme.surface,
       enableDrag: true,
@@ -280,7 +272,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
         ),
       ),
       Padding(
-        padding: EdgeInsets.all(height * percentGapMedium),
+        padding: EdgeInsets.all(deviceHeight * percentGapMedium),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -288,16 +280,16 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
           children: [
             Text(
               student.name,
-              style: textTheme.titleLarge,
+              style: textTheme.titleLarge!.copyWith(color: textColorDefault),
             ),
             Text(
               student.userId,
-              style: textTheme.titleSmall,
+              style: textTheme.titleSmall!.copyWith(color: textColorDefault),
             ),
-            verticalGap(height * percentGapMedium),
+            verticalGap(deviceHeight * percentGapMedium),
             Text(
               'Change Attendance',
-              style: textTheme.bodySmall,
+              style: textTheme.bodySmall!.copyWith(color: textColorLight),
             ),
             Obx(() {
               return Column(
@@ -332,13 +324,13 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                 ],
               );
             }),
-            verticalGap(height * percentGapMedium),
+            verticalGap(deviceHeight * percentGapMedium),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 CustomButton(
-                  height: height * 0.05,
-                  width: width * 0.4,
+                  height: deviceHeight * 0.05,
+                  width: deviceWidth * 0.4,
                   backgroundColor: colorScheme.onSurface,
                   textColor: colorScheme.surface,
                   text: 'Cancel',
@@ -347,8 +339,8 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                   },
                 ),
                 CustomButton(
-                  height: height * 0.05,
-                  width: width * 0.4,
+                  height: deviceHeight * 0.05,
+                  width: deviceWidth * 0.4,
                   text: 'Confirm',
                   onPressed: () async {
                     await controller.changeStudentAttendanceStatus(
@@ -375,28 +367,36 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
         return AlertDialog(
           title: Text(
             'Edit Attendance',
-            style: Get.textTheme.titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
           ),
           content: SizedBox(
-            width: Get.width,
+            width: deviceWidth,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Change date and time of classroom',
-                  style: Get.textTheme.bodyMedium,
+                  style: textTheme.bodyMedium!.copyWith(
+                    color: textColorDefault,
+                  ),
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 Obx(() {
                   return Row(
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Date', style: textTheme.bodySmall),
-                          verticalGap(height * percentGapVerySmall),
+                          Text(
+                            'Date',
+                            style: textTheme.bodySmall!
+                                .copyWith(color: textColorLight),
+                          ),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           _customInkWellButton(
                             onTap: () async {
                               final picked = await showDatePicker(
@@ -421,12 +421,17 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                           ),
                         ],
                       ),
-                      horizontalGap(width * percentGapLarge),
+                      horizontalGap(deviceWidth * percentGapLarge),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Time', style: textTheme.bodySmall),
-                          verticalGap(height * percentGapVerySmall),
+                          Text(
+                            'Time',
+                            style: textTheme.bodySmall!.copyWith(
+                              color: textColorLight,
+                            ),
+                          ),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           _customInkWellButton(
                             onTap: () async {
                               final picked = await showTimePicker(
@@ -501,14 +506,16 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
         return AlertDialog(
           title: Text(
             'Delete Attendance',
-            style: Get.textTheme.titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
           ),
           content: SizedBox(
-            width: Get.width,
+            width: deviceWidth,
             child: Text(
               'Do you really want to delete this attendance data?',
-              style: Get.textTheme.bodyMedium,
+              style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
             ),
           ),
           actions: [

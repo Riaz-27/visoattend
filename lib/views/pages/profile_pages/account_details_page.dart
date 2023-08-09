@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -15,11 +13,6 @@ class AccountDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
-
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final currentUser = cloudFirestoreController.currentUser;
 
@@ -84,8 +77,7 @@ class AccountDetailsPage extends StatelessWidget {
               cloudFirestoreController.currentUser.gender =
                   genderController.text;
               cloudFirestoreController.currentUser.dob = dobController.text;
-              cloudFirestoreController.currentUser.batch =
-                  batchController.text;
+              cloudFirestoreController.currentUser.batch = batchController.text;
               cloudFirestoreController.currentUser.designation =
                   designationController.text;
               cloudFirestoreController.currentUser.department =
@@ -105,35 +97,40 @@ class AccountDetailsPage extends StatelessWidget {
       ),
       body: Padding(
         padding: EdgeInsets.only(
-          right: height * percentGapSmall,
-          left: height * percentGapSmall,
+          right: deviceHeight * percentGapSmall,
+          left: deviceHeight * percentGapSmall,
         ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Account Details', style: textTheme.titleMedium),
-              verticalGap(height * percentGapLarge),
+              Text(
+                'Account Details',
+                style: textTheme.titleMedium!.copyWith(
+                  color: textColorDefault,
+                ),
+              ),
+              verticalGap(deviceHeight * percentGapLarge),
               CustomInput(
                 controller: nameController,
                 title: 'Full Name',
                 enableTextField: false,
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               CustomInput(
                 controller: idController,
                 title: 'Metric ID No',
                 enableTextField: false,
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               CustomInput(
                 controller: emailController,
                 title: 'Email',
                 enableTextField: false,
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               CustomInput(controller: mobileController, title: 'Mobile Number'),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               Row(
                 children: [
                   Expanded(
@@ -157,10 +154,10 @@ class AccountDetailsPage extends StatelessWidget {
                               .toList(),
                           onSelected: (value) => genderController.text = value,
                           constraints: BoxConstraints.expand(
-                              width: width * 0.4, height: 150),
+                              width: deviceWidth * 0.4, height: 150),
                           position: PopupMenuPosition.under,
                           child: Container(
-                            width: width,
+                            width: deviceWidth,
                             height: 45,
                             decoration: const BoxDecoration(
                               color: Colors.transparent,
@@ -170,7 +167,7 @@ class AccountDetailsPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  horizontalGap(width * percentGapMedium),
+                  horizontalGap(deviceWidth * percentGapMedium),
                   Expanded(
                     flex: 3,
                     child: CustomInput(
@@ -193,22 +190,22 @@ class AccountDetailsPage extends StatelessWidget {
                   ),
                 ],
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               CustomInput(
                 controller: batchController,
                 title: 'Batch',
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               _autocompleteField(
                   controller: designationController,
                   options: designationOptions,
                   title: 'Designation'),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               _autocompleteField(
                   controller: departmentController,
                   options: departmentOptions,
                   title: 'Department'),
-              verticalGap(height * 0.3),
+              verticalGap(deviceHeight * 0.3),
             ],
           ),
         ),
@@ -221,11 +218,6 @@ class AccountDetailsPage extends StatelessWidget {
     required List<String> options,
     required String title,
   }) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
-
     return Autocomplete<String>(
       optionsBuilder: (textEditingValue) {
         if (textEditingValue.text == '') {
@@ -250,8 +242,8 @@ class AccountDetailsPage extends StatelessWidget {
           alignment: Alignment.topLeft,
           child: Material(
             child: Container(
-              margin: EdgeInsets.only(top: height * percentGapVerySmall),
-              width: width * 0.9,
+              margin: EdgeInsets.only(top: deviceHeight * percentGapVerySmall),
+              width: deviceWidth * 0.9,
               decoration: BoxDecoration(
                 color: colorScheme.surfaceVariant.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(15),
@@ -271,7 +263,12 @@ class AccountDetailsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         verticalGap(10),
-                        Text(option, style: textTheme.bodyMedium),
+                        Text(
+                          option,
+                          style: textTheme.bodyMedium!.copyWith(
+                            color: textColorDefault,
+                          ),
+                        ),
                         verticalGap(10),
                         if (index < optionsData.length - 1)
                           const Divider(height: 0, thickness: 0.5),

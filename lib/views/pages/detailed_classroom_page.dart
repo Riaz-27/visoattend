@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../controller/classroom_controller.dart';
 import '../../controller/navigation_controller.dart';
+import '../../helper/constants.dart';
 import '../../helper/functions.dart';
 import '../../views/pages/classroom_pages/leave_request_page.dart';
 import '../../views/pages/classroom_pages/people_page.dart';
@@ -46,7 +47,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
         appBar: AppBar(
           title: Text(
             classroomData.courseTitle,
-            style: Get.textTheme.bodyLarge,
+            style: textTheme.bodyLarge!.copyWith(color: textColorDefault),
           ),
           forceMaterialTransparency: true,
           actions: [
@@ -144,30 +145,38 @@ class DetailedClassroomPage extends GetView<NavigationController> {
           return AlertDialog(
             title: Text(
               'Leave Classroom',
-              style: Get.textTheme.titleMedium!
-                  .copyWith(fontWeight: FontWeight.bold),
+              style: textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: textColorDefault,
+              ),
             ),
             content: SizedBox(
-              width: Get.width,
+              width: deviceWidth,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     'Do you really want to unroll from this classroom?',
-                    style: Get.textTheme.bodyMedium,
+                    style: textTheme.bodyMedium!.copyWith(
+                      color: textColorDefault,
+                    ),
                   ),
                   verticalGap(20),
                   Text(
                     'Course Title',
-                    style: Get.textTheme.labelSmall!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                   ),
                   Flexible(
                     child: Text(
                       classroomData.courseTitle,
-                      style: Get.textTheme.bodySmall!
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.bodySmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColorLight,
+                      ),
                     ),
                   ),
                 ],

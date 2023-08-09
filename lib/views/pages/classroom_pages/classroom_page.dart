@@ -4,8 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:visoattend/services/generate_excel_service.dart';
 
+import '../../../controller/leave_request_controller.dart';
+import '../../../services/generate_excel_service.dart';
 import '../../../controller/timer_controller.dart';
 import '../../../models/attendance_model.dart';
 import '../../../views/pages/classroom_pages/selected_attendance_page.dart';
@@ -31,13 +32,15 @@ class ClassroomPage extends GetView<AttendanceController> {
       body: RefreshIndicator(
         onRefresh: () async {
           final attendanceController = Get.find<AttendanceController>();
+          final leaveRequestController = Get.find<LeaveRequestController>();
           await attendanceController
               .updateValues(attendanceController.classroomData);
           await attendanceController.getUsersData();
+          await leaveRequestController.loadLeaveRequestData();
         },
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: height * percentGapSmall,
+            horizontal: deviceHeight * percentGapSmall,
           ),
           child: SingleChildScrollView(
             child: Obx(() {
@@ -48,32 +51,34 @@ class ClassroomPage extends GetView<AttendanceController> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _topView(context: context),
-                        verticalGap(height * percentGapSmall),
+                        verticalGap(deviceHeight * percentGapSmall),
                         Obx(() {
                           return Text(
                             'Attendances (${controller.filteredAttendances.length})',
-                            style: Get.textTheme.bodySmall!
-                                .copyWith(fontWeight: FontWeight.bold),
+                            style: textTheme.bodySmall!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: textColorLight,
+                            ),
                           );
                         }),
-                        verticalGap(height * percentGapVerySmall),
+                        verticalGap(deviceHeight * percentGapVerySmall),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Container(
-                              width: width * 0.4,
+                              width: deviceWidth * 0.4,
                               height: 28,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                    color: Get.theme.colorScheme.outline),
+                                border: Border.all(color: colorScheme.outline),
                               ),
                               child: Row(
                                 children: [
                                   Flexible(
                                     child: CustomTextField(
                                       controller: searchController,
-                                      style: Get.theme.textTheme.bodySmall,
+                                      style: textTheme.bodySmall!
+                                          .copyWith(color: textColorLight),
                                       disableBorder: true,
                                       hintText: 'All Times',
                                       onChanged: (value) {
@@ -135,24 +140,21 @@ class ClassroomPage extends GetView<AttendanceController> {
                                         decoration: BoxDecoration(
                                             borderRadius:
                                                 BorderRadius.circular(50),
-                                            color: Get.theme.colorScheme
-                                                .secondaryContainer),
+                                            color:
+                                                colorScheme.secondaryContainer),
                                         child: Row(
                                           children: [
                                             Icon(
                                               Icons.file_download_outlined,
                                               size: 16,
-                                              color: Get
-                                                  .theme.colorScheme.secondary,
+                                              color: colorScheme.secondary,
                                             ),
                                             Text(
                                               "Report",
-                                              style: Get.textTheme.bodySmall!
+                                              style: textTheme.bodySmall!
                                                   .copyWith(
-                                                      color: Get
-                                                          .theme
-                                                          .colorScheme
-                                                          .secondary,
+                                                      color:
+                                                          colorScheme.secondary,
                                                       fontWeight:
                                                           FontWeight.bold),
                                             ),
@@ -164,7 +166,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                             }),
                           ],
                         ),
-                        verticalGap(height * percentGapSmall),
+                        verticalGap(deviceHeight * percentGapSmall),
                         Flexible(
                           child: Obx(() {
                             return ListView.builder(
@@ -215,7 +217,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             CustomButton(
-              height: height * 0.055,
+              height: deviceHeight * 0.055,
               backgroundColor: colorScheme.secondaryContainer,
               textColor: colorScheme.onSecondaryContainer,
               text: 'Generate PDF Report',
@@ -236,9 +238,9 @@ class ClassroomPage extends GetView<AttendanceController> {
                     '${classroomData.courseCode}_$dateTimeNow', pdfData);
               },
             ),
-            verticalGap(height * percentGapSmall),
+            verticalGap(deviceHeight * percentGapSmall),
             CustomButton(
-              height: height * 0.055,
+              height: deviceHeight * 0.055,
               backgroundColor: colorScheme.secondaryContainer,
               textColor: colorScheme.onSecondaryContainer,
               text: 'Generate Excel Report',
@@ -246,8 +248,9 @@ class ClassroomPage extends GetView<AttendanceController> {
                 Get.back();
                 final excelService = GenerateExcelService();
                 final dateTimeNow =
-                DateFormat('ddMMy_hhmmss').format(DateTime.now());
-                await excelService.generateReport('${controller.classroomData.courseCode}_$dateTimeNow');
+                    DateFormat('ddMMy_hhmmss').format(DateTime.now());
+                await excelService.generateReport(
+                    '${controller.classroomData.courseCode}_$dateTimeNow');
 
                 // excelService.saveExcelFile(
                 //     '${controller.classroomData.courseCode}_$dateTimeNow', excelData);
@@ -268,8 +271,8 @@ class ClassroomPage extends GetView<AttendanceController> {
     final presentStatus = attendance.studentsData[currentUser.authUid];
     final userRole = controller.currentUserRole;
     final color = presentStatus == 'Absent' || presentStatus == null
-        ? Get.theme.colorScheme.error
-        : Get.theme.colorScheme.primary;
+        ? colorScheme.error
+        : colorScheme.primary;
     final classroomData = controller.classroomData;
     int presentStudents = 0;
     int totalStudents = 0;
@@ -299,10 +302,10 @@ class ClassroomPage extends GetView<AttendanceController> {
         }
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: height * percentGapSmall),
+        margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+          color: colorScheme.surfaceVariant.withAlpha(100),
         ),
         child: Padding(
           padding: const EdgeInsets.all(kSmall),
@@ -310,21 +313,22 @@ class ClassroomPage extends GetView<AttendanceController> {
             children: [
               Text(
                 DateFormat('dd').format(dateTime),
-                style: Get.textTheme.displaySmall!
-                    .copyWith(color: Get.theme.colorScheme.onBackground),
+                style:
+                    textTheme.displaySmall!.copyWith(color: textColorDefault),
               ),
-              horizontalGap(width * percentGapSmall),
+              horizontalGap(deviceWidth * percentGapSmall),
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     DateFormat('MMMM y').format(dateTime),
-                    style: Get.textTheme.titleSmall,
+                    style:
+                        textTheme.titleSmall!.copyWith(color: textColorDefault),
                   ),
                   Text(
                     DateFormat.jm().format(dateTime),
-                    style: Get.textTheme.bodySmall,
+                    style: textTheme.bodySmall!.copyWith(color: textColorLight),
                   ),
                 ],
               ),
@@ -335,11 +339,12 @@ class ClassroomPage extends GetView<AttendanceController> {
                   children: [
                     Text(
                       presentStatus ?? 'Missing',
-                      style: Get.textTheme.titleSmall!.copyWith(color: color),
+                      style: textTheme.titleSmall!.copyWith(color: color),
                     ),
                     Text(
                       'by ${takenBy.name}',
-                      style: Get.textTheme.bodySmall,
+                      style:
+                          textTheme.bodySmall!.copyWith(color: textColorLight),
                     ),
                   ],
                 ),
@@ -349,11 +354,13 @@ class ClassroomPage extends GetView<AttendanceController> {
                   children: [
                     Text(
                       'by ${takenBy.authUid == currentUser.authUid ? 'you' : takenBy.name}',
-                      style: Get.textTheme.titleSmall,
+                      style: textTheme.titleSmall!
+                          .copyWith(color: textColorDefault),
                     ),
                     Text(
                       '$presentStudents/$totalStudents presents',
-                      style: Get.textTheme.bodySmall,
+                      style:
+                          textTheme.bodySmall!.copyWith(color: textColorLight),
                     ),
                   ],
                 ),
@@ -380,15 +387,16 @@ class ClassroomPage extends GetView<AttendanceController> {
     required BuildContext context,
   }) {
     return Container(
-      width: width,
+      width: deviceWidth,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Get.theme.colorScheme.surfaceVariant.withOpacity(0.4),
+        color: colorScheme.surfaceVariant.withOpacity(0.4),
       ),
       padding: const EdgeInsets.all(kSmall),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          horizontalGap(width * percentGapVerySmall),
+          horizontalGap(deviceWidth * percentGapVerySmall),
           Obx(() {
             final currentUserRole =
                 Get.find<AttendanceController>().currentUserRole;
@@ -403,16 +411,16 @@ class ClassroomPage extends GetView<AttendanceController> {
                 ? '${(percent * 100).toStringAsFixed(0)}%'
                 : 'N/A';
             String status = 'Collegiate';
-            Color color = Get.theme.colorScheme.primary;
+            Color color = colorScheme.primary;
             if (percent < 0.6) {
-              color = Get.theme.colorScheme.error;
+              color = colorScheme.error;
               status = 'Dis-Collegiate';
             } else if (percent < 0.7) {
               color = Colors.orange;
               status = 'Non-Collegiate';
             }
             if (isTeacher) {
-              color = Get.theme.colorScheme.onSurfaceVariant;
+              color = colorScheme.onSurfaceVariant;
               percentText = totalClasses.toString();
               status = 'Total classes';
             }
@@ -420,15 +428,14 @@ class ClassroomPage extends GetView<AttendanceController> {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CircularPercentIndicator(
-                  radius: height * 0.08,
+                  radius: deviceHeight * 0.08,
                   lineWidth: 12,
                   percent: isTeacher ? 1 : percent,
                   circularStrokeCap: CircularStrokeCap.round,
                   progressColor: color,
-                  backgroundColor:
-                      Get.theme.colorScheme.onBackground.withAlpha(15),
+                  backgroundColor: colorScheme.onBackground.withAlpha(15),
                   animation: true,
                   animateFromLastPercent: true,
                   center: Column(
@@ -436,56 +443,57 @@ class ClassroomPage extends GetView<AttendanceController> {
                     children: [
                       Text(
                         percentText,
-                        style: Get.textTheme.titleLarge,
+                        style: textTheme.titleLarge!
+                            .copyWith(color: textColorDefault),
                       ),
                       Text(
                         status,
-                        style: Get.textTheme.labelSmall!.copyWith(color: color),
+                        style: textTheme.labelSmall!.copyWith(color: color),
                       ),
                     ],
                   ),
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 if (!isTeacher)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CircularPercentIndicator(
-                        radius: height * 0.023,
+                        radius: deviceHeight * 0.023,
                         lineWidth: 7,
                         percent:
                             totalClasses > 0 ? missedClasses / totalClasses : 0,
                         circularStrokeCap: CircularStrokeCap.round,
-                        progressColor: Get.theme.colorScheme.error,
-                        backgroundColor:
-                            Get.theme.colorScheme.onBackground.withAlpha(15),
+                        progressColor: colorScheme.error,
+                        backgroundColor: colorScheme.onBackground.withAlpha(15),
                         animation: true,
                         center: Text(
                           missedClasses.toString(),
-                          style: Get.textTheme.bodyMedium!.copyWith(
+                          style: textTheme.bodyMedium!.copyWith(
                             fontWeight: FontWeight.bold,
                             color: missedClasses > 0
-                                ? Get.theme.colorScheme.error
-                                : Get.theme.colorScheme.onBackground,
+                                ? colorScheme.error
+                                : colorScheme.onBackground,
                           ),
                         ),
                       ),
-                      horizontalGap(width * percentGapSmall),
+                      horizontalGap(deviceWidth * percentGapSmall),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          verticalGap(height * percentGapVerySmall),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           Text(
                             'Missed Classes',
-                            style: Get.textTheme.bodySmall!.copyWith(
+                            style: textTheme.bodySmall!.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Get.theme.colorScheme.error,
+                              color: colorScheme.error,
                             ),
                           ),
                           Text(
                             'Out of $totalClasses classes',
-                            style: Get.textTheme.bodySmall!,
+                            style: textTheme.bodySmall!
+                                .copyWith(color: textColorLight),
                           ),
                         ],
                       ),
@@ -494,7 +502,7 @@ class ClassroomPage extends GetView<AttendanceController> {
               ],
             );
           }),
-          horizontalGap(width * 0.05),
+          horizontalGap(deviceWidth * 0.05),
           Expanded(
             child: Obx(() {
               //finding class schedule
@@ -549,6 +557,7 @@ class ClassroomPage extends GetView<AttendanceController> {
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   controller.currentUserRole == 'Teacher' &&
                           !classroom.isArchived
@@ -574,67 +583,71 @@ class ClassroomPage extends GetView<AttendanceController> {
                             children: [
                               Text(
                                 'Copy Code',
-                                style: Get.textTheme.bodySmall,
+                                style: textTheme.bodySmall!
+                                    .copyWith(color: textColorLight),
                               ),
-                              horizontalGap(width * percentGapVerySmall),
+                              horizontalGap(deviceWidth * percentGapVerySmall),
                               Icon(
                                 Icons.copy_rounded,
                                 size: 18,
-                                color: Get.textTheme.bodySmall!.color,
+                                color: textColorLight,
                               ),
                             ],
                           ),
                         )
                       : SizedBox(
-                          height: height * percentGapSmall,
+                          height: deviceHeight * percentGapSmall,
                         ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   Text(
                     classroom.courseTitle,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                   ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   Row(
                     children: [
                       Text(
                         'Code: ',
-                        style: Get.textTheme.labelSmall!.copyWith(
-                          color:
-                              Get.theme.colorScheme.onBackground.withAlpha(150),
+                        style: textTheme.labelSmall!.copyWith(
+                          color: textColorLight,
                         ),
                       ),
                       Text(
                         classroom.courseCode,
-                        style: Get.textTheme.labelMedium,
+                        style: textTheme.labelMedium!
+                            .copyWith(color: textColorDefault),
                       ),
                     ],
                   ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   Row(
                     children: [
                       Text(
                         classroom.section.isEmpty ? '' : 'Section: ',
-                        style: Get.textTheme.labelSmall!.copyWith(
-                          color:
-                              Get.theme.colorScheme.onBackground.withAlpha(150),
+                        style: textTheme.labelSmall!.copyWith(
+                          color: textColorLight,
                         ),
                       ),
                       Text(
                         classroom.section,
-                        style: Get.textTheme.labelMedium,
+                        style: textTheme.labelMedium!.copyWith(
+                          color: textColorDefault,
+                        ),
                       ),
                     ],
                   ),
-                  verticalGap(height * percentGapSmall),
+                  verticalGap(deviceHeight * percentGapSmall),
                   Text(
                     scheduleText ?? 'Schedule not set yet',
-                    style: Get.textTheme.labelSmall!.copyWith(
+                    style: textTheme.labelSmall!.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Get.theme.colorScheme.onBackground.withAlpha(150),
+                      color: textColorLight,
                     ),
                   ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   Row(
                     children: [
                       if (roomNo != '') ...[
@@ -644,18 +657,20 @@ class ClassroomPage extends GetView<AttendanceController> {
                         ),
                         Text(
                           'Room No: ',
-                          style: Get.textTheme.labelSmall!.copyWith(
-                              color: Get.theme.colorScheme.onBackground
-                                  .withAlpha(150)),
+                          style: textTheme.labelSmall!.copyWith(
+                            color: textColorLight,
+                          ),
                         ),
                         Text(
                           roomNo,
-                          style: Get.textTheme.labelMedium,
+                          style: textTheme.labelMedium!.copyWith(
+                            color: textColorDefault,
+                          ),
                         ),
                       ],
                     ],
                   ),
-                  verticalGap(height * 0.015),
+                  verticalGap(deviceHeight * 0.015),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -665,33 +680,33 @@ class ClassroomPage extends GetView<AttendanceController> {
                           children: [
                             Text(
                               'From',
-                              style: Get.textTheme.labelSmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150),
+                              style: textTheme.labelSmall!.copyWith(
+                                color: textColorLight,
                               ),
                             ),
-                            verticalGap(height * percentGapVerySmall),
+                            verticalGap(deviceHeight * percentGapVerySmall),
                             Text(
                               startTime,
-                              style: Get.textTheme.labelMedium,
+                              style: textTheme.labelMedium!
+                                  .copyWith(color: textColorDefault),
                             ),
                           ],
                         ),
-                        horizontalGap(width * 0.08),
+                        horizontalGap(deviceWidth * 0.08),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'To',
-                              style: Get.textTheme.labelSmall!.copyWith(
-                                color: Get.theme.colorScheme.onBackground
-                                    .withAlpha(150),
+                              style: textTheme.labelSmall!.copyWith(
+                                color: textColorLight,
                               ),
                             ),
-                            verticalGap(height * percentGapVerySmall),
+                            verticalGap(deviceHeight * percentGapVerySmall),
                             Text(
                               endTime,
-                              style: Get.textTheme.labelMedium,
+                              style: textTheme.labelMedium!
+                                  .copyWith(color: textColorDefault),
                             ),
                           ],
                         ),
@@ -708,7 +723,6 @@ class ClassroomPage extends GetView<AttendanceController> {
   }
 
   Widget _bottomFloatingButton(BuildContext context) {
-    final height = Get.height;
     final timerController = Get.find<TimerController>();
 
     return Obx(() {
@@ -725,7 +739,7 @@ class ClassroomPage extends GetView<AttendanceController> {
           child: FloatingActionButton(
             onPressed: () {
               Get.bottomSheet(
-                backgroundColor: Get.theme.colorScheme.surface,
+                backgroundColor: colorScheme.surface,
                 enableDrag: true,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.only(
@@ -740,10 +754,9 @@ class ClassroomPage extends GetView<AttendanceController> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CustomButton(
-                        height: height * 0.055,
-                        backgroundColor:
-                            Get.theme.colorScheme.secondaryContainer,
-                        textColor: Get.theme.colorScheme.onSecondaryContainer,
+                        height: deviceHeight * 0.055,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        textColor: colorScheme.onSecondaryContainer,
                         text: 'Take Attendance',
                         onPressed: () {
                           Get.back();
@@ -757,7 +770,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                           });
                         },
                       ),
-                      verticalGap(height * percentGapSmall),
+                      verticalGap(deviceHeight * percentGapSmall),
                       Obx(() {
                         final openAttendance =
                             controller.classroomData.openAttendance;
@@ -782,10 +795,9 @@ class ClassroomPage extends GetView<AttendanceController> {
                           }
                         }
                         return CustomButton(
-                          height: height * 0.055,
-                          backgroundColor:
-                              Get.theme.colorScheme.secondaryContainer,
-                          textColor: Get.theme.colorScheme.onSecondaryContainer,
+                          height: deviceHeight * 0.055,
+                          backgroundColor: colorScheme.secondaryContainer,
+                          textColor: colorScheme.onSecondaryContainer,
                           text: buttonText,
                           onPressed: () async {
                             if (buttonText[0] == 'O') {
@@ -855,20 +867,22 @@ class ClassroomPage extends GetView<AttendanceController> {
         return AlertDialog(
           title: Text(
             'Open Attendance',
-            style: Get.textTheme.titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
           ),
           content: SizedBox(
-            width: Get.width,
+            width: deviceWidth,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
                   'Allow class CR to take attendance.\nEnter duration in minute.',
-                  style: Get.textTheme.bodyMedium,
+                  style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
                 ),
-                verticalGap(Get.height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 TextField(
                   controller: textController,
                   keyboardType: TextInputType.number,
@@ -909,7 +923,7 @@ class ClassroomPage extends GetView<AttendanceController> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _loadTopView(),
-        verticalGap(height * percentGapSmall),
+        verticalGap(deviceHeight * percentGapSmall),
         Flexible(
           child: ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
@@ -927,7 +941,7 @@ class ClassroomPage extends GetView<AttendanceController> {
   Widget _loadTopView() {
     return Container(
       // height: height * 0.28,
-      width: width,
+      width: deviceWidth,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: loadColor.withOpacity(0.04),
@@ -935,39 +949,39 @@ class ClassroomPage extends GetView<AttendanceController> {
       padding: const EdgeInsets.all(kSmall),
       child: Row(
         children: [
-          horizontalGap(width * percentGapVerySmall),
+          horizontalGap(deviceWidth * percentGapVerySmall),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               ShimmerLoading(
-                width: height * 0.14,
-                height: height * 0.14,
+                width: deviceHeight * 0.14,
+                height: deviceHeight * 0.14,
                 radius: 100,
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
             ],
           ),
-          horizontalGap(width * 0.05),
+          horizontalGap(deviceWidth * 0.05),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalGap(height * percentGapSmall),
-                ShimmerLoading(width: width * 0.5, color: loadColorLight),
-                verticalGap(height * percentGapVerySmall),
-                ShimmerLoading(width: width * 0.25, height: 10),
-                verticalGap(height * percentGapVerySmall),
-                ShimmerLoading(width: width * 0.15, height: 10),
-                verticalGap(height * percentGapMedium),
-                ShimmerLoading(width: width * 0.3, height: 10),
-                verticalGap(height * 0.015),
+                verticalGap(deviceHeight * percentGapSmall),
+                ShimmerLoading(width: deviceWidth * 0.5, color: loadColorLight),
+                verticalGap(deviceHeight * percentGapVerySmall),
+                ShimmerLoading(width: deviceWidth * 0.25, height: 10),
+                verticalGap(deviceHeight * percentGapVerySmall),
+                ShimmerLoading(width: deviceWidth * 0.15, height: 10),
+                verticalGap(deviceHeight * percentGapMedium),
+                ShimmerLoading(width: deviceWidth * 0.3, height: 10),
+                verticalGap(deviceHeight * 0.015),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ShimmerLoading(width: width * 0.15, height: 12),
-                    horizontalGap(width * 0.08),
-                    ShimmerLoading(width: width * 0.15, height: 12),
+                    ShimmerLoading(width: deviceWidth * 0.15, height: 12),
+                    horizontalGap(deviceWidth * 0.08),
+                    ShimmerLoading(width: deviceWidth * 0.15, height: 12),
                   ],
                 )
               ],
@@ -980,7 +994,7 @@ class ClassroomPage extends GetView<AttendanceController> {
 
   Widget _loadAttendanceListView() {
     return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: loadColor.withOpacity(0.04),
@@ -990,22 +1004,22 @@ class ClassroomPage extends GetView<AttendanceController> {
         child: Row(
           children: [
             ShimmerLoading(
-              width: width * 0.1,
+              width: deviceWidth * 0.1,
               height: 40,
               color: loadColorLight,
             ),
-            horizontalGap(width * percentGapSmall),
+            horizontalGap(deviceWidth * percentGapSmall),
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ShimmerLoading(
-                  width: width * 0.3,
+                  width: deviceWidth * 0.3,
                   height: 12,
                   color: loadColorLight,
                 ),
-                verticalGap(height * percentGapVerySmall),
-                ShimmerLoading(width: width * 0.2, height: 10),
+                verticalGap(deviceHeight * percentGapVerySmall),
+                ShimmerLoading(width: deviceWidth * 0.2, height: 10),
               ],
             ),
             const Spacer(),
@@ -1013,12 +1027,12 @@ class ClassroomPage extends GetView<AttendanceController> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 ShimmerLoading(
-                  width: width * 0.15,
+                  width: deviceWidth * 0.15,
                   height: 12,
                   color: loadColorLight,
                 ),
-                verticalGap(height * percentGapVerySmall),
-                ShimmerLoading(width: width * 0.25, height: 10),
+                verticalGap(deviceHeight * percentGapVerySmall),
+                ShimmerLoading(width: deviceWidth * 0.25, height: 10),
               ],
             ),
           ],

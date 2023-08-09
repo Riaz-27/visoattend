@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import '../../helper/constants.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -34,34 +34,45 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
     return TextField(
       controller: controller,
       obscureText: isPassword,
       onChanged: onChanged,
       style: style,
       decoration: InputDecoration(
-        contentPadding:contentPadding?? const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        contentPadding: contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         hintText: hintText,
-        hintStyle: hintStyle ?? textTheme.bodySmall,
+        hintStyle:
+            hintStyle ?? textTheme.bodySmall!.copyWith(color: textColorLight),
         labelText: labelText,
-        labelStyle: labelStyle ?? textTheme.bodySmall,
+        labelStyle:
+            labelStyle ?? textTheme.bodySmall!.copyWith(color: textColorLight),
         isDense: true,
         alignLabelWithHint: true,
         icon: icon,
-        focusedBorder:disableBorder? InputBorder.none:  OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
-            borderSide: BorderSide(color: colorScheme.outline)),
-        enabledBorder:disableBorder? InputBorder.none: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
-            borderSide: BorderSide(color: colorScheme.outline.withAlpha(60))),
-        errorBorder:disableBorder? InputBorder.none: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
-            borderSide: BorderSide(color: colorScheme.error.withAlpha(140))),
-        focusedErrorBorder:disableBorder? InputBorder.none: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
-            borderSide: BorderSide(color: colorScheme.error)),
+        focusedBorder: disableBorder
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
+                borderSide: BorderSide(color: colorScheme.outline)),
+        enabledBorder: disableBorder
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
+                borderSide:
+                    BorderSide(color: colorScheme.outline.withAlpha(60))),
+        errorBorder: disableBorder
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
+                borderSide:
+                    BorderSide(color: colorScheme.error.withAlpha(140))),
+        focusedErrorBorder: disableBorder
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius ?? kLarge),
+                borderSide: BorderSide(color: colorScheme.error)),
       ),
     );
   }

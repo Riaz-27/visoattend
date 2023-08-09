@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
 
+import '../../../controller/attendance_controller.dart';
+import '../../../helper/functions.dart';
+import '../../../views/widgets/custom_button.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../controller/leave_request_controller.dart';
 import '../../../helper/constants.dart';
-import '../../../models/leave_request_model.dart';
 import '../../../models/user_model.dart';
 import 'apply_leave_page.dart';
 
@@ -29,8 +28,8 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
         },
         child: Padding(
           padding: EdgeInsets.only(
-            right: height * percentGapSmall,
-            left: height * percentGapSmall,
+            right: deviceHeight * percentGapSmall,
+            left: deviceHeight * percentGapSmall,
           ),
           child: Obx(
             () {
@@ -119,8 +118,8 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
       },
       child: Container(
         padding: EdgeInsets.symmetric(
-          vertical: height * percentGapSmall,
-          horizontal: width * percentGapLarge,
+          vertical: deviceHeight * percentGapSmall,
+          horizontal: deviceWidth * percentGapLarge,
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -199,26 +198,30 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                     ),
                   ],
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
                       user.name,
-                      style: textTheme.bodyMedium!
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColorDefault,
+                      ),
                     ),
-                    verticalGap(height * percentGapVerySmall),
+                    verticalGap(deviceHeight * percentGapVerySmall),
                     Text(
                       user.userId,
-                      style: textTheme.bodySmall,
+                      style: textTheme.bodySmall!.copyWith(
+                        color: textColorLight,
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-            verticalGap(height * percentGapSmall),
+            verticalGap(deviceHeight * percentGapSmall),
             Row(
               children: [
                 Icon(
@@ -226,23 +229,29 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                   size: 18,
                   color: colorScheme.secondary,
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Text(
                   DateFormat('dd MMMM y').format(fromDateTime),
-                  style: textTheme.labelMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColorDefault,
+                  ),
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Text(
                   'to',
-                  style: textTheme.labelMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColorDefault,
+                  ),
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Text(
                   DateFormat('dd MMMM y').format(toDateTime),
-                  style: textTheme.labelMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColorDefault,
+                  ),
                 ),
                 const Spacer(),
                 Container(
@@ -256,12 +265,14 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                   ),
                   child: Text(
                     durationDay,
-                    style: textTheme.labelMedium,
+                    style: textTheme.labelMedium!.copyWith(
+                      color: textColorDefault,
+                    ),
                   ),
                 ),
               ],
             ),
-            verticalGap(height * percentGapVerySmall),
+            verticalGap(deviceHeight * percentGapVerySmall),
             Row(
               children: [
                 Icon(
@@ -269,43 +280,48 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                   size: 18,
                   color: colorScheme.secondary,
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Text(
                   leaveRequest.reason,
-                  style: textTheme.labelMedium!
-                      .copyWith(fontWeight: FontWeight.bold),
+                  style: textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColorDefault,
+                  ),
                 ),
               ],
             ),
-            verticalGap(height * percentGapVerySmall),
+            verticalGap(deviceHeight * percentGapVerySmall),
             Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                horizontalGap(width * percentGapSmall + 18),
+                horizontalGap(deviceWidth * percentGapSmall + 18),
                 Expanded(
                   child: Text(
                     leaveRequest.description,
-                    style: textTheme.labelMedium,
+                    style: textTheme.labelMedium!.copyWith(
+                      color: textColorDefault,
+                    ),
                   ),
                 ),
               ],
             ),
-            verticalGap(height * percentGapSmall),
+            verticalGap(deviceHeight * percentGapSmall),
             Row(
               children: [
                 Expanded(
                   child: Text(
                     '$dateString at $timeString',
                     style: textTheme.labelMedium!.copyWith(
-                        color: colorScheme.onBackground.withOpacity(0.6)),
+                      color: textColorLight,
+                    ),
                     textAlign: TextAlign.right,
                   ),
                 ),
               ],
             ),
-            verticalGap(height * percentGapVerySmall),
+            verticalGap(deviceHeight * percentGapVerySmall),
             Obx(
               () {
                 final currentClass = attendanceController.classroomData;
@@ -321,7 +337,7 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                             text: 'Approve',
                             textStyle: textTheme.bodyMedium!
                                 .copyWith(color: colorScheme.surface),
-                            width: width * 0.3,
+                            width: deviceWidth * 0.3,
                             height: 35,
                             backgroundColor:
                                 colorScheme.primary.withOpacity(0.6),
@@ -338,7 +354,7 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
                             textColor: colorScheme.error,
                             textStyle: textTheme.bodyMedium!
                                 .copyWith(color: colorScheme.surface),
-                            width: width * 0.3,
+                            width: deviceWidth * 0.3,
                             backgroundColor:
                                 colorScheme.onSurface.withOpacity(0.8),
                             height: 35,
@@ -366,14 +382,18 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
         return AlertDialog(
           title: Text(
             'Delete Leave Request',
-            style: Get.textTheme.titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
           ),
           content: SizedBox(
-            width: Get.width,
+            width: deviceWidth,
             child: Text(
               'Do you really want to delete this request?',
-              style: Get.textTheme.bodyMedium,
+              style: textTheme.bodyMedium!.copyWith(
+                color: textColorDefault,
+              ),
             ),
           ),
           actions: [

@@ -2,9 +2,10 @@ import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
+import '../../helper/constants.dart';
 import '../../models/recognition_model.dart';
 
 class FaceDetectorPainter extends CustomPainter {
@@ -24,8 +25,6 @@ class FaceDetectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final textTheme = Get.theme.textTheme;
-    final colorScheme = Get.theme.colorScheme;
 
     final double scaleX = size.width / imageSize.width;
     final double scaleY = size.height / imageSize.height;

@@ -29,7 +29,7 @@ class AllClassroomPage extends StatelessWidget {
               centerTitle: true,
               title: Text(
                 'Archived Classes',
-                style: textTheme.titleMedium,
+                style: textTheme.titleMedium!.copyWith(color: textColorDefault),
               ),
             )
           : null,
@@ -40,15 +40,15 @@ class AllClassroomPage extends StatelessWidget {
         child: SafeArea(
           child: Padding(
             padding: EdgeInsets.only(
-              top: height * percentGapVerySmall,
-              right: height * percentGapSmall,
-              left: height * percentGapSmall,
+              top: deviceHeight * percentGapVerySmall,
+              right: deviceHeight * percentGapSmall,
+              left: deviceHeight * percentGapSmall,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomTextFormField(
                   labelText: 'Search Classroom',
                   controller: searchController,
@@ -60,7 +60,7 @@ class AllClassroomPage extends StatelessWidget {
                       : cloudFirestoreController
                           .filterAllClassesSearchResult(value),
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 Obx(() {
                   final archivedClasses =
                       cloudFirestoreController.archivedClassrooms.length;
@@ -73,8 +73,7 @@ class AllClassroomPage extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
-                        color:
-                            Get.theme.colorScheme.surfaceVariant.withAlpha(150),
+                        color: colorScheme.surfaceVariant.withAlpha(150),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -85,26 +84,29 @@ class AllClassroomPage extends StatelessWidget {
                               Icons.archive_rounded,
                               color: colorScheme.secondary,
                             ),
-                            horizontalGap(width * percentGapMedium),
+                            horizontalGap(deviceWidth * percentGapMedium),
                             Text(
                               'Archived Classrooms',
-                              style: textTheme.bodyMedium,
+                              style: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                             ),
                             const Spacer(),
                             Text(
                               archivedClasses.toString(),
                               style: textTheme.titleMedium!.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.bold),
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            horizontalGap(width * percentGapSmall),
+                            horizontalGap(deviceWidth * percentGapSmall),
                           ],
                         ),
                       ),
                     ),
                   );
                 }),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 Expanded(
                   child: Obx(() {
                     return ListView.builder(
@@ -148,12 +150,11 @@ class AllClassroomPage extends StatelessWidget {
 
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
-
     return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        color: Get.theme.colorScheme.surfaceVariant.withAlpha(100),
+        color: colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -166,8 +167,10 @@ class AllClassroomPage extends StatelessWidget {
                 children: [
                   Text(
                     classroom.courseTitle,
-                    style: Get.textTheme.titleSmall!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   // Text(
@@ -176,12 +179,13 @@ class AllClassroomPage extends StatelessWidget {
                   //     color: Get.theme.colorScheme.onBackground.withAlpha(150),
                   //   ),
                   // ),
-                  verticalGap(height * 0.01),
+                  verticalGap(deviceHeight * 0.01),
                   Row(
                     children: [
                       Obx(() {
                         final teacherProfileUrl = cloudFirestoreController
-                            .classroomTeacherInfo[classroom.teachers[0]['authUid']]!['profilePic']!;
+                                .classroomTeacherInfo[
+                            classroom.teachers[0]['authUid']]!['profilePic']!;
                         return Container(
                           width: 25,
                           height: 25,
@@ -195,19 +199,20 @@ class AllClassroomPage extends StatelessWidget {
                           ),
                         );
                       }),
-                      horizontalGap(width * percentGapMedium),
-                      Obx(
-                        () {
-                          final teacherUid = cloudFirestoreController.classroomTeacherInfo[classroom.teachers[0]['authUid']];
-                          final teacherName = teacherUid == null? '' : teacherUid['name'];
-                          return Text(
-                            teacherName??'',
-                            style: Get.textTheme.titleSmall!.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.9),
-                            ),
-                          );
-                        }
-                      ),
+                      horizontalGap(deviceWidth * percentGapMedium),
+                      Obx(() {
+                        final teacherUid =
+                            cloudFirestoreController.classroomTeacherInfo[
+                                classroom.teachers[0]['authUid']];
+                        final teacherName =
+                            teacherUid == null ? '' : teacherUid['name'];
+                        return Text(
+                          teacherName ?? '',
+                          style: textTheme.titleSmall!.copyWith(
+                            color: textColorMedium,
+                          ),
+                        );
+                      }),
                     ],
                   ),
                   Row(
@@ -248,7 +253,7 @@ class AllClassroomPage extends StatelessWidget {
   Widget _customClassroomTag(
       {Color? bgColor, Color? textColor, required String text}) {
     return Container(
-      margin: EdgeInsets.only(top: height * percentGapSmall, right: 10),
+      margin: EdgeInsets.only(top: deviceHeight * percentGapSmall, right: 10),
       padding: const EdgeInsets.symmetric(
         vertical: 5,
         horizontal: 8,
@@ -260,8 +265,9 @@ class AllClassroomPage extends StatelessWidget {
       child: Text(
         text,
         style: textTheme.labelMedium!.copyWith(
-            color: textColor ?? colorScheme.onSurface.withOpacity(0.8),
-            fontWeight: FontWeight.bold),
+          color: textColor ?? textColorMedium,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

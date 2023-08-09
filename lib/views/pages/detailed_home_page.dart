@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/views/widgets/shimmer_loading.dart';
 
+import '../../views/widgets/shimmer_loading.dart';
 import '../../views/pages/detailed_classroom_page.dart';
 import '../../controller/navigation_controller.dart';
 import '../../views/pages/all_classroom_page.dart';
@@ -63,7 +63,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          horizontalGap(width * percentGapSmall),
+                          horizontalGap(deviceWidth * percentGapSmall),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,17 +75,17 @@ class DetailedHomePage extends GetView<NavigationController> {
                                   'Hi, $userName',
                                   style: textTheme.titleMedium!.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
+                                    color: textColorDefault,
                                   ),
                                 );
                               }),
-                              verticalGap(height * percentGapVerySmall),
+                              verticalGap(deviceHeight * percentGapVerySmall),
                               Text(
                                 DateFormat('EEE, d MMMM y')
                                     .format(DateTime.now()),
                                 style: textTheme.bodySmall!.copyWith(
-                                    color: colorScheme.onBackground
-                                        .withAlpha(150)),
+                                  color: textColorLight,
+                                ),
                               ),
                             ],
                           ),
@@ -101,6 +101,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: colorScheme.outline.withOpacity(0.4),
+                                  border: Border.all(color: colorScheme.primary),
                                   image: DecorationImage(
                                     fit: BoxFit.cover,
                                     image: NetworkImage(picUrl),
@@ -109,7 +110,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                               ),
                             );
                           }),
-                          horizontalGap(width * percentGapMedium)
+                          horizontalGap(deviceWidth * percentGapMedium)
                         ],
                       ),
                     ],
@@ -139,7 +140,7 @@ class DetailedHomePage extends GetView<NavigationController> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CustomButton(
-                        height: height * 0.055,
+                        height: deviceHeight * 0.055,
                         backgroundColor: colorScheme.secondaryContainer,
                         textColor: colorScheme.onSecondaryContainer,
                         text: 'Join Class',
@@ -148,9 +149,9 @@ class DetailedHomePage extends GetView<NavigationController> {
                           _handleJoinClass();
                         },
                       ),
-                      verticalGap(height * percentGapSmall),
+                      verticalGap(deviceHeight * percentGapSmall),
                       CustomButton(
-                        height: height * 0.055,
+                        height: deviceHeight * 0.055,
                         backgroundColor: colorScheme.secondaryContainer,
                         textColor: colorScheme.onSecondaryContainer,
                         text: 'Create Class',
@@ -195,7 +196,6 @@ class DetailedHomePage extends GetView<NavigationController> {
   void _handleJoinClass() {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
     final TextEditingController classroomIdController = TextEditingController();
-    final height = Get.height;
     Get.bottomSheet(
       enableDrag: true,
       isScrollControlled: true,
@@ -220,7 +220,7 @@ class DetailedHomePage extends GetView<NavigationController> {
               ),
             ),
             CustomButton(
-              height: height * 0.055,
+              height: deviceHeight * 0.055,
               text: 'Join Class',
               onPressed: () async {
                 loadingDialog('Joining...');
@@ -255,19 +255,19 @@ class DetailedHomePage extends GetView<NavigationController> {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            horizontalGap(width * percentGapSmall),
+            horizontalGap(deviceWidth * percentGapSmall),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const ShimmerLoading(height: 15, width: 150),
-                verticalGap(height * percentGapVerySmall),
+                verticalGap(deviceHeight * percentGapVerySmall),
                 ShimmerLoading(height: 12, width: 100, color: loadColorLight),
               ],
             ),
             const Spacer(),
             const ShimmerLoading(height: 40, width: 40, radius: 100),
-            horizontalGap(width * percentGapMedium)
+            horizontalGap(deviceWidth * percentGapMedium)
           ],
         ),
       ],

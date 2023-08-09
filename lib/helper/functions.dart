@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../helper/constants.dart';
+
+import '../../helper/constants.dart';
 
 /// For UI
 
@@ -19,7 +20,12 @@ void loadingDialog([String? msg]) {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 8),
-            Text(msg ?? ''),
+            Text(
+              msg ?? '',
+              style: textTheme.titleSmall!.copyWith(
+                color: textColorDefault,
+              ),
+            ),
           ],
         ),
       ),
@@ -31,8 +37,14 @@ void errorDialog({required String title, required String msg}) {
   Get.dialog(
     barrierDismissible: false,
     AlertDialog(
-      title: Text(title),
-      content: Text(msg),
+      title: Text(
+        title,
+        style: textTheme.titleMedium!.copyWith(color: textColorDefault),
+      ),
+      content: Text(
+        msg,
+        style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+      ),
       actions: [
         TextButton(
           onPressed: () => Get.back(),

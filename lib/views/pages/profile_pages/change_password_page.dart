@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/widgets/custom_button.dart';
-import 'package:visoattend/views/widgets/custom_input.dart';
-import 'package:visoattend/views/widgets/custom_text_form_field.dart';
 
+import '../../../helper/functions.dart';
+import '../../../views/widgets/custom_button.dart';
+import '../../../views/widgets/custom_input.dart';
 import '../../../controller/auth_controller.dart';
 import '../../../helper/constants.dart';
 
@@ -14,11 +13,6 @@ class ChangePasswordPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
-
     final formKey = GlobalKey<FormState>();
 
     final oldPasswordController = TextEditingController();
@@ -34,8 +28,8 @@ class ChangePasswordPage extends StatelessWidget {
       ),
       body: Padding(
         padding: EdgeInsets.only(
-          right: height * percentGapSmall,
-          left: height * percentGapSmall,
+          right: deviceHeight * percentGapSmall,
+          left: deviceHeight * percentGapSmall,
         ),
         child: SingleChildScrollView(
           child: Form(
@@ -45,19 +39,19 @@ class ChangePasswordPage extends StatelessWidget {
               children: [
                 Text(
                   'Change Password',
-                  style: textTheme.titleMedium,
+                  style: textTheme.titleMedium!.copyWith(color: textColorDefault,),
                 ),
-                verticalGap(height * percentGapMedium),
+                verticalGap(deviceHeight * percentGapMedium),
                 Text(
                   'We strongly suggest you to use at least 1 letter, 1 number and 1 symbol as your new password.',
-                  style: textTheme.bodySmall,
+                  style: textTheme.bodySmall!.copyWith(color: textColorLight),
                 ),
-                verticalGap(height * percentGapVerySmall),
+                verticalGap(deviceHeight * percentGapVerySmall),
                 Text(
                   'Minimum password length is 6.',
-                  style: textTheme.bodySmall,
+                  style: textTheme.bodySmall!.copyWith(color: textColorLight),
                 ),
-                verticalGap(height * percentGapLarge),
+                verticalGap(deviceHeight * percentGapLarge),
                 CustomInput(
                   controller: oldPasswordController,
                   title: 'Old Password',
@@ -69,7 +63,7 @@ class ChangePasswordPage extends StatelessWidget {
                     return oldPasswordValidateText;
                   },
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomInput(
                   controller: newPasswordController,
                   title: 'New Password',
@@ -81,7 +75,7 @@ class ChangePasswordPage extends StatelessWidget {
                     return null;
                   },
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 CustomInput(
                   controller: confirmNewPasswordController,
                   title: 'Confirm Password',
@@ -96,7 +90,7 @@ class ChangePasswordPage extends StatelessWidget {
                     return null;
                   },
                 ),
-                verticalGap(height * percentGapLarge),
+                verticalGap(deviceHeight * percentGapLarge),
                 CustomButton(
                   text: 'Confirm',
                   onPressed: () async {

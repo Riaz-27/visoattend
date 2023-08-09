@@ -10,7 +10,6 @@ import '../../helper/constants.dart';
 import '../../helper/functions.dart';
 import '../widgets/custom_text_form_field.dart';
 
-import 'auth_page.dart';
 import 'face_register_page.dart';
 
 class LoginRegisterPage extends StatelessWidget {
@@ -179,7 +178,7 @@ class LoginRegisterPage extends StatelessWidget {
 
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: height * 0.025),
+        padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
         child: Form(
           key: formKey,
           child: Center(
@@ -189,7 +188,7 @@ class LoginRegisterPage extends StatelessWidget {
                 children: [
                   if (!isSignUp) ...[
                     SizedBox(
-                      width: width * 0.55,
+                      width: deviceWidth * 0.55,
                       child: Image.asset('assets/icons/text_icon.png'),
                     ),
                     // Text(
@@ -197,26 +196,32 @@ class LoginRegisterPage extends StatelessWidget {
                     //   style: Get.textTheme.titleLarge!
                     //       .copyWith(fontWeight: FontWeight.bold),
                     // ),
-                    verticalGap(height * percentGapSmall),
+                    verticalGap(deviceHeight * percentGapSmall),
                     Text(
                       'Welcome Back',
-                      style: textTheme.bodySmall!
-                          .copyWith(fontSize: width * 0.035),
+                      style: textTheme.bodySmall!.copyWith(
+                        fontSize: deviceWidth * 0.035,
+                        color: textColorLight,
+                      ),
                     ),
                     Text(
                       'Please sign in to continue',
-                      style: textTheme.bodySmall!
-                          .copyWith(fontSize: width * 0.035),
+                      style: textTheme.bodySmall!.copyWith(
+                        fontSize: deviceWidth * 0.035,
+                        color: textColorLight,
+                      ),
                     ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(deviceHeight * percentGapMedium),
                   ],
                   if (isSignUp) ...[
                     Text(
                       'Create Account',
-                      style: textTheme.titleLarge!
-                          .copyWith(fontWeight: FontWeight.bold),
+                      style: textTheme.titleLarge!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColorDefault,
+                      ),
                     ),
-                    verticalGap(height * percentGapLarge),
+                    verticalGap(deviceHeight * percentGapLarge),
                     CustomTextFormField(
                       labelText: 'Full Name (According to the registration)',
                       controller: nameController,
@@ -230,7 +235,7 @@ class LoginRegisterPage extends StatelessWidget {
                         return null;
                       },
                     ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(deviceHeight * percentGapMedium),
                     CustomTextFormField(
                       labelText: 'Email',
                       controller: emailController,
@@ -244,7 +249,7 @@ class LoginRegisterPage extends StatelessWidget {
                         return emailValidatorString;
                       },
                     ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(deviceHeight * percentGapMedium),
                   ],
                   CustomTextFormField(
                     labelText: isSignUp ? 'Student/Teacher ID' : 'ID / Email',
@@ -268,7 +273,7 @@ class LoginRegisterPage extends StatelessWidget {
                       return null;
                     },
                   ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(deviceHeight * percentGapMedium),
                   CustomTextFormField(
                     labelText: 'Password',
                     controller: passwordController,
@@ -285,7 +290,7 @@ class LoginRegisterPage extends StatelessWidget {
                       return null;
                     },
                   ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(deviceHeight * percentGapMedium),
                   if (isSignUp) ...[
                     CustomTextFormField(
                       labelText: 'Confirm Password',
@@ -302,7 +307,7 @@ class LoginRegisterPage extends StatelessWidget {
                         return null;
                       },
                     ),
-                    verticalGap(height * percentGapLarge),
+                    verticalGap(deviceHeight * percentGapLarge),
                   ],
                   if (!isSignUp) ...[
                     Row(
@@ -322,7 +327,7 @@ class LoginRegisterPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(deviceHeight * percentGapMedium),
                   ],
                   CustomButton(
                     text: isSignUp ? 'Sign Up' : 'Sign In',
@@ -339,7 +344,7 @@ class LoginRegisterPage extends StatelessWidget {
                       }
                     },
                   ),
-                  verticalGap(height * percentGapSmall),
+                  verticalGap(deviceHeight * percentGapSmall),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -350,7 +355,9 @@ class LoginRegisterPage extends StatelessWidget {
                           isSignUp
                               ? 'Already have an account?'
                               : "Don't have an account?",
-                          style: textTheme.labelLarge,
+                          style: textTheme.labelLarge!.copyWith(
+                            color: textColorDefault,
+                          ),
                         ),
                       ),
                       TextButton(

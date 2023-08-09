@@ -4,7 +4,6 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../controller/cloud_firestore_controller.dart';
-import '../../../controller/navigation_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../views/widgets/custom_button.dart';
 import '../../../controller/attendance_controller.dart';
@@ -17,7 +16,6 @@ class PeoplePage extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     final classroom = controller.classroomData;
-    final textTheme = Get.textTheme;
 
     final currentUserRole = controller.currentUserRole;
 
@@ -29,7 +27,8 @@ class PeoplePage extends GetView<AttendanceController> {
         },
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: width * percentGapMedium),
+            padding: EdgeInsets.symmetric(
+                horizontal: deviceWidth * percentGapMedium),
             child: Obx(() {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -45,7 +44,7 @@ class PeoplePage extends GetView<AttendanceController> {
                     thickness: 1,
                     color: colorScheme.primary,
                   ),
-                  verticalGap(height * percentGapSmall),
+                  verticalGap(deviceHeight * percentGapSmall),
                   Flexible(
                     child: ListView.builder(
                       physics: const NeverScrollableScrollPhysics(),
@@ -68,7 +67,7 @@ class PeoplePage extends GetView<AttendanceController> {
                       },
                     ),
                   ),
-                  verticalGap(height * percentGapMedium),
+                  verticalGap(deviceHeight * percentGapMedium),
                   if (classroom.cRs.isNotEmpty) ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -89,7 +88,7 @@ class PeoplePage extends GetView<AttendanceController> {
                       thickness: 1,
                       color: colorScheme.primary,
                     ),
-                    verticalGap(height * percentGapSmall),
+                    verticalGap(deviceHeight * percentGapSmall),
                     Flexible(
                       child: ListView.builder(
                         physics: const NeverScrollableScrollPhysics(),
@@ -111,7 +110,7 @@ class PeoplePage extends GetView<AttendanceController> {
                         },
                       ),
                     ),
-                    verticalGap(height * percentGapMedium),
+                    verticalGap(deviceHeight * percentGapMedium),
                   ],
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -134,7 +133,7 @@ class PeoplePage extends GetView<AttendanceController> {
                     thickness: 1,
                     color: colorScheme.primary,
                   ),
-                  verticalGap(height * percentGapSmall),
+                  verticalGap(deviceHeight * percentGapSmall),
                   Flexible(
                     child: ListView.builder(
                       physics: const NeverScrollableScrollPhysics(),
@@ -259,17 +258,19 @@ class PeoplePage extends GetView<AttendanceController> {
                         ),
                       ),
                     ),
-              horizontalGap(width * percentGapLarge),
+              horizontalGap(deviceWidth * percentGapLarge),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     user.name,
-                    style: textTheme.bodyMedium!,
+                    style: textTheme.bodyMedium!.copyWith(
+                      color: textColorDefault,
+                    ),
                   ),
                   Text(
                     forTeacher ? user.designation : user.userId,
-                    style: textTheme.bodySmall,
+                    style: textTheme.bodySmall!.copyWith(color: textColorLight),
                   ),
                 ],
               ),
@@ -285,7 +286,9 @@ class PeoplePage extends GetView<AttendanceController> {
                     ),
                     Text(
                       status,
-                      style: textTheme.labelSmall,
+                      style: textTheme.labelSmall!.copyWith(
+                        color: textColorDefault,
+                      ),
                     ),
                   ],
                 )
@@ -326,7 +329,7 @@ class PeoplePage extends GetView<AttendanceController> {
       ),
       SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(height * percentGapMedium),
+          padding: EdgeInsets.all(deviceHeight * percentGapMedium),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -360,26 +363,51 @@ class PeoplePage extends GetView<AttendanceController> {
                       ),
                     ),
                   ),
-                  horizontalGap(width * percentGapMedium),
+                  horizontalGap(deviceWidth * percentGapMedium),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         user.name,
-                        style: textTheme.titleMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
+                        style: textTheme.titleMedium!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColorDefault,
+                        ),
                       ),
                       Text(
                         user.userId,
-                        style: textTheme.bodyMedium,
+                        style: textTheme.bodyMedium!.copyWith(
+                          color: textColorDefault,
+                        ),
                       ),
-                      verticalGap(height * percentGapVerySmall),
+                      if (user.batch != '') ...[
+                        verticalGap(deviceHeight * percentGapVerySmall),
+                        Row(
+                          children: [
+                            Text(
+                              'Batch: ',
+                              style: textTheme.bodySmall!.copyWith(
+                                color: textColorLight,
+                              ),
+                            ),
+                            Text(
+                              user.batch,
+                              style: textTheme.bodySmall!.copyWith(
+                                color: textColorDefault,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      verticalGap(deviceHeight * percentGapVerySmall),
                       Row(
                         children: [
                           Text(
                             'Attendance: ',
-                            style: textTheme.bodySmall,
+                            style: textTheme.bodySmall!.copyWith(
+                              color: textColorLight,
+                            ),
                           ),
                           Text(
                             '${(percent * 100).toStringAsFixed(0)}% | $status',
@@ -387,12 +415,14 @@ class PeoplePage extends GetView<AttendanceController> {
                           ),
                         ],
                       ),
-                      verticalGap(height * percentGapVerySmall),
+                      verticalGap(deviceHeight * percentGapVerySmall),
                       Row(
                         children: [
                           Text(
                             'Missed Class: ',
-                            style: textTheme.bodySmall,
+                            style: textTheme.bodySmall!.copyWith(
+                              color: textColorLight,
+                            ),
                           ),
                           Text(
                             '$missedClasses/$totalClasses',
@@ -404,7 +434,7 @@ class PeoplePage extends GetView<AttendanceController> {
                   ),
                 ],
               ),
-              verticalGap(height * percentGapMedium),
+              verticalGap(deviceHeight * percentGapMedium),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -414,12 +444,16 @@ class PeoplePage extends GetView<AttendanceController> {
                     children: [
                       Text(
                         'Mobile',
-                        style: textTheme.bodySmall,
+                        style: textTheme.bodySmall!.copyWith(
+                          color: textColorLight,
+                        ),
                       ),
-                      verticalGap(height * percentGapVerySmall),
+                      verticalGap(deviceHeight * percentGapVerySmall),
                       Text(
                         user.mobile == '' ? 'Number not set' : user.mobile,
-                        style: textTheme.bodyMedium,
+                        style: textTheme.bodyMedium!.copyWith(
+                          color: textColorDefault,
+                        ),
                       ),
                     ],
                   ),
@@ -451,10 +485,12 @@ class PeoplePage extends GetView<AttendanceController> {
                   ),
                 ],
               ),
-              verticalGap(height * percentGapMedium),
+              verticalGap(deviceHeight * percentGapMedium),
               Text(
                 'Set Role',
-                style: textTheme.bodySmall,
+                style: textTheme.bodySmall!.copyWith(
+                  color: textColorLight,
+                ),
               ),
               Obx(() {
                 return Column(
@@ -495,13 +531,13 @@ class PeoplePage extends GetView<AttendanceController> {
                   ],
                 );
               }),
-              verticalGap(height * percentGapMedium),
+              verticalGap(deviceHeight * percentGapMedium),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CustomButton(
-                    height: height * 0.05,
-                    width: width * 0.4,
+                    height: deviceHeight * 0.05,
+                    width: deviceWidth * 0.4,
                     backgroundColor: colorScheme.onSurface,
                     textColor: colorScheme.surface,
                     text: 'Cancel',
@@ -510,8 +546,8 @@ class PeoplePage extends GetView<AttendanceController> {
                     },
                   ),
                   CustomButton(
-                    height: height * 0.05,
-                    width: width * 0.4,
+                    height: deviceHeight * 0.05,
+                    width: deviceWidth * 0.4,
                     text: 'Confirm',
                     onPressed: () async {
                       if (controller.classroomData.isArchived) {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import '../../helper/constants.dart';
 
 class CustomTextFormField extends StatelessWidget {
@@ -24,7 +24,8 @@ class CustomTextFormField extends StatelessWidget {
     this.focusNode,
     this.onSubmitted,
     this.onTap,
-    this.maxLength, this.maxLines,
+    this.maxLength,
+    this.maxLines,
   }) : super(key: key);
 
   final String? hintText;
@@ -51,8 +52,6 @@ class CustomTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
@@ -61,23 +60,24 @@ class CustomTextFormField extends StatelessWidget {
       onFieldSubmitted: onSubmitted,
       onTap: onTap,
       style: enabled
-          ? style
-          : textTheme.bodyMedium!
-              .copyWith(color: colorScheme.onBackground.withOpacity(0.6)),
+          ? style ?? textTheme.bodyMedium!.copyWith(color: textColorDefault)
+          : textTheme.bodyMedium!.copyWith(color: textColorLight),
       enabled: enabled,
       readOnly: readOnly,
       focusNode: focusNode,
       maxLength: maxLength,
-      maxLines: maxLines??1,
+      maxLines: maxLines ?? 1,
       decoration: InputDecoration(
         contentPadding: contentPadding ??
             const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         filled: fillColor == null ? false : true,
         fillColor: fillColor,
         hintText: hintText,
-        hintStyle: hintStyle ?? textTheme.titleSmall,
+        hintStyle: hintStyle ??
+            textTheme.titleSmall!.copyWith(color: textColorDefault),
         labelText: labelText,
-        labelStyle: labelStyle ?? textTheme.titleSmall,
+        labelStyle: labelStyle ??
+            textTheme.titleSmall!.copyWith(color: textColorDefault),
         isDense: true,
         alignLabelWithHint: true,
         icon: icon,

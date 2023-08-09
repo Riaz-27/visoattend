@@ -42,12 +42,13 @@ class RecognitionController extends GetxController {
     final interpreterAddress = recognitionService.interpreterAddress;
     final pres = DateTime.now().millisecondsSinceEpoch;
     final result = await recognitionIsolateForFirestore(
-        interpreterAddress: interpreterAddress,
-        cameraImage: cameraImage,
-        faces: faces,
-        isRegistration: isRegistration,
-        users: users,
-        cameraLensDirection: cameraLensDirection);
+      interpreterAddress: interpreterAddress,
+      cameraImage: cameraImage,
+      faces: faces,
+      isRegistration: isRegistration,
+      users: users,
+      cameraLensDirection: cameraLensDirection,
+    );
     _performedRecognition(true);
     if (!isRegistration) {
       _recognitionResults.value = result;

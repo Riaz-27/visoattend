@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/controller/classroom_controller.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
-import 'package:visoattend/controller/leave_request_controller.dart';
-import 'package:visoattend/helper/constants.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/pages/detailed_classroom_page.dart';
-import 'package:visoattend/views/pages/detailed_home_page.dart';
-import 'package:visoattend/views/pages/home_page.dart';
 
-import '../../models/classroom_model.dart';
-import '../widgets/custom_button.dart';
+import '../../controller/attendance_controller.dart';
+import '../../controller/classroom_controller.dart';
+import '../../controller/cloud_firestore_controller.dart';
+import '../../helper/constants.dart';
+import '../../helper/functions.dart';
+import '../../views/pages/detailed_classroom_page.dart';
+import '../../views/pages/detailed_home_page.dart';
 
 class CreateEditClassroomPage extends StatelessWidget {
   const CreateEditClassroomPage({
@@ -64,8 +60,6 @@ class CreateEditClassroomPage extends StatelessWidget {
     final currentUser = Get.find<CloudFirestoreController>().currentUser;
     final currentUserRole = Get.find<AttendanceController>().currentUserRole;
 
-    final height = Get.height;
-
     if (isEdit) {
       classroomController.detailsExpanded = false;
 
@@ -110,11 +104,11 @@ class CreateEditClassroomPage extends StatelessWidget {
       children: [
         Text(
           courseTitleController.text,
-          style: textTheme.bodyMedium,
+          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
         ),
         Text(
           courseCodeController.text,
-          style: textTheme.bodySmall,
+          style: textTheme.bodySmall!.copyWith(color: textColorLight),
         ),
       ],
     );
@@ -126,7 +120,7 @@ class CreateEditClassroomPage extends StatelessWidget {
         forceMaterialTransparency: true,
         title: Text(
           isEdit ? 'Edit Classroom' : 'Create Classroom',
-          style: Get.textTheme.bodyLarge,
+          style: textTheme.bodyLarge!.copyWith(color: textColorDefault),
         ),
         actions: [
           classroom.isArchived
@@ -137,7 +131,7 @@ class CreateEditClassroomPage extends StatelessWidget {
 
                     final courseCode = courseCodeController.text.trim();
                     final courseTitle = courseTitleController.text.trim();
-                    if (courseTitle.isEmpty || courseTitle.isEmpty) {
+                    if (courseTitle.isEmpty || courseCode.isEmpty) {
                       return;
                     }
                     if (isEdit) {
@@ -150,9 +144,9 @@ class CreateEditClassroomPage extends StatelessWidget {
                           classroomController.selectedWeekTimes;
                       await classroomController.updateClassroom(classroom);
                       Get.back();
-                      Get.back();
-                      Get.to(() =>
-                          DetailedClassroomPage(classroomData: classroom));
+                      // Get.back();
+                      // Get.to(() =>
+                      //     DetailedClassroomPage(classroomData: classroom));
                     } else if (!isEdit) {
                       await classroomController.createNewClassroom(
                         courseCode: courseCode,
@@ -168,10 +162,10 @@ class CreateEditClassroomPage extends StatelessWidget {
                     margin: isEdit && currentUserRole == 'Teacher'
                         ? EdgeInsets.zero
                         : EdgeInsets.symmetric(
-                            horizontal: width * percentGapLarge),
+                            horizontal: deviceWidth * percentGapLarge),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(100),
-                      color: Get.theme.colorScheme.secondaryContainer,
+                      color: colorScheme.secondaryContainer,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -180,8 +174,8 @@ class CreateEditClassroomPage extends StatelessWidget {
                       ),
                       child: Text(
                         isEdit ? 'Save' : 'Create',
-                        style: Get.textTheme.bodySmall!.copyWith(
-                          color: Get.theme.colorScheme.onSecondaryContainer,
+                        style: textTheme.bodySmall!.copyWith(
+                          color: colorScheme.onSecondaryContainer,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -230,13 +224,19 @@ class CreateEditClassroomPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: height * percentGapSmall),
+          padding:
+              EdgeInsets.symmetric(horizontal: deviceHeight * percentGapSmall),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Classroom Details', style: textTheme.bodySmall),
-              verticalGap(height * percentGapSmall),
+              Text(
+                'Classroom Details',
+                style: textTheme.bodySmall!.copyWith(
+                  color: textColorLight,
+                ),
+              ),
+              verticalGap(deviceHeight * percentGapSmall),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
@@ -250,8 +250,9 @@ class CreateEditClassroomPage extends StatelessWidget {
                   dense: true,
                   child: Theme(
                     data: Get.theme.copyWith(
-                        dividerColor: Colors.transparent,
-                        splashColor: Colors.transparent),
+                      dividerColor: Colors.transparent,
+                      splashColor: Colors.transparent,
+                    ),
                     child: Obx(() {
                       final classroomController =
                           Get.find<ClassroomController>();
@@ -270,53 +271,69 @@ class CreateEditClassroomPage extends StatelessWidget {
                             enabled: isEdit && userRole == 'CR' ? false : true,
                             readOnly: classroom.isArchived,
                             controller: courseTitleController,
-                            style: textTheme.bodyMedium,
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: textColorDefault,
+                            ),
                             decoration: InputDecoration(
                               labelText:
                                   'Course Title (e.g. Project / Thesis) *',
-                              labelStyle: Get.textTheme.bodyMedium,
+                              labelStyle: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                               alignLabelWithHint: true,
                               isDense: true,
                             ),
                           ),
-                          verticalGap(height * percentGapVerySmall),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           TextField(
                             enabled: isEdit && userRole == 'CR' ? false : true,
                             readOnly: classroom.isArchived,
                             controller: courseCodeController,
-                            style: textTheme.bodyMedium,
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: textColorDefault,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Course Code (e.g. CSE-4800) *',
-                              labelStyle: Get.textTheme.bodyMedium,
+                              labelStyle: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                               isDense: true,
                               alignLabelWithHint: true,
                             ),
                           ),
-                          verticalGap(height * percentGapVerySmall),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           TextField(
                             readOnly: classroom.isArchived,
                             controller: sectionController,
-                            style: textTheme.bodyMedium,
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: textColorDefault,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Section (e.g. 8BM)',
-                              labelStyle: Get.textTheme.bodyMedium,
+                              labelStyle: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                               isDense: true,
                               alignLabelWithHint: true,
                             ),
                           ),
-                          verticalGap(height * percentGapVerySmall),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           TextField(
                             readOnly: classroom.isArchived,
                             controller: sessionController,
-                            style: textTheme.bodyMedium,
+                            style: textTheme.bodyMedium!.copyWith(
+                              color: textColorDefault,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Session (e.g. Spring-2022, Batch-47)',
-                              labelStyle: Get.textTheme.bodyMedium,
+                              labelStyle: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                               isDense: true,
                               alignLabelWithHint: true,
                             ),
                           ),
-                          verticalGap(height * percentGapVerySmall),
+                          verticalGap(deviceHeight * percentGapVerySmall),
                           Autocomplete<String>(
                             optionsBuilder: (textEditingValue) {
                               if (textEditingValue.text == '') {
@@ -332,14 +349,19 @@ class CreateEditClassroomPage extends StatelessWidget {
                             },
                             fieldViewBuilder: (context, fieldController,
                                 focusNode, onSubmitted) {
+                              fieldController.text = departmentController.text;
                               return TextField(
                                 readOnly: classroom.isArchived,
                                 controller: fieldController,
-                                style: textTheme.bodyMedium,
+                                style: textTheme.bodyMedium!.copyWith(
+                                  color: textColorDefault,
+                                ),
                                 focusNode: focusNode,
                                 decoration: InputDecoration(
                                   labelText: 'Department',
-                                  labelStyle: Get.textTheme.bodyMedium,
+                                  labelStyle: textTheme.bodyMedium!.copyWith(
+                                    color: textColorDefault,
+                                  ),
                                   isDense: true,
                                   alignLabelWithHint: true,
                                 ),
@@ -352,8 +374,9 @@ class CreateEditClassroomPage extends StatelessWidget {
                                 child: Material(
                                   child: Container(
                                     margin: EdgeInsets.only(
-                                        top: height * percentGapVerySmall),
-                                    width: width * 0.85,
+                                        top:
+                                            deviceHeight * percentGapVerySmall),
+                                    width: deviceWidth * 0.85,
                                     decoration: BoxDecoration(
                                         color: colorScheme.surfaceVariant
                                             .withOpacity(0.7),
@@ -379,8 +402,13 @@ class CreateEditClassroomPage extends StatelessWidget {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               verticalGap(10),
-                                              Text(option,
-                                                  style: textTheme.bodyMedium),
+                                              Text(
+                                                option,
+                                                style: textTheme.bodyMedium!
+                                                    .copyWith(
+                                                  color: textColorDefault,
+                                                ),
+                                              ),
                                               verticalGap(10),
                                               if (index <
                                                   optionsData.length - 1)
@@ -412,12 +440,14 @@ class CreateEditClassroomPage extends StatelessWidget {
                   ),
                 ),
               ),
-              verticalGap(height * percentGapMedium),
+              verticalGap(deviceHeight * percentGapMedium),
               Text(
                 'Weekly class details',
-                style: textTheme.bodySmall,
+                style: textTheme.bodySmall!.copyWith(
+                  color: textColorLight,
+                ),
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               Flexible(
                 child: ListView.builder(
                   padding: classroom.isArchived
@@ -436,7 +466,7 @@ class CreateEditClassroomPage extends StatelessWidget {
                   },
                 ),
               ),
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
             ],
           ),
         ),
@@ -454,14 +484,16 @@ void _handleClassArchiveRestore(BuildContext context, {required bool archive}) {
       return AlertDialog(
         title: Text(
           archive ? 'Archive Classroom' : 'Restore Classroom',
-          style:
-              Get.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: textColorDefault,
+          ),
         ),
         content: SizedBox(
-          width: Get.width,
+          width: deviceWidth,
           child: Text(
             'Do you really want to ${archive ? 'archive' : 'restore'} this classroom?',
-            style: Get.textTheme.bodyMedium,
+            style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
           ),
         ),
         actions: [
@@ -502,26 +534,27 @@ void _handleClassDelete(
       return AlertDialog(
         title: Text(
           'Delete Classroom',
-          style:
-              Get.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: textColorDefault,
+          ),
         ),
         content: SizedBox(
-          width: Get.width,
+          width: deviceWidth,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Remember This process cannot be undone.',
-                style: Get.textTheme.bodyMedium!
-                    .copyWith(color: colorScheme.error),
+                style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
               ),
-              verticalGap(Get.height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               Text(
                 'Enter the Course Title to confirm',
-                style: Get.textTheme.bodyMedium,
+                style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
               ),
-              verticalGap(Get.height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               TextField(
                 controller: deleteController,
                 decoration: InputDecoration(
@@ -564,10 +597,22 @@ Future<void> _selectTime(BuildContext context, int index,
   final weekDay = classroomController.weekDays[index];
   final weekStartTimes = List.generate(7, (index) => TimeOfDay.now());
   final weekEndTimes = List.generate(7, (index) => TimeOfDay.now());
+  TimeOfDay initialTime = TimeOfDay.now();
+  if (isEndTime && classroomController.selectedEndTimes[index] != 'Off Day') {
+    final selectedTime =
+        DateTime.parse(classroomController.selectedEndTimes[index]);
+    initialTime = TimeOfDay.fromDateTime(selectedTime);
+  } else if (!isEndTime &&
+      classroomController.selectedStartTimes[index] != 'Off Day') {
+    final selectedTime =
+        DateTime.parse(classroomController.selectedStartTimes[index]);
+    initialTime = TimeOfDay.fromDateTime(selectedTime);
+  }
+
   final TimeOfDay? picked = await showTimePicker(
     helpText: isEndTime ? 'Select End Time' : 'Select Start Time',
     context: context,
-    initialTime: isEndTime ? weekEndTimes[index] : weekStartTimes[index],
+    initialTime: initialTime,
   );
 
   if (picked != null) {
@@ -578,7 +623,7 @@ Future<void> _selectTime(BuildContext context, int index,
     if (isEndTime) {
       weekEndTimes[index] = picked;
       if (classroomController.selectedStartTimes[index] == 'Off Day') {
-        final reducedDateTime = dateTime.add(const Duration(minutes: -40));
+        final reducedDateTime = dateTime.add(const Duration(minutes: -50));
         weekStartTimes[index] = TimeOfDay.fromDateTime(reducedDateTime);
         classroomController.selectedStartTimes[index] =
             reducedDateTime.toString();
@@ -590,7 +635,7 @@ Future<void> _selectTime(BuildContext context, int index,
     } else {
       weekStartTimes[index] = picked;
       if (classroomController.selectedEndTimes[index] == 'Off Day') {
-        final addedDateTime = dateTime.add(const Duration(minutes: 40));
+        final addedDateTime = dateTime.add(const Duration(minutes: 50));
         weekEndTimes[index] = TimeOfDay.fromDateTime(addedDateTime);
         classroomController.selectedEndTimes[index] = addedDateTime.toString();
       } else {
@@ -637,9 +682,6 @@ Widget _buildWeekTimeList(
   final classroomController = Get.find<ClassroomController>();
 
   final classroom = Get.find<AttendanceController>().classroomData;
-
-  final height = Get.height;
-  final width = Get.width;
 
   final weekName = classroomController.weekDays[index];
 
@@ -698,16 +740,14 @@ Widget _buildWeekTimeList(
               Text(
                 weekName,
                 style: classroomController.selectedWeeks[index]
-                    ? textTheme.bodyMedium
-                    : textTheme.bodyMedium!.copyWith(
-                        color: colorScheme.onBackground.withOpacity(0.6)),
+                    ? textTheme.bodyMedium!.copyWith(color: textColorDefault)
+                    : textTheme.bodyMedium!.copyWith(color: textColorLight),
               ),
               Text(
                 startTimeString == 'Off Day'
                     ? 'No class'
                     : '$startTimeString - $endTimeString',
-                style: textTheme.labelSmall!
-                    .copyWith(color: colorScheme.onBackground.withOpacity(0.6)),
+                style: textTheme.labelSmall!.copyWith(color: textColorLight),
               ),
             ],
           ),
@@ -744,10 +784,10 @@ Widget _buildWeekTimeList(
             ),
           ),
           children: [
-            verticalGap(height * percentGapVerySmall),
+            verticalGap(deviceHeight * percentGapVerySmall),
             Row(
               children: [
-                horizontalGap(width * 0.05),
+                horizontalGap(deviceWidth * 0.05),
                 Flexible(
                   flex: 1,
                   child: TextField(
@@ -765,13 +805,15 @@ Widget _buildWeekTimeList(
                       ),
                     ),
                     textAlign: TextAlign.center,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                   ),
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 const Text('-'),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Flexible(
                   flex: 1,
                   child: TextField(
@@ -790,17 +832,19 @@ Widget _buildWeekTimeList(
                       ),
                     ),
                     textAlign: TextAlign.center,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                   ),
                 ),
-                horizontalGap(width * 0.05),
+                horizontalGap(deviceWidth * 0.05),
               ],
             ),
-            verticalGap(height * percentGapSmall),
+            verticalGap(deviceHeight * percentGapSmall),
             Row(
               children: [
-                horizontalGap(width * 0.05),
+                horizontalGap(deviceWidth * 0.05),
                 Flexible(
                   flex: 1,
                   child: TextField(
@@ -811,23 +855,27 @@ Widget _buildWeekTimeList(
                       contentPadding: const EdgeInsets.all(8),
                       isDense: true,
                       labelText: 'Room No',
-                      labelStyle: Get.textTheme.labelMedium,
+                      labelStyle: textTheme.labelMedium!.copyWith(
+                        color: textColorDefault,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     textAlign: TextAlign.start,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                     onChanged: (value) {
                       classroomController.selectedWeekTimes[weekName]['room'] =
                           roomNoController[index].text.trim();
                     },
                   ),
                 ),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 const Text(' '),
-                horizontalGap(width * percentGapSmall),
+                horizontalGap(deviceWidth * percentGapSmall),
                 Flexible(
                   flex: 1,
                   child: TextField(
@@ -838,7 +886,9 @@ Widget _buildWeekTimeList(
                       contentPadding: const EdgeInsets.all(8),
                       isDense: true,
                       labelText: 'Class Count',
-                      labelStyle: Get.textTheme.labelMedium,
+                      labelStyle: textTheme.labelMedium!.copyWith(
+                        color: textColorDefault,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -846,8 +896,10 @@ Widget _buildWeekTimeList(
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     textAlign: TextAlign.start,
-                    style: Get.textTheme.labelMedium!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.labelMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                     onChanged: (value) {
                       if (value == '' || value == '0') {
                         classroomController.selectedWeekTimes[weekName]
@@ -860,10 +912,10 @@ Widget _buildWeekTimeList(
                     },
                   ),
                 ),
-                horizontalGap(width * 0.05),
+                horizontalGap(deviceWidth * 0.05),
               ],
             ),
-            verticalGap(height * percentGapSmall),
+            verticalGap(deviceHeight * percentGapSmall),
           ],
         ),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 import '../../helper/constants.dart';
 import '../../helper/functions.dart';
@@ -38,10 +37,6 @@ class CustomInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
-    final height = Get.height;
-    final width = Get.width;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -53,10 +48,10 @@ class CustomInput extends StatelessWidget {
           child: Text(
             title,
             style: textTheme.bodyMedium!
-                .copyWith(color: textTheme.bodySmall!.color),
+                .copyWith(color: textColorLight),
           ),
         ),
-        verticalGap(height * percentGapVerySmall),
+        verticalGap(deviceHeight * percentGapVerySmall),
         CustomTextFormField(
           controller: controller,
           enabled: enableTextField,
@@ -71,7 +66,7 @@ class CustomInput extends StatelessWidget {
           borderRadius: borderRadius,
           contentPadding:
               const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-          style: textTheme.bodyMedium,
+          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
           isPassword: isPassword,
           fillColor: colorScheme.surfaceVariant.withOpacity(0.4),
         ),

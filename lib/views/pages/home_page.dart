@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:visoattend/views/widgets/shimmer_loading.dart';
 
+import '../../views/widgets/shimmer_loading.dart';
 import '../../helper/functions.dart';
 import '../../models/classroom_model.dart';
 import '../../controller/cloud_firestore_controller.dart';
@@ -31,8 +31,8 @@ class HomePage extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: EdgeInsets.only(
-                right: height * percentGapSmall,
-                left: height * percentGapSmall,
+                right: deviceHeight * percentGapSmall,
+                left: deviceHeight * percentGapSmall,
               ),
               child: Obx(
                 () {
@@ -42,7 +42,7 @@ class HomePage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            verticalGap(height * percentGapSmall),
+                            verticalGap(deviceHeight * percentGapSmall),
                             // Running Class UI
                             Obx(() {
                               final classTimes =
@@ -59,11 +59,13 @@ class HomePage extends StatelessWidget {
                                           ? "Running Class"
                                           : "Next Class",
                                       style: textTheme.titleSmall!.copyWith(
-                                          fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
+                                        color: textColorDefault,
+                                      ),
                                     )
                                   : const SizedBox();
                             }),
-                            verticalGap(height * percentGapSmall),
+                            verticalGap(deviceHeight * percentGapSmall),
                             GestureDetector(
                               onTap: () {
                                 if (classroomList.isNotEmpty) {
@@ -77,7 +79,7 @@ class HomePage extends StatelessWidget {
                                   context: context,
                                   classroomList: classroomList),
                             ),
-                            verticalGap(height * percentGapMedium),
+                            verticalGap(deviceHeight * percentGapMedium),
                             Obx(() {
                               String nextDateString = '';
                               if (classroomList.isEmpty &&
@@ -103,31 +105,41 @@ class HomePage extends StatelessWidget {
                                     Text(
                                       'Next Class',
                                       style: textTheme.titleSmall!.copyWith(
-                                          fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
+                                        color: textColorDefault,
+                                      ),
                                     ),
                                     const Spacer(),
                                     Text(
                                       nextDateString,
                                       style: textTheme.bodySmall!.copyWith(
-                                          fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
+                                        color: textColorLight,
+                                      ),
                                     ),
                                   ],
                                 );
                               }
                               return Text(
                                 "Later Today",
-                                style: textTheme.titleSmall!
-                                    .copyWith(fontWeight: FontWeight.bold),
+                                style: textTheme.titleSmall!.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColorDefault,
+                                ),
                               );
                             }),
-                            verticalGap(height * percentGapSmall),
+                            verticalGap(deviceHeight * percentGapSmall),
                             if (classroomList.isNotEmpty)
                               Flexible(
                                 child: Obx(
                                   () {
                                     if (classroomList.length == 1) {
-                                      return const Text(
-                                          'No more classes today!');
+                                      return Text(
+                                        'No more classes today!',
+                                        style: textTheme.titleSmall!.copyWith(
+                                          color: textColorMedium,
+                                        ),
+                                      );
                                     }
                                     return ListView.builder(
                                       physics:
@@ -206,13 +218,13 @@ class HomePage extends StatelessWidget {
     final classSession = classroom.session.split(',').first;
 
     return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
-        padding: EdgeInsets.all(height * percentGapSmall),
+        padding: EdgeInsets.all(deviceHeight * percentGapSmall),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -258,14 +270,16 @@ class HomePage extends StatelessWidget {
                     children: [
                       Text(
                         classroom.courseTitle,
-                        style: textTheme.titleSmall!
-                            .copyWith(fontWeight: FontWeight.bold),
+                        style: textTheme.titleSmall!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColorDefault,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Obx(() {
                         final cloudFirestoreController =
                             Get.find<CloudFirestoreController>();
-                        if(cloudFirestoreController.timeLeftToStart.isEmpty){
+                        if (cloudFirestoreController.timeLeftToStart.isEmpty) {
                           return const SizedBox();
                         }
                         final timeLeft =
@@ -296,7 +310,7 @@ class HomePage extends StatelessWidget {
                       }),
                     ],
                   ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   // Text(
                   //   classroom.courseCode,
                   //   style: textTheme.titleSmall!.copyWith(
@@ -305,8 +319,8 @@ class HomePage extends StatelessWidget {
                   // ),
                   Text(
                     '$startTime - $endTime',
-                    style: Get.textTheme.titleSmall!.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.8),
+                    style: textTheme.titleSmall!.copyWith(
+                      color: textColorMedium,
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -380,13 +394,13 @@ class HomePage extends StatelessWidget {
     final endTime = DateFormat.jm().format(DateTime.parse(weekEndTime));
 
     return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: colorScheme.surfaceVariant.withAlpha(100),
       ),
       child: Padding(
-        padding: EdgeInsets.all(height * percentGapSmall),
+        padding: EdgeInsets.all(deviceHeight * percentGapSmall),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -407,15 +421,17 @@ class HomePage extends StatelessWidget {
                   // verticalGap(height * percentGapVerySmall),
                   Text(
                     classroom.courseTitle,
-                    style: textTheme.titleSmall!
-                        .copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColorDefault,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  verticalGap(height * percentGapVerySmall),
+                  verticalGap(deviceHeight * percentGapVerySmall),
                   Text(
                     '$startTime - $endTime',
-                    style: Get.textTheme.titleSmall!.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.8),
+                    style: textTheme.titleSmall!.copyWith(
+                      color: textColorMedium,
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -441,7 +457,7 @@ class HomePage extends StatelessWidget {
   Widget _customClassroomTag(
       {Color? bgColor, Color? textColor, required String text}) {
     return Container(
-      margin: EdgeInsets.only(top: height * percentGapSmall, right: 10),
+      margin: EdgeInsets.only(top: deviceHeight * percentGapSmall, right: 10),
       padding: const EdgeInsets.symmetric(
         vertical: 5,
         horizontal: 8,
@@ -453,8 +469,7 @@ class HomePage extends StatelessWidget {
       child: Text(
         text,
         style: textTheme.labelMedium!.copyWith(
-            color: textColor ?? colorScheme.onSurface.withOpacity(0.8),
-            fontWeight: FontWeight.bold),
+            color: textColor ?? textColorMedium, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -463,9 +478,6 @@ class HomePage extends StatelessWidget {
     required BuildContext context,
     required List<ClassroomModel> classroomList,
   }) {
-    final height = Get.height;
-    final width = Get.width;
-
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
     return Obx(() {
@@ -557,8 +569,8 @@ class HomePage extends StatelessWidget {
         padding: EdgeInsets.only(
           top: 3,
           bottom: 15,
-          left: height * percentGapSmall,
-          right: height * percentGapSmall,
+          left: deviceHeight * percentGapSmall,
+          right: deviceHeight * percentGapSmall,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -569,14 +581,14 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                horizontalGap(width * percentGapVerySmall),
+                horizontalGap(deviceWidth * percentGapVerySmall),
                 if (!cloudFirestoreController.isHoliday &&
                     classroomList.isNotEmpty)
                   Column(
                     children: [
-                      verticalGap(height * percentGapSmall),
+                      verticalGap(deviceHeight * percentGapSmall),
                       CircularPercentIndicator(
-                        radius: height * 0.07,
+                        radius: deviceHeight * 0.07,
                         lineWidth: 11,
                         percent: percent,
                         circularStrokeCap: CircularStrokeCap.round,
@@ -588,7 +600,9 @@ class HomePage extends StatelessWidget {
                           children: [
                             Text(
                               percentText,
-                              style: textTheme.titleLarge,
+                              style: textTheme.titleLarge!.copyWith(
+                                color: textColorDefault,
+                              ),
                             ),
                             Text(
                               status,
@@ -600,49 +614,58 @@ class HomePage extends StatelessWidget {
                       ),
                     ],
                   ),
-                horizontalGap(width * 0.05),
+                horizontalGap(deviceWidth * 0.05),
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      verticalGap(height * percentGapSmall),
+                      verticalGap(deviceHeight * percentGapSmall),
                       Text(
-                        cloudFirestoreController.isHoliday
-                            ? 'Looks like its a Holiday!'
-                            : classroomList.isEmpty
-                                ? 'No more classes today'
-                                : classroom.courseTitle,
-                        style: textTheme.labelMedium!
-                            .copyWith(fontWeight: FontWeight.bold),
+                        cloudFirestoreController.currentUser.classrooms.isEmpty
+                            ? 'Welcome to VisoAttend!'
+                            : cloudFirestoreController.isHoliday
+                                ? 'Looks like its a Holiday!'
+                                : classroomList.isEmpty
+                                    ? 'No more classes today'
+                                    : classroom.courseTitle,
+                        style: textTheme.labelMedium!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColorDefault,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      verticalGap(height * percentGapVerySmall),
+                      verticalGap(deviceHeight * percentGapVerySmall),
                       Row(
                         children: [
                           Text(
-                            cloudFirestoreController.isHoliday
+                            cloudFirestoreController.currentUser.classrooms.isEmpty
+                                ? "Create or Join your first classroom."
+                                : cloudFirestoreController.isHoliday
                                 ? 'Enjoy your Holiday!'
                                 : classroom.courseCode,
-                            style: textTheme.labelMedium,
+                            style: textTheme.labelMedium!.copyWith(
+                              color: textColorDefault,
+                            ),
                           ),
                           if (classroomList.isNotEmpty) ...[
-                            horizontalGap(width * percentGapSmall),
+                            horizontalGap(deviceWidth * percentGapSmall),
                             Text(
                               'Section: ',
-                              style: textTheme.labelSmall!.copyWith(
-                                  color:
-                                      colorScheme.onBackground.withAlpha(150)),
+                              style: textTheme.labelSmall!
+                                  .copyWith(color: textColorLight),
                             ),
                             Text(
                               classroom.section,
-                              style: textTheme.labelMedium,
+                              style: textTheme.labelMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
                             ),
                           ]
                         ],
                       ),
                       if (classroomList.isNotEmpty) ...[
-                        verticalGap(height * percentGapSmall),
+                        verticalGap(deviceHeight * percentGapSmall),
                         Row(
                           children: [
                             if (roomNo != '') ...[
@@ -653,17 +676,18 @@ class HomePage extends StatelessWidget {
                               Text(
                                 'Room No: ',
                                 style: textTheme.labelSmall!.copyWith(
-                                    color: colorScheme.onBackground
-                                        .withAlpha(150)),
+                                  color: textColorLight,
+                                ),
                               ),
                               Text(
                                 roomNo,
-                                style: textTheme.labelMedium,
+                                style: textTheme.labelMedium!
+                                    .copyWith(color: textColorDefault),
                               ),
                             ]
                           ],
                         ),
-                        verticalGap(height * percentGapSmall),
+                        verticalGap(deviceHeight * percentGapSmall),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -673,14 +697,15 @@ class HomePage extends StatelessWidget {
                                 Text(
                                   isRunning ? 'Started' : 'Starts at',
                                   style: textTheme.labelSmall!.copyWith(
-                                    color:
-                                        colorScheme.onBackground.withAlpha(150),
+                                    color: textColorLight,
                                   ),
                                 ),
-                                verticalGap(height * percentGapVerySmall),
+                                verticalGap(deviceHeight * percentGapVerySmall),
                                 Text(
                                   startTime,
-                                  style: textTheme.labelMedium,
+                                  style: textTheme.labelMedium!.copyWith(
+                                    color: textColorDefault,
+                                  ),
                                 ),
                                 // Text(
                                 //   startTimeLeftText,
@@ -690,21 +715,21 @@ class HomePage extends StatelessWidget {
                                 // ),
                               ],
                             ),
-                            horizontalGap(height * percentGapLarge),
+                            horizontalGap(deviceHeight * percentGapLarge),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Ends at',
                                   style: textTheme.labelSmall!.copyWith(
-                                    color:
-                                        colorScheme.onBackground.withAlpha(150),
+                                    color: textColorLight,
                                   ),
                                 ),
-                                verticalGap(height * percentGapVerySmall),
+                                verticalGap(deviceHeight * percentGapVerySmall),
                                 Text(
                                   endTime,
-                                  style: textTheme.labelMedium,
+                                  style: textTheme.labelMedium!
+                                      .copyWith(color: textColorDefault),
                                 ),
                                 // Text(
                                 //   endTimeLeftText,
@@ -724,12 +749,12 @@ class HomePage extends StatelessWidget {
             ),
             if (!cloudFirestoreController.isHoliday &&
                 classroomList.isNotEmpty) ...[
-              verticalGap(height * percentGapSmall),
+              verticalGap(deviceHeight * percentGapSmall),
               Text(
                 timeLeftText,
-                style: textTheme.bodySmall!,
+                style: textTheme.bodySmall!.copyWith(color: textColorLight),
               ),
-              verticalGap(height * percentGapVerySmall),
+              verticalGap(deviceHeight * percentGapVerySmall),
               LinearPercentIndicator(
                 padding: EdgeInsets.zero,
                 animateFromLastPercent: true,
@@ -740,7 +765,7 @@ class HomePage extends StatelessWidget {
                 progressColor: colorScheme.primary,
                 backgroundColor: colorScheme.onBackground.withOpacity(0.1),
               ),
-              verticalGap(height * percentGapVerySmall),
+              verticalGap(deviceHeight * percentGapVerySmall),
             ],
           ],
         ),
@@ -753,9 +778,9 @@ class HomePage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        verticalGap(height * percentGapSmall),
+        verticalGap(deviceHeight * percentGapSmall),
         _loadingTopView(),
-        verticalGap(height * percentGapMedium),
+        verticalGap(deviceHeight * percentGapMedium),
         Flexible(
           child: ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
@@ -779,8 +804,8 @@ class HomePage extends StatelessWidget {
       padding: EdgeInsets.only(
         top: 3,
         bottom: 15,
-        left: height * percentGapSmall,
-        right: height * percentGapSmall,
+        left: deviceHeight * percentGapSmall,
+        right: deviceHeight * percentGapSmall,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -791,32 +816,33 @@ class HomePage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              horizontalGap(width * percentGapVerySmall),
+              horizontalGap(deviceWidth * percentGapVerySmall),
               Column(
                 children: [
-                  verticalGap(height * percentGapSmall),
+                  verticalGap(deviceHeight * percentGapSmall),
                   ShimmerLoading(
-                    height: height * 0.12,
-                    width: height * 0.12,
+                    height: deviceHeight * 0.12,
+                    width: deviceHeight * 0.12,
                     radius: 100,
                   )
                 ],
               ),
-              horizontalGap(width * 0.05),
+              horizontalGap(deviceWidth * 0.05),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    verticalGap(height * percentGapSmall),
-                    ShimmerLoading(width: width * 0.5, color: loadColorLight),
-                    verticalGap(height * percentGapVerySmall),
+                    verticalGap(deviceHeight * percentGapSmall),
                     ShimmerLoading(
-                      width: width * 0.3,
+                        width: deviceWidth * 0.5, color: loadColorLight),
+                    verticalGap(deviceHeight * percentGapVerySmall),
+                    ShimmerLoading(
+                      width: deviceWidth * 0.3,
                       height: 12,
                       color: loadColorLight,
                     ),
-                    verticalGap(height * percentGapSmall),
+                    verticalGap(deviceHeight * percentGapSmall),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -824,28 +850,28 @@ class HomePage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             ShimmerLoading(
-                              width: width * 0.16,
+                              width: deviceWidth * 0.16,
                               height: 10,
                             ),
-                            verticalGap(height * percentGapVerySmall),
+                            verticalGap(deviceHeight * percentGapVerySmall),
                             ShimmerLoading(
-                              width: width * 0.16,
+                              width: deviceWidth * 0.16,
                               height: 12,
                               color: loadColorLight,
                             ),
                           ],
                         ),
-                        horizontalGap(height * percentGapLarge),
+                        horizontalGap(deviceHeight * percentGapLarge),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             ShimmerLoading(
-                              width: width * 0.16,
+                              width: deviceWidth * 0.16,
                               height: 10,
                             ),
-                            verticalGap(height * percentGapVerySmall),
+                            verticalGap(deviceHeight * percentGapVerySmall),
                             ShimmerLoading(
-                              width: width * 0.16,
+                              width: deviceWidth * 0.16,
                               height: 12,
                               color: loadColorLight,
                             ),
@@ -858,15 +884,15 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-          verticalGap(height * percentGapSmall),
-          ShimmerLoading(height: 10, width: width * 0.2),
-          verticalGap(height * percentGapVerySmall),
+          verticalGap(deviceHeight * percentGapSmall),
+          ShimmerLoading(height: 10, width: deviceWidth * 0.2),
+          verticalGap(deviceHeight * percentGapVerySmall),
           ShimmerLoading(
             height: 6,
-            width: width,
+            width: deviceWidth,
             radius: 100,
           ),
-          verticalGap(height * percentGapVerySmall),
+          verticalGap(deviceHeight * percentGapVerySmall),
         ],
       ),
     );
@@ -874,13 +900,13 @@ class HomePage extends StatelessWidget {
 
   Widget _loadBuildCustomCard() {
     return Container(
-      margin: EdgeInsets.only(bottom: height * percentGapSmall),
+      margin: EdgeInsets.only(bottom: deviceHeight * percentGapSmall),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
         color: loadColor.withOpacity(0.04),
       ),
       child: Padding(
-        padding: EdgeInsets.all(height * percentGapSmall),
+        padding: EdgeInsets.all(deviceHeight * percentGapSmall),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -888,10 +914,11 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ShimmerLoading(width: width * 0.5, color: loadColorLight),
-                  verticalGap(height * percentGapVerySmall),
                   ShimmerLoading(
-                    width: width * 0.3,
+                      width: deviceWidth * 0.5, color: loadColorLight),
+                  verticalGap(deviceHeight * percentGapVerySmall),
+                  ShimmerLoading(
+                    width: deviceWidth * 0.3,
                     height: 14,
                   ),
                 ],

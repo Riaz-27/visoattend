@@ -15,8 +15,13 @@ const double percentGapVerySmall = 0.005;
 ///Theme data
 final colorScheme = Get.theme.colorScheme;
 final textTheme = Get.theme.textTheme;
-final height = Get.height;
-final width = Get.width;
+final deviceHeight = Get.height;
+final deviceWidth = Get.width;
 
+//some default color
 final loadColor = colorScheme.onSurface.withOpacity(0.15);
 final loadColorLight = colorScheme.onSurface.withOpacity(0.1);
+
+final textColorDefault = colorScheme.onBackground;
+final textColorMedium = colorScheme.onBackground.withOpacity(0.85);
+final textColorLight = colorScheme.onBackground.withOpacity(0.5);

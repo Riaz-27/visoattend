@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/views/pages/all_classroom_page.dart';
-import 'package:visoattend/views/pages/profile_pages/account_details_page.dart';
-import 'package:visoattend/views/pages/profile_pages/change_password_page.dart';
 
+import '../../../helper/functions.dart';
+import '../../../views/pages/profile_pages/account_details_page.dart';
+import '../../../views/pages/profile_pages/change_password_page.dart';
 import '../../../controller/auth_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../controller/profile_pic_controller.dart';
@@ -18,7 +17,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final profilePicController = Get.find<ProfilePicController>();
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
 
@@ -30,20 +28,20 @@ class ProfilePage extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Profile',
-          style: textTheme.titleMedium,
+          style: textTheme.titleMedium!.copyWith(color: textColorDefault),
         ),
       ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
-            right: height * percentGapSmall,
-            left: height * percentGapSmall,
+            right: deviceHeight * percentGapSmall,
+            left: deviceHeight * percentGapSmall,
           ),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                verticalGap(height * percentGapLarge),
+                verticalGap(deviceHeight * percentGapLarge),
                 //Center photo
                 Center(
                   child: Stack(
@@ -77,13 +75,14 @@ class ProfilePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 Text(
                   currentUser.name,
                   textAlign: TextAlign.center,
                   style: textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
+                    color: textColorDefault,
                   ),
                 ),
                 Text(
@@ -92,16 +91,16 @@ class ProfilePage extends StatelessWidget {
                   style: textTheme.titleSmall!.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1,
-                    color: textTheme.bodySmall!.color,
+                    color: textColorLight,
                   ),
                 ),
-                verticalGap(height * percentGapMedium),
+                verticalGap(deviceHeight * percentGapMedium),
                 Divider(
                   height: 0,
                   color: colorScheme.outline.withOpacity(0.4),
                   thickness: 1,
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 _optionsWidget(
                   onTap: () {
                     Get.to(
@@ -114,25 +113,25 @@ class ProfilePage extends StatelessWidget {
                   Icons.face_retouching_natural_outlined,
                   'Retrain Face Model',
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 _optionsWidget(
                   onTap: () => Get.to(() => const AccountDetailsPage()),
                   Icons.account_circle_rounded,
                   'Account Details',
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 _optionsWidget(
                   onTap: () => Get.to(() => const ChangePasswordPage()),
                   Icons.lock_outline_rounded,
                   'Change Password',
                 ),
-                verticalGap(height * percentGapMedium),
+                verticalGap(deviceHeight * percentGapMedium),
                 Divider(
                   height: 0,
                   color: colorScheme.outline.withOpacity(0.4),
                   thickness: 1,
                 ),
-                verticalGap(height * percentGapSmall),
+                verticalGap(deviceHeight * percentGapSmall),
                 _optionsWidget(
                   onTap: () => showConfirmDialog(context),
                   Icons.logout_rounded,
@@ -148,7 +147,6 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _handleImageChangeButton() {
-
     return Positioned(
       bottom: -3,
       right: -3,
@@ -202,7 +200,6 @@ class ProfilePage extends StatelessWidget {
 
   Widget _optionsWidget(IconData icon, String text,
       {Color? color, void Function()? onTap}) {
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -224,10 +221,10 @@ class ProfilePage extends StatelessWidget {
                   color: colorScheme.secondary,
                 ),
               ),
-              horizontalGap(width * percentGapMedium),
+              horizontalGap(deviceWidth * percentGapMedium),
               Text(
                 text,
-                style: textTheme.titleSmall!.copyWith(color: color),
+                style: textTheme.titleSmall!.copyWith(color: color?? textColorDefault),
               ),
               const Spacer(),
               const Icon(
@@ -248,14 +245,16 @@ class ProfilePage extends StatelessWidget {
         return AlertDialog(
           title: Text(
             'Logout',
-            style: textTheme.titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
           ),
           content: SizedBox(
-            width: Get.width,
+            width: deviceWidth,
             child: Text(
               'Do you really want to logout?',
-              style: textTheme.bodyMedium,
+              style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
             ),
           ),
           actions: [
@@ -269,8 +268,7 @@ class ProfilePage extends StatelessWidget {
               },
               child: Text(
                 'Yes',
-                style: textTheme.bodyMedium!
-                    .copyWith(color: colorScheme.error),
+                style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
               ),
             ),
             TextButton(

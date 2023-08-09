@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
+import '../../helper/constants.dart';
 
 class CustomButton extends StatelessWidget {
   const CustomButton({
@@ -27,11 +28,9 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Get.theme.colorScheme;
-    final textTheme = Get.theme.textTheme;
     return SizedBox(
-      width: width ?? Get.width,
-      height: height ?? Get.height * 0.06,
+      width: width ?? deviceWidth,
+      height: height ?? deviceHeight * 0.06,
       child: ElevatedButton(
         onLongPress: onLongPressed,
         onPressed: onPressed,

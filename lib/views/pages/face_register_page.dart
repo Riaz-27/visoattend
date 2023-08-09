@@ -1,11 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/controller/auth_controller.dart';
-import 'package:visoattend/views/pages/auth_page.dart';
-import 'package:visoattend/views/pages/classroom_pages/classroom_page.dart';
-import 'package:visoattend/views/pages/home_page.dart';
 
+import '../../controller/auth_controller.dart';
+import '../../views/pages/auth_page.dart';
 import '../../controller/face_detector_controller.dart';
 import '../../controller/camera_service_controller.dart';
 import '../../controller/user_database_controller.dart';
@@ -27,7 +25,6 @@ class FaceRegisterPage extends StatelessWidget {
       ..resetValues();
     cameraServiceController.isSignUp = true;
     final size = Get.size;
-    final colorScheme = Get.theme.colorScheme;
 
     List<Widget> stackChildren = [];
 
