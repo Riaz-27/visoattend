@@ -3,7 +3,6 @@ import 'dart:developer' as dev;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-
 import '../models/leave_request_model.dart';
 import '../models/attendance_model.dart';
 import '../models/classroom_model.dart';
@@ -57,6 +56,7 @@ class AttendanceController extends GetxController {
   final _isAttendanceLoading = false.obs;
 
   bool get isAttendanceLoading => _isAttendanceLoading.value;
+
   set isAttendanceLoading(value) => _isAttendanceLoading.value = value;
 
   @override
@@ -92,7 +92,7 @@ class AttendanceController extends GetxController {
     final classIndex = cloudFirestoreController.classrooms.indexWhere(
         (classroom) => classroom.classroomId == classroomData.classroomId);
 
-    if(classIndex < 0) return;
+    if (classIndex < 0) return;
 
     cloudFirestoreController.classrooms[classIndex] = classroomData;
     cloudFirestoreController.filterClassesOfToday();
@@ -329,14 +329,14 @@ class AttendanceController extends GetxController {
 
   AttendanceModel get selectedAttendance => _selectedAttendance.value;
 
+  set selectedAttendance(AttendanceModel value) =>
+      _selectedAttendance.value = value;
+
   final _selectedDateTime = DateTime.now().obs;
 
   DateTime get selectedDateTime => _selectedDateTime.value;
 
   set selectedDateTime(DateTime dateTime) => _selectedDateTime.value = dateTime;
-
-  set selectedAttendance(AttendanceModel value) =>
-      _selectedAttendance.value = value;
 
   final _allStudents = <UserModel>[].obs;
 
@@ -414,12 +414,16 @@ class AttendanceController extends GetxController {
     if (selectedCategory == '') {
       return;
     }
+    String finalCategory = _selectedCategory.value;
+    if (finalCategory.contains('Leave')) {
+      finalCategory = 'Present(Leave)';
+    }
 
     _filteredStudents.value = _filteredStudents
         .where(
           (student) =>
               _selectedAttendance.value.studentsData[student.authUid] ==
-              selectedCategory,
+              finalCategory,
         )
         .toList();
   }
@@ -446,6 +450,5 @@ class AttendanceController extends GetxController {
 
   void resetAllValues() {
     _selectedAttendance.value = AttendanceModel.empty();
-
   }
 }

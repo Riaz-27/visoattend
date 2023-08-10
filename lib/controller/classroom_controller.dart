@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:visoattend/controller/cloud_firestore_controller.dart';
 import 'package:visoattend/controller/leave_request_controller.dart';
 import 'package:visoattend/models/classroom_model.dart';
+import 'package:visoattend/models/user_model.dart';
 
 import 'attendance_controller.dart';
 
@@ -170,6 +171,11 @@ class ClassroomController extends GetxController {
 
   Future<void> leaveClassroom(ClassroomModel classroom) async {
     final cloudFirestoreController = Get.find<CloudFirestoreController>();
-    cloudFirestoreController.leaveClassroom(classroom);
+    await cloudFirestoreController.leaveClassroom(classroom);
+  }
+
+  Future<void> removeStudentFromClassroom(ClassroomModel classroom, UserModel studentData) async {
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+    await cloudFirestoreController.removeUserFromClassroom(classroom, studentData);
   }
 }

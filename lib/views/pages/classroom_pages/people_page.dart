@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../controller/classroom_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../views/widgets/custom_button.dart';
@@ -22,8 +23,7 @@ class PeoplePage extends GetView<AttendanceController> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          await controller.updateValues(controller.classroomData);
-          await controller.getUsersData();
+          await _reloadData();
         },
         child: SingleChildScrollView(
           child: Padding(
@@ -165,6 +165,11 @@ class PeoplePage extends GetView<AttendanceController> {
         ),
       ),
     );
+  }
+
+  Future<void> _reloadData() async {
+    await controller.updateValues(controller.classroomData);
+    await controller.getUsersData();
   }
 
   Widget _buildUsersList(
@@ -486,11 +491,38 @@ class PeoplePage extends GetView<AttendanceController> {
                 ],
               ),
               verticalGap(deviceHeight * percentGapMedium),
-              Text(
-                'Set Role',
-                style: textTheme.bodySmall!.copyWith(
-                  color: textColorLight,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Set Role',
+                    style: textTheme.bodySmall!.copyWith(
+                      color: textColorLight,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (user.classrooms[controller.classroomData.classroomId] ==
+                      'Student')
+                    GestureDetector(
+                      onTap: () {
+                        Get.back();
+                        _handleRemoveStudent(user);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Remove',
+                          style: textTheme.bodySmall!.copyWith(
+                            color: colorScheme.error,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               Obx(() {
                 return Column(
@@ -584,5 +616,41 @@ class PeoplePage extends GetView<AttendanceController> {
     } catch (error) {
       throw ("Cannot dial");
     }
+  }
+
+  void _handleRemoveStudent(UserModel student) {
+    Get.dialog(AlertDialog(
+      title: Text(
+        'Remove Student',
+        style: textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.bold,
+          color: textColorDefault,
+        ),
+      ),
+      content: SizedBox(
+        width: deviceWidth,
+        child: Text(
+          'Do you really want to remove ${student.name} from this classroom?',
+          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('No'),
+        ),
+        TextButton(
+          onPressed: () async {
+            final classroomController = Get.find<ClassroomController>();
+            await classroomController.removeStudentFromClassroom(
+              controller.classroomData,
+              student,
+            );
+            _reloadData();
+          },
+          child: const Text('Yes'),
+        ),
+      ],
+    ));
   }
 }

@@ -50,6 +50,7 @@ class RecognitionController extends GetxController {
       cameraLensDirection: cameraLensDirection,
     );
     _performedRecognition(true);
+    _recognitionResults.clear();
     if (!isRegistration) {
       _recognitionResults.value = result;
     }

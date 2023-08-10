@@ -1,5 +1,6 @@
 import 'dart:isolate';
 import 'dart:math';
+import 'dart:developer' as dev;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,9 @@ import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper_plus/tflite_flutter_helper_plus.dart';
 import 'package:tflite_flutter_plus/src/bindings/types.dart';
 import 'package:image/image.dart' as img;
-import 'package:visoattend/models/recognition_model.dart';
-import 'package:visoattend/models/user_model.dart';
+
+import '../../models/recognition_model.dart';
+import '../../models/user_model.dart';
 
 import 'image_converter.dart';
 
@@ -52,15 +54,13 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
   final users = data[5];
   final cameraLensDirection = data[6] as CameraLensDirection;
 
-  final inputShape = interpreter
-      .getInputTensor(0)
-      .shape;
-  final outputShape = interpreter
-      .getOutputTensor(0)
-      .shape;
+  final inputShape = interpreter.getInputTensor(0).shape;
+  final outputShape = interpreter.getOutputTensor(0).shape;
   NormalizeOp preProcessNormalizeOp = NormalizeOp(127.5, 127.5);
-  final outputBuffer =
-  TensorBuffer.createFixedSize(outputShape, TfLiteType.float32);
+  final outputBuffer = TensorBuffer.createFixedSize(
+    outputShape,
+    TfLiteType.float32,
+  );
   const threshold = 0.76;
 
   List<double> emb = [];
@@ -83,41 +83,31 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
     );
 
     /// load image and preprocess
-    final pres = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    final pres = DateTime.now().millisecondsSinceEpoch;
     var inputImage = TensorImage(TfLiteType.float32);
     inputImage.loadImage(faceImage);
     int cropSize = min(inputImage.height, inputImage.width);
     inputImage = ImageProcessorBuilder()
         .add(ResizeWithCropOrPadOp(cropSize, cropSize))
-        .add(ResizeOp(
-        inputShape[1], inputShape[2], ResizeMethod.bilinear))
+        .add(ResizeOp(inputShape[1], inputShape[2], ResizeMethod.bilinear))
         .add(preProcessNormalizeOp)
         .build()
         .process(inputImage);
-    final pre = DateTime
-        .now()
-        .millisecondsSinceEpoch - pres;
-    print('Time to load image: $pre ms');
-
+    final pre = DateTime.now().millisecondsSinceEpoch - pres;
+    dev.log('Time to load image: $pre ms');
 
     /// run model
-    final runs = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    final runs = DateTime.now().millisecondsSinceEpoch;
     interpreter.run(inputImage.buffer, outputBuffer.getBuffer());
-    final run = DateTime
-        .now()
-        .millisecondsSinceEpoch - runs;
-    print('Time to run inference: $run ms');
+    final run = DateTime.now().millisecondsSinceEpoch - runs;
+    dev.log('Time to run inference: $run ms');
 
     /// prepare results
     emb = outputBuffer.getDoubleList();
 
     if (!isRegistration) {
       if (users == null) {
-        print('Users data not found');
+        dev.log('recognition isolate: Users data not found');
         return;
       }
       final recognitionResult = findNearestFirestore(emb, users);
@@ -125,16 +115,11 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
       recognitionResult.face = faceImage;
       if (recognitionResult.distance > threshold) {
         recognitionResult.userOrNot =
-        '${recognitionResult.userOrNot.userId} - ${face.trackingId}';
+            '${recognitionResult.userOrNot.userId} - ${face.trackingId}';
       }
       final key = face.trackingId!;
-      if (recognitionResults.containsKey(key)) {
-        if (recognitionResults[key] is String) {
-          recognitionResults[key] = recognitionResult;
-        }
-      } else {
-        recognitionResults[key] = recognitionResult;
-      }
+
+      recognitionResults[key] = recognitionResult;
     } else {
       break;
     }
@@ -149,9 +134,8 @@ Future<void> _recognitionIsolateFirestore(List<dynamic> data) async {
 
 ///  looks for the nearest embedding in the dataset
 RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
-  // dynamic recognitionResult = [UserModel.empty(), -5.0, Rect.zero];
-  RecognitionModel recognitionResult = RecognitionModel(
-      userOrNot: UserModel.empty(), distance: -5.0, position: Rect.zero);
+  RecognitionModel recognitionResult =
+      RecognitionModel(userOrNot: '', distance: 50.0, position: Rect.zero);
 
   for (UserModel user in users) {
     final userEmbeddings = [
@@ -160,7 +144,7 @@ RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
       List<double>.from(user.faceDataLeft),
     ];
     double averageDistance = 0;
-    double divider = 3.0;
+    // double divider = 3.0;
     List<double> distances = [];
     for (List<double> embedding in userEmbeddings) {
       double distance = 0;
@@ -191,15 +175,14 @@ RecognitionModel findNearestFirestore(List<double> emb, List<UserModel> users) {
     distances.sort();
     if (distances[1] < 0.68) {
       averageDistance = distances[1];
-    } else if(distances[1] > 0.75) {
+    } else if (distances[1] > 0.75) {
       averageDistance = distances[2];
     } else {
-      averageDistance = (distances[1]+distances[2])/2.0;
+      averageDistance = (distances[1] + distances[2]) / 2.0;
       // averageDistance = distances[2]*1.2;
     }
 
-
-    if (recognitionResult.distance == -5.0 ||
+    if (recognitionResult.distance == 50.0 ||
         averageDistance < recognitionResult.distance) {
       recognitionResult.userOrNot = user;
       recognitionResult.distance = averageDistance;

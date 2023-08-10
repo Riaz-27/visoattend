@@ -6,10 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:synchronized/synchronized.dart';
 
-// import 'recognition_controller.dart';
-// import 'user_database_controller.dart';
-// import '../services/recognition_service.dart';
-
+import '../../models/user_model.dart';
 import 'attendance_controller.dart';
 import 'face_detector_controller.dart';
 import 'recognition_controller.dart';
@@ -64,7 +61,7 @@ class CameraServiceController extends GetxController {
       _cameraRotation =
           rotationIntToImageRotation(_cameraDescription.sensorOrientation);
 
-      print('Camera rotation: $_cameraRotation');
+      dev.log('Camera rotation: $_cameraRotation');
 
       // attendanceController.totalRecognized.clear();
 
@@ -85,8 +82,17 @@ class CameraServiceController extends GetxController {
               cameraLensDirection: cameraLensDirection,
               users: totalStudents,
             )
-                .then((value) {
-              attendanceController.totalRecognized.addAll(value);
+                .then((_) {
+              recognitionController.recognitionResults.forEach((key, value) {
+                if (attendanceController.totalRecognized.containsKey(key)) {
+                  if (value.userOrNot is UserModel) {
+                    attendanceController.totalRecognized[key] = value;
+                  }
+                } else {
+                  attendanceController.totalRecognized[key] = value;
+                }
+              });
+              // attendanceController.totalRecognized.addAll();
               isBusy = false;
             });
           } else {

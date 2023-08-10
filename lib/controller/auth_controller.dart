@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:visoattend/helper/functions.dart';
 
 import 'cloud_firestore_controller.dart';
 import 'navigation_controller.dart';
+import 'timer_controller.dart';
 
 class AuthController extends GetxController {
   final _isLoading = false.obs;
@@ -95,7 +95,12 @@ class AuthController extends GetxController {
 
   Future<void> signOut() async {
     final navigationController = Get.find<NavigationController>();
+    final timerController = Get.find<TimerController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
     navigationController.selectedHomeIndex = 0;
+    timerController.cancelTimer();
+    timerController.cancelAttendanceTimer();
+    cloudFirestoreController.resetValues();
 
     await _firebaseAuth.signOut();
   }

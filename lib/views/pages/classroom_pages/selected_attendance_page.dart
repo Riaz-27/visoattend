@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
 
+import '../../../controller/cloud_firestore_controller.dart';
 import '../../../controller/attendance_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
@@ -91,10 +91,11 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                       onSelected: (value) {
                         switch (value) {
                           case 'edit':
-                            _handleEditAttendance(context);
+                            handleEditAttendance(context, attendance);
                             break;
                           case 'delete':
-                            _handleDeleteAttendance(context);
+                            handleDeleteAttendance(context, attendance,
+                                selected: true);
                             break;
                         }
                       },
@@ -162,42 +163,49 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   Widget _buildFilterChip() {
     final selectedCategory = controller.selectedCategory;
 
-    final chipCategories = ['Present', 'Absent'];
+    final chipCategories = ['Present', 'Taken Leave', 'Absent'];
     return Row(
       children: chipCategories
           .map(
-            (category) => Row(
-              children: [
-                FilterChip(
-                  showCheckmark: false,
-                  selectedColor: category == 'Present'
-                      ? colorScheme.primary.withOpacity(0.7)
-                      : colorScheme.error.withOpacity(0.7),
-                  backgroundColor: category == 'Present'
-                      ? colorScheme.secondaryContainer.withOpacity(0.8)
-                      : colorScheme.errorContainer.withOpacity(0.8),
-                  side: BorderSide.none,
-                  label: Text(
-                    category,
-                    style: textTheme.labelMedium!.copyWith(
-                      color: selectedCategory == category
-                          ? Colors.white
-                          : colorScheme.onBackground,
+            (category) {
+              Color selectColor = colorScheme.primary;
+              Color backgroundColor = colorScheme.secondaryContainer;
+              if(category == 'Absent'){
+                selectColor = colorScheme.error;
+                backgroundColor = colorScheme.errorContainer;
+              } else if(category.contains('Leave')){
+                selectColor = Colors.orange;
+                backgroundColor = Colors.amber;
+              }
+              return Row(
+                children: [
+                  FilterChip(
+                    showCheckmark: false,
+                    selectedColor: selectColor.withOpacity(0.7),
+                    backgroundColor:backgroundColor.withOpacity(0.8),
+                    side: BorderSide.none,
+                    label: Text(
+                      category,
+                      style: textTheme.labelMedium!.copyWith(
+                        color: selectedCategory == category
+                            ? Colors.white
+                            : colorScheme.onBackground,
+                      ),
                     ),
+                    selected: selectedCategory == category,
+                    onSelected: (selected) {
+                      if (selected) {
+                        controller.selectedCategory = category;
+                      } else {
+                        controller.selectedCategory = '';
+                      }
+                      controller.selectedCategoryResult();
+                    },
                   ),
-                  selected: selectedCategory == category,
-                  onSelected: (selected) {
-                    if (selected) {
-                      controller.selectedCategory = category;
-                    } else {
-                      controller.selectedCategory = '';
-                    }
-                    controller.selectedCategoryResult();
-                  },
-                ),
-                horizontalGap(deviceWidth * percentGapMedium),
-              ],
-            ),
+                  horizontalGap(deviceWidth * percentGapMedium),
+                ],
+              );
+            }
           )
           .toList(),
     );
@@ -205,8 +213,15 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
   Widget _buildUsersList(UserModel student) {
     final attendance = controller.selectedAttendance;
-    final studentStatus = attendance.studentsData[student.authUid] ?? 'Absent';
+    final studentStatus =
+        attendance.studentsData[student.authUid] as String? ?? 'Absent';
     final classroomData = controller.classroomData;
+    Color color = colorScheme.primary;
+    if (studentStatus.contains('Leave')) {
+      color = Colors.amber;
+    } else if (studentStatus == 'Absent') {
+      color = colorScheme.error;
+    }
     return GestureDetector(
       onTap: () {
         if (classroomData.isArchived) return;
@@ -247,12 +262,10 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
             ),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: studentStatus[0] == 'P'
-                    ? colorScheme.primary
-                    : colorScheme.error,
+                color: color,
               ),
             )
           ],
@@ -262,6 +275,16 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   }
 
   void _handleUpdateAttendanceStatus(UserModel student) {
+    final studentStatus = controller
+            .selectedAttendance.studentsData[student.authUid] as String? ??
+        'Absent';
+    Color color = colorScheme.primary;
+    if (studentStatus.contains('Leave')) {
+      color = Colors.amber;
+    } else if (studentStatus == 'Absent') {
+      color = colorScheme.error;
+    }
+
     Get.bottomSheet(
       backgroundColor: colorScheme.surface,
       enableDrag: true,
@@ -306,6 +329,20 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                       style: textTheme.bodyLarge!
                           .copyWith(color: colorScheme.primary),
                     ),
+                  ),
+                  RadioListTile.adaptive(
+                    contentPadding: const EdgeInsets.all(0),
+                    value: 'Present(Leave)',
+                    groupValue: controller.selectedAttendanceStatus,
+                    onChanged: (value) {
+                      controller.selectedAttendanceStatus = value!;
+                    },
+                    title: Text(
+                      'Taken Leave',
+                      style: textTheme.bodyLarge!
+                          .copyWith(color: Colors.orangeAccent),
+                    ),
+                    activeColor: Colors.orangeAccent,
                   ),
                   RadioListTile.adaptive(
                     contentPadding: const EdgeInsets.all(0),
@@ -357,183 +394,183 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     );
   }
 
-  void _handleEditAttendance(BuildContext context) {
-    controller.selectedDateTime =
-        DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            'Edit Attendance',
-            style: textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: textColorDefault,
-            ),
-          ),
-          content: SizedBox(
-            width: deviceWidth,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Change date and time of classroom',
-                  style: textTheme.bodyMedium!.copyWith(
-                    color: textColorDefault,
-                  ),
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                Obx(() {
-                  return Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Date',
-                            style: textTheme.bodySmall!
-                                .copyWith(color: textColorLight),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          _customInkWellButton(
-                            onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
-                                initialDate: controller.selectedDateTime,
-                                firstDate: DateTime.now()
-                                    .add(const Duration(days: -365)),
-                                lastDate: DateTime.now()
-                                    .add(const Duration(days: 365)),
-                              );
-                              if (picked != null) {
-                                controller.selectedDateTime =
-                                    controller.selectedDateTime.copyWith(
-                                  day: picked.day,
-                                  month: picked.month,
-                                  year: picked.year,
-                                );
-                              }
-                            },
-                            text: DateFormat('dd MMMM, y')
-                                .format(controller.selectedDateTime),
-                          ),
-                        ],
-                      ),
-                      horizontalGap(deviceWidth * percentGapLarge),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Time',
-                            style: textTheme.bodySmall!.copyWith(
-                              color: textColorLight,
-                            ),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          _customInkWellButton(
-                            onTap: () async {
-                              final picked = await showTimePicker(
-                                context: context,
-                                initialTime: TimeOfDay.fromDateTime(
-                                    controller.selectedDateTime),
-                              );
-                              if (picked != null) {
-                                controller.selectedDateTime =
-                                    controller.selectedDateTime.copyWith(
-                                  hour: picked.hour,
-                                  minute: picked.minute,
-                                );
-                              }
-                            },
-                            text: DateFormat('hh:mm a')
-                                .format(controller.selectedDateTime),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                }),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                controller.selectedDateTime =
-                    DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
-                Get.back();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                attendance.dateTime =
-                    controller.selectedDateTime.millisecondsSinceEpoch;
-                await controller.updateAttendanceDateTime(attendance);
-                Get.back();
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _customInkWellButton({Function()? onTap, required String text}) {
-    return InkWell(
-      customBorder: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceTint.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(text),
-      ),
-    );
-  }
-
-  void _handleDeleteAttendance(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            'Delete Attendance',
-            style: textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: textColorDefault,
-            ),
-          ),
-          content: SizedBox(
-            width: deviceWidth,
-            child: Text(
-              'Do you really want to delete this attendance data?',
-              style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await controller.deleteAttendance(attendance);
-                Get.back();
-                Get.back();
-              },
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+// void _handleEditAttendance(BuildContext context) {
+//   controller.selectedDateTime =
+//       DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+//   showDialog(
+//     barrierDismissible: false,
+//     context: context,
+//     builder: (context) {
+//       return AlertDialog(
+//         title: Text(
+//           'Edit Attendance',
+//           style: textTheme.titleMedium!.copyWith(
+//             fontWeight: FontWeight.bold,
+//             color: textColorDefault,
+//           ),
+//         ),
+//         content: SizedBox(
+//           width: deviceWidth,
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 'Change date and time of classroom',
+//                 style: textTheme.bodyMedium!.copyWith(
+//                   color: textColorDefault,
+//                 ),
+//               ),
+//               verticalGap(deviceHeight * percentGapSmall),
+//               Obx(() {
+//                 return Row(
+//                   children: [
+//                     Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           'Date',
+//                           style: textTheme.bodySmall!
+//                               .copyWith(color: textColorLight),
+//                         ),
+//                         verticalGap(deviceHeight * percentGapVerySmall),
+//                         _customInkWellButton(
+//                           onTap: () async {
+//                             final picked = await showDatePicker(
+//                               context: context,
+//                               initialDate: controller.selectedDateTime,
+//                               firstDate: DateTime.now()
+//                                   .add(const Duration(days: -365)),
+//                               lastDate: DateTime.now()
+//                                   .add(const Duration(days: 365)),
+//                             );
+//                             if (picked != null) {
+//                               controller.selectedDateTime =
+//                                   controller.selectedDateTime.copyWith(
+//                                 day: picked.day,
+//                                 month: picked.month,
+//                                 year: picked.year,
+//                               );
+//                             }
+//                           },
+//                           text: DateFormat('dd MMMM, y')
+//                               .format(controller.selectedDateTime),
+//                         ),
+//                       ],
+//                     ),
+//                     horizontalGap(deviceWidth * percentGapLarge),
+//                     Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           'Time',
+//                           style: textTheme.bodySmall!.copyWith(
+//                             color: textColorLight,
+//                           ),
+//                         ),
+//                         verticalGap(deviceHeight * percentGapVerySmall),
+//                         _customInkWellButton(
+//                           onTap: () async {
+//                             final picked = await showTimePicker(
+//                               context: context,
+//                               initialTime: TimeOfDay.fromDateTime(
+//                                   controller.selectedDateTime),
+//                             );
+//                             if (picked != null) {
+//                               controller.selectedDateTime =
+//                                   controller.selectedDateTime.copyWith(
+//                                 hour: picked.hour,
+//                                 minute: picked.minute,
+//                               );
+//                             }
+//                           },
+//                           text: DateFormat('hh:mm a')
+//                               .format(controller.selectedDateTime),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 );
+//               }),
+//             ],
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//               controller.selectedDateTime =
+//                   DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
+//               Get.back();
+//             },
+//             child: const Text('Cancel'),
+//           ),
+//           TextButton(
+//             onPressed: () async {
+//               attendance.dateTime =
+//                   controller.selectedDateTime.millisecondsSinceEpoch;
+//               await controller.updateAttendanceDateTime(attendance);
+//               Get.back();
+//             },
+//             child: const Text('Save'),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
+//
+// Widget _customInkWellButton({Function()? onTap, required String text}) {
+//   return InkWell(
+//     customBorder: RoundedRectangleBorder(
+//       borderRadius: BorderRadius.circular(10),
+//     ),
+//     onTap: onTap,
+//     child: Container(
+//       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+//       decoration: BoxDecoration(
+//         color: colorScheme.surfaceTint.withOpacity(0.15),
+//         borderRadius: BorderRadius.circular(10),
+//       ),
+//       child: Text(text),
+//     ),
+//   );
+// }
+//
+// void _handleDeleteAttendance(BuildContext context) {
+//   showDialog(
+//     context: context,
+//     builder: (context) {
+//       return AlertDialog(
+//         title: Text(
+//           'Delete Attendance',
+//           style: textTheme.titleMedium!.copyWith(
+//             fontWeight: FontWeight.bold,
+//             color: textColorDefault,
+//           ),
+//         ),
+//         content: SizedBox(
+//           width: deviceWidth,
+//           child: Text(
+//             'Do you really want to delete this attendance data?',
+//             style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Get.back(),
+//             child: const Text('No'),
+//           ),
+//           TextButton(
+//             onPressed: () async {
+//               await controller.deleteAttendance(attendance);
+//               Get.back();
+//               Get.back();
+//             },
+//             child: const Text('Yes'),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
 }

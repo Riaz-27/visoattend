@@ -341,6 +341,25 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
+  Future<void> removeUserFromClassroom(
+      ClassroomModel classroom, UserModel studentData) async {
+    try {
+      classroom.students
+          .removeWhere((student) => student['authUid'] == studentData.authUid);
+      studentData.classrooms.remove(classroom.classroomId);
+      await _firestoreInstance
+          .collection(classroomsCollection)
+          .doc(classroom.classroomId)
+          .update({'students': classroom.students});
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(studentData.authUid)
+          .update({'classrooms': studentData.classrooms});
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
   Future<void> getUserClassrooms() async {
     _classrooms.value = [];
     _filteredClassroom.value = [];

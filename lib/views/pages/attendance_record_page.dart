@@ -21,15 +21,10 @@ class AttendanceRecordPage extends StatelessWidget {
     final recognitionController = Get.find<RecognitionController>();
     final attendanceController = Get.find<AttendanceController>();
 
-    attendanceController.totalRecognized.clear();
-    attendanceController.matchedStudents.clear();
-
     List<Widget> stackChildren = [];
     cameraServiceController.isSignUp = false;
 
     String loadingMsg = 'Please wait...';
-
-
 
     //camera view
     stackChildren.add(

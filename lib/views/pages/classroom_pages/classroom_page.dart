@@ -177,7 +177,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                               shrinkWrap: true,
                               itemCount: controller.filteredAttendances.length,
                               itemBuilder: (context, index) {
-                                return _buildAttendanceListView(
+                                return _buildAttendanceListView(context,
                                     attendance:
                                         controller.filteredAttendances[index]);
                               },
@@ -262,7 +262,8 @@ class ClassroomPage extends GetView<AttendanceController> {
     );
   }
 
-  Widget _buildAttendanceListView({required AttendanceModel attendance}) {
+  Widget _buildAttendanceListView(BuildContext context,
+      {required AttendanceModel attendance}) {
     final dateTime = DateTime.fromMillisecondsSinceEpoch(attendance.dateTime);
     final isToday = DateFormat('dMy').format(dateTime) ==
         DateFormat('dMy').format(DateTime.now());
@@ -289,6 +290,7 @@ class ClassroomPage extends GetView<AttendanceController> {
             controller.studentsData.toList())
         .firstWhere((user) => attendance.takenBy['authUid'] == user.authUid);
 
+    Offset tapPosition = Offset.zero;
     return GestureDetector(
       onTap: () {
         final openAttendance = controller.classroomData.openAttendance;
@@ -299,6 +301,45 @@ class ClassroomPage extends GetView<AttendanceController> {
                 openAttendance != 'off' &&
                 openAttendance != 'always')) {
           Get.to(() => SelectedAttendancePage(attendance: attendance));
+        }
+      },
+      onTapDown: (position) {
+        tapPosition = position.globalPosition;
+      },
+      onLongPress: () async {
+        final openAttendance = controller.classroomData.openAttendance;
+        if (userRole == 'Teacher' ||
+            (userRole == 'CR' && openAttendance == 'always') ||
+            (userRole == 'CR' &&
+                isToday &&
+                openAttendance != 'off' &&
+                openAttendance != 'always')) {
+
+          final tappedOption = await showMenu(
+            context: context,
+            position: RelativeRect.fromSize(
+              Rect.fromLTWH(tapPosition.dx, tapPosition.dy, 100, 100),
+              const Size(100, 100)
+            ),
+            items: [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Text('Edit'),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Text('Delete'),
+              ),
+            ],
+          );
+          switch (tappedOption) {
+            case 'edit':
+              handleEditAttendance(context, attendance);
+              break;
+            case 'delete':
+              handleDeleteAttendance(context, attendance);
+              break;
+          }
         }
       },
       child: Container(
@@ -760,6 +801,8 @@ class ClassroomPage extends GetView<AttendanceController> {
                         text: 'Take Attendance',
                         onPressed: () {
                           Get.back();
+                          controller.totalRecognized.clear();
+                          controller.matchedStudents.clear();
                           Get.to(() => const AttendanceRecordPage());
                         },
                         onLongPressed: () async {
@@ -838,6 +881,8 @@ class ClassroomPage extends GetView<AttendanceController> {
         }
         return InkWell(
           onTap: () {
+            controller.totalRecognized.clear();
+            controller.matchedStudents.clear();
             Get.to(() => const AttendanceRecordPage());
           },
           onLongPress: () async {
@@ -880,7 +925,8 @@ class ClassroomPage extends GetView<AttendanceController> {
               children: [
                 Text(
                   'Allow class CR to take attendance.\nEnter duration in minute.',
-                  style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+                  style:
+                      textTheme.bodyMedium!.copyWith(color: textColorDefault),
                 ),
                 verticalGap(deviceHeight * percentGapSmall),
                 TextField(
