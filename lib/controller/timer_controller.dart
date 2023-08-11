@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:visoattend/controller/cloud_firestore_controller.dart';
+
+import '../controller/cloud_firestore_controller.dart';
 
 class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
   @override
@@ -64,7 +63,7 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
     if (!_isATInitialized && dbTimeLeft > 0) {
       _timeLeft.value = dbTimeLeft;
       _attendanceTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        print('Open Timer : ${timeLeft~/60} : ${timeLeft%60}');
+        // print('Open Timer : ${timeLeft~/60} : ${timeLeft%60}');
         _timeLeft.value--;
         if (_timeLeft.value == 0) {
           cancelAttendanceTimer();

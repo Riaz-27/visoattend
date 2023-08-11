@@ -28,6 +28,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     return WillPopScope(
       onWillPop: () async {
         controller.selectedCategory = '';
+        controller.updateValues(controller.classroomData);
         return true;
       },
       child: Scaffold(
@@ -165,49 +166,45 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
     final chipCategories = ['Present', 'Absent', 'Taken Leave'];
     return Row(
-      children: chipCategories
-          .map(
-            (category) {
-              Color selectColor = colorScheme.primary;
-              Color backgroundColor = colorScheme.secondaryContainer;
-              if(category == 'Absent'){
-                selectColor = colorScheme.error;
-                backgroundColor = colorScheme.errorContainer;
-              } else if(category.contains('Leave')){
-                selectColor = Colors.amber.shade700;
-                backgroundColor = Colors.amber.shade100;
-              }
-              return Row(
-                children: [
-                  FilterChip(
-                    showCheckmark: false,
-                    selectedColor: selectColor.withOpacity(0.7),
-                    backgroundColor:backgroundColor.withOpacity(0.8),
-                    side: BorderSide.none,
-                    label: Text(
-                      category,
-                      style: textTheme.labelMedium!.copyWith(
-                        color: selectedCategory == category
-                            ? Colors.white
-                            : colorScheme.onBackground,
-                      ),
-                    ),
-                    selected: selectedCategory == category,
-                    onSelected: (selected) {
-                      if (selected) {
-                        controller.selectedCategory = category;
-                      } else {
-                        controller.selectedCategory = '';
-                      }
-                      controller.selectedCategoryResult();
-                    },
-                  ),
-                  horizontalGap(deviceWidth * percentGapMedium),
-                ],
-              );
-            }
-          )
-          .toList(),
+      children: chipCategories.map((category) {
+        Color selectColor = colorScheme.primary;
+        Color backgroundColor = colorScheme.secondaryContainer;
+        if (category == 'Absent') {
+          selectColor = colorScheme.error;
+          backgroundColor = colorScheme.errorContainer;
+        } else if (category.contains('Leave')) {
+          selectColor = Colors.amber.shade700;
+          backgroundColor = Colors.amber.shade100;
+        }
+        return Row(
+          children: [
+            FilterChip(
+              showCheckmark: false,
+              selectedColor: selectColor.withOpacity(0.7),
+              backgroundColor: backgroundColor.withOpacity(0.8),
+              side: BorderSide.none,
+              label: Text(
+                category,
+                style: textTheme.labelMedium!.copyWith(
+                  color: selectedCategory == category
+                      ? Colors.white
+                      : colorScheme.onBackground,
+                ),
+              ),
+              selected: selectedCategory == category,
+              onSelected: (selected) {
+                if (selected) {
+                  controller.selectedCategory = category;
+                } else {
+                  controller.selectedCategory = '';
+                }
+                controller.selectedCategoryResult();
+              },
+            ),
+            horizontalGap(deviceWidth * percentGapMedium),
+          ],
+        );
+      }).toList(),
     );
   }
 
@@ -278,12 +275,12 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
     final studentStatus = controller
             .selectedAttendance.studentsData[student.authUid] as String? ??
         'Absent';
-    Color color = colorScheme.primary;
-    if (studentStatus.contains('Leave')) {
-      color = Colors.amber;
-    } else if (studentStatus == 'Absent') {
-      color = colorScheme.error;
-    }
+    // Color color = colorScheme.primary;
+    // if (studentStatus.contains('Leave')) {
+    //   color = Colors.amber;
+    // } else if (studentStatus == 'Absent') {
+    //   color = colorScheme.error;
+    // }
 
     Get.bottomSheet(
       backgroundColor: colorScheme.surface,

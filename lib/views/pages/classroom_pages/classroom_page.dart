@@ -806,6 +806,8 @@ class ClassroomPage extends GetView<AttendanceController> {
                           Get.to(() => const AttendanceRecordPage());
                         },
                         onLongPressed: () async {
+                          controller.totalRecognized.clear();
+                          controller.matchedStudents.clear();
                           await controller.saveDataToFirestore().then((_) {
                             Get.back();
                             Fluttertoast.showToast(
@@ -880,18 +882,24 @@ class ClassroomPage extends GetView<AttendanceController> {
           }
         }
         return InkWell(
-          onTap: () {
+          // onTap: () {
+          //   // controller.totalRecognized.clear();
+          //   // controller.matchedStudents.clear();
+          //   // Get.to(() => const AttendanceRecordPage());
+          // },
+          onLongPress: () async {
             controller.totalRecognized.clear();
             controller.matchedStudents.clear();
-            Get.to(() => const AttendanceRecordPage());
-          },
-          onLongPress: () async {
             await controller.saveDataToFirestore().then((_) {
               Fluttertoast.showToast(msg: 'Created empty attendance');
             });
           },
           child: FloatingActionButton.extended(
-            onPressed: () {},
+            onPressed: () {
+              controller.totalRecognized.clear();
+              controller.matchedStudents.clear();
+              Get.to(() => const AttendanceRecordPage());
+            },
             label: Text(timeText),
           ),
         );
