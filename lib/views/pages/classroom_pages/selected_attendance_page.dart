@@ -163,7 +163,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   Widget _buildFilterChip() {
     final selectedCategory = controller.selectedCategory;
 
-    final chipCategories = ['Present', 'Taken Leave', 'Absent'];
+    final chipCategories = ['Present', 'Absent', 'Taken Leave'];
     return Row(
       children: chipCategories
           .map(
@@ -174,8 +174,8 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
                 selectColor = colorScheme.error;
                 backgroundColor = colorScheme.errorContainer;
               } else if(category.contains('Leave')){
-                selectColor = Colors.orange;
-                backgroundColor = Colors.amber;
+                selectColor = Colors.amber.shade700;
+                backgroundColor = Colors.amber.shade100;
               }
               return Row(
                 children: [

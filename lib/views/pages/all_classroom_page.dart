@@ -28,7 +28,7 @@ class AllClassroomPage extends StatelessWidget {
               forceMaterialTransparency: true,
               centerTitle: true,
               title: Text(
-                'Archived Classes',
+                'Archived Classrooms',
                 style: textTheme.titleMedium!.copyWith(color: textColorDefault),
               ),
             )

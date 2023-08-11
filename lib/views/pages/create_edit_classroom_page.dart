@@ -442,7 +442,7 @@ class CreateEditClassroomPage extends StatelessWidget {
               ),
               verticalGap(deviceHeight * percentGapMedium),
               Text(
-                'Weekly class details',
+                'Weekly class schedule',
                 style: textTheme.bodySmall!.copyWith(
                   color: textColorLight,
                 ),
