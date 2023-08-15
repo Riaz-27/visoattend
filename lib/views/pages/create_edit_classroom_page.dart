@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import '../../controller/attendance_controller.dart';
 import '../../controller/classroom_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
+import '../../controller/navigation_controller.dart';
 import '../../helper/constants.dart';
 import '../../helper/functions.dart';
-import '../../views/pages/detailed_classroom_page.dart';
 import '../../views/pages/detailed_home_page.dart';
 
 class CreateEditClassroomPage extends StatelessWidget {
@@ -132,9 +132,14 @@ class CreateEditClassroomPage extends StatelessWidget {
                     final courseCode = courseCodeController.text.trim();
                     final courseTitle = courseTitleController.text.trim();
                     if (courseTitle.isEmpty || courseCode.isEmpty) {
+                      errorDialog(
+                        title: 'Missing Required Field',
+                        msg: 'Course Title and Course Code must be provided.',
+                      );
                       return;
                     }
                     if (isEdit) {
+                      loadingDialog('Saving...');
                       classroom.courseCode = courseCodeController.text.trim();
                       classroom.courseTitle = courseTitleController.text.trim();
                       classroom.session = sessionController.text.trim();
@@ -143,11 +148,10 @@ class CreateEditClassroomPage extends StatelessWidget {
                       classroom.weekTimes =
                           classroomController.selectedWeekTimes;
                       await classroomController.updateClassroom(classroom);
+                      hideLoadingDialog();
                       Get.back();
-                      // Get.back();
-                      // Get.to(() =>
-                      //     DetailedClassroomPage(classroomData: classroom));
                     } else if (!isEdit) {
+                      loadingDialog('Please wait...');
                       await classroomController.createNewClassroom(
                         courseCode: courseCode,
                         courseTitle: courseTitle,
@@ -155,7 +159,10 @@ class CreateEditClassroomPage extends StatelessWidget {
                         session: sessionController.text.trim(),
                         department: departmentController.text.trim(),
                       );
+                      hideLoadingDialog();
                       Get.back();
+                      Get.back();
+                      Get.find<NavigationController>().selectedHomeIndex = 1;
                     }
                   },
                   child: Container(
@@ -503,6 +510,7 @@ void _handleClassArchiveRestore(BuildContext context, {required bool archive}) {
           ),
           TextButton(
             onPressed: () async {
+              loadingDialog('Please wait...');
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
               await classroomController
                   .archiveRestoreClassroom(classroom, archive)
@@ -512,6 +520,7 @@ void _handleClassArchiveRestore(BuildContext context, {required bool archive}) {
                         .then(
                             (_) => Get.offAll(() => const DetailedHomePage())),
                   );
+              hideLoadingDialog();
             },
             child: const Text('Confirm'),
           ),
@@ -546,7 +555,7 @@ void _handleClassDelete(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Remember This process cannot be undone.',
+                'Remember This process cannot be undone!!!\nThis process might take some time depending on the classroom size.',
                 style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
               ),
               verticalGap(deviceHeight * percentGapSmall),
@@ -574,6 +583,7 @@ void _handleClassDelete(
           TextButton(
             onPressed: () async {
               if (courseTitle == deleteController.text) {
+                loadingDialog('Deleting...');
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 await classroomController.deleteClassroom().then(
                       (_) => Get.find<CloudFirestoreController>()
@@ -581,6 +591,7 @@ void _handleClassDelete(
                           .then((_) =>
                               Get.offAll(() => const DetailedHomePage())),
                     );
+                hideLoadingDialog();
               }
             },
             child: const Text('Confirm'),

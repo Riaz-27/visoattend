@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/controller/auth_controller.dart';
-import 'package:visoattend/controller/leave_request_controller.dart';
-import 'package:visoattend/controller/navigation_controller.dart';
-import 'package:visoattend/controller/profile_pic_controller.dart';
 
-import '../controller/camera_service_controller.dart';
-import '../controller/face_detector_controller.dart';
-import '../controller/recognition_controller.dart';
-import '../controller/user_database_controller.dart';
+import 'controller/attendance_controller.dart';
+import 'controller/auth_controller.dart';
+import 'controller/leave_request_controller.dart';
+import 'controller/navigation_controller.dart';
+import 'controller/profile_pic_controller.dart';
+import 'controller/camera_service_controller.dart';
+import 'controller/face_detector_controller.dart';
+import 'controller/recognition_controller.dart';
+import 'controller/user_database_controller.dart';
 import 'controller/classroom_controller.dart';
 import 'controller/cloud_firestore_controller.dart';
 import 'controller/timer_controller.dart';

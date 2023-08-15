@@ -183,9 +183,14 @@ class AllClassroomPage extends StatelessWidget {
                   Row(
                     children: [
                       Obx(() {
-                        final teacherProfileUrl = cloudFirestoreController
-                                .classroomTeacherInfo[
-                            classroom.teachers[0]['authUid']]!['profilePic']!;
+                        final classroomTeacherInfo =
+                            cloudFirestoreController.classroomTeacherInfo[
+                                classroom.teachers[0]['authUid']];
+                        if (classroomTeacherInfo == null) {
+                          return const SizedBox();
+                        }
+                        final teacherProfileUrl =
+                            classroomTeacherInfo['profilePic']!;
                         return Container(
                           width: 25,
                           height: 25,

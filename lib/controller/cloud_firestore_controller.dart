@@ -106,7 +106,7 @@ class CloudFirestoreController extends GetxController {
     _archivedClassrooms.clear();
     _timeLeftToStart.clear();
     _timeLeftToEnd.clear();
-    classroomTeacherInfo.clear();
+    _classroomTeacherInfo.clear();
   }
 
   /// User data control
@@ -405,7 +405,7 @@ class CloudFirestoreController extends GetxController {
               .doc(classroom.teachers[0]['authUid'])
               .get();
           final teacherUserData = UserModel.fromJson(teacherDoc.data()!);
-          classroomTeacherInfo[teacherUserData.authUid] = {
+          _classroomTeacherInfo[teacherUserData.authUid] = {
             'name': teacherUserData.name,
             'profilePic': teacherUserData.profilePic,
           };
