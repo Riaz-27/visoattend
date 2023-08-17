@@ -80,4 +80,28 @@ class TimerController extends FullLifeCycleController with FullLifeCycleMixin {
       _isATInitialized = false;
     }
   }
+
+  ///reset password timer controller
+  Timer? _resetPassTimer;
+  bool _isResetPassTimerInitialized = false;
+
+  final _resetPassTimeLeft = 60.obs;
+  int get resetPassTimeLeft => _resetPassTimeLeft.value;
+
+  void startResetPassTimer() {
+    _isResetPassTimerInitialized = true;
+    _resetPassTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _resetPassTimeLeft.value--;
+      if(_resetPassTimeLeft.value == 0) cancelResetPassTimer();
+    });
+  }
+
+  void cancelResetPassTimer() {
+    if(_isResetPassTimerInitialized){
+      _resetPassTimer!.cancel();
+      _resetPassTimeLeft.value = 60;
+      _isResetPassTimerInitialized = false;
+    }
+  }
+
 }

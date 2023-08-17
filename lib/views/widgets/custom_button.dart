@@ -23,7 +23,7 @@ class CustomButton extends StatelessWidget {
   final TextStyle? textStyle;
   final FontWeight? fontWeight;
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final VoidCallback? onLongPressed;
 
   @override

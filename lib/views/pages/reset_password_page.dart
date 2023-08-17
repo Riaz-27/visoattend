@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
 import '../../controller/cloud_firestore_controller.dart';
+import '../../controller/timer_controller.dart';
 import '../../helper/constants.dart';
 import '../../helper/functions.dart';
 import '../widgets/custom_button.dart';
@@ -35,6 +36,7 @@ class ResetPasswordPage extends StatelessWidget {
         return !(Get.isDialogOpen ?? false);
       },
       child: Scaffold(
+        appBar: AppBar(),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
           child: Form(
@@ -46,7 +48,7 @@ class ResetPasswordPage extends StatelessWidget {
                   children: [
                     Text(
                       "Enter the email associated with your account and we’ll send an email with instructions to reset your password",
-                      textAlign: TextAlign.center,
+                      textAlign: TextAlign.justify,
                       style: textTheme.bodyMedium!.copyWith(
                         color: textColorLight,
                       ),
@@ -63,16 +65,24 @@ class ResetPasswordPage extends StatelessWidget {
                       },
                     ),
                     verticalGap(deviceHeight * percentGapMedium),
-                    CustomButton(
-                      text: 'Reset Password',
-                      onPressed: () async {
-                        await validateEmail();
-                        if (formKey.currentState!.validate()) {
-                          Get.find<AuthController>()
-                              .resetPassword(emailController.text.trim());
-                        }
-                      },
-                    ),
+                    Obx(() {
+                      final timerController = Get.find<TimerController>();
+                      final timeLeft = timerController.resetPassTimeLeft;
+                      return CustomButton(
+                        text:
+                            'Reset Password${timeLeft < 60 ? '($timeLeft)' : ''}',
+                        onPressed: timerController.resetPassTimeLeft < 60
+                            ? null
+                            : () async {
+                                await validateEmail();
+                                if (formKey.currentState!.validate()) {
+                                  timerController.startResetPassTimer();
+                                  Get.find<AuthController>().resetPassword(
+                                      emailController.text.trim());
+                                }
+                              },
+                      );
+                    }),
                   ],
                 ),
               ),
