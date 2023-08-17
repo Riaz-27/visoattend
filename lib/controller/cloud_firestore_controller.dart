@@ -5,16 +5,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:visoattend/controller/attendance_controller.dart';
 
-import 'package:visoattend/controller/auth_controller.dart';
-import 'package:visoattend/controller/profile_pic_controller.dart';
-import 'package:visoattend/helper/functions.dart';
-import 'package:visoattend/models/classroom_model.dart';
-import 'package:visoattend/models/user_model.dart';
-
+import '../models/classroom_model.dart';
+import '../models/user_model.dart';
 import '../models/attendance_model.dart';
 import '../models/leave_request_model.dart';
+
+import 'attendance_controller.dart';
+import 'auth_controller.dart';
+import 'profile_pic_controller.dart';
 import 'timer_controller.dart';
 
 class CloudFirestoreController extends GetxController {
@@ -696,7 +695,7 @@ class CloudFirestoreController extends GetxController {
     final attendances = attendanceController.attendances;
     _homeClassAttendances.value = attendances.length;
 
-    print('CAL HOME CLASS');
+    dev.log('CAL HOME CLASS');
 
     int missedClass = 0;
     if (_homeClassUserRole.value == 'Teacher') {
@@ -827,7 +826,7 @@ class CloudFirestoreController extends GetxController {
       await docRef.set(leaveRequest.toJson());
       return leaveRequest.leaveRequestId;
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
       return '';
     }
   }
@@ -840,7 +839,7 @@ class CloudFirestoreController extends GetxController {
           .doc(leaveRequest.leaveRequestId)
           .update({'applicationStatus': leaveRequest.applicationStatus});
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
     }
   }
 
@@ -856,7 +855,7 @@ class CloudFirestoreController extends GetxController {
           .doc(classroom.classroomId)
           .update({'leaveRequestIds': leaveRequestIds});
     } catch (e) {
-      print(e.toString());
+      dev.log(e.toString());
     }
   }
 

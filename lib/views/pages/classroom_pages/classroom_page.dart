@@ -28,175 +28,184 @@ class ClassroomPage extends GetView<AttendanceController> {
     final searchController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          final attendanceController = Get.find<AttendanceController>();
-          final leaveRequestController = Get.find<LeaveRequestController>();
-          await attendanceController
-              .updateValues(attendanceController.classroomData);
-          await attendanceController.getUsersData();
-          await leaveRequestController.loadLeaveRequestData();
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: deviceHeight * percentGapSmall,
-          ),
-          child: SingleChildScrollView(
-            child: Obx(() {
-              return controller.isAttendanceLoading
-                  ? _loadWidget()
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _topView(context: context),
-                        verticalGap(deviceHeight * percentGapSmall),
-                        Obx(() {
-                          return Text(
-                            'Attendances (${controller.filteredAttendances.length})',
-                            style: textTheme.bodySmall!.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: textColorLight,
-                            ),
-                          );
-                        }),
-                        verticalGap(deviceHeight * percentGapVerySmall),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: deviceWidth * 0.4,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(color: colorScheme.outline),
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: () async {
+            final attendanceController = Get.find<AttendanceController>();
+            final leaveRequestController = Get.find<LeaveRequestController>();
+            await attendanceController
+                .updateValues(attendanceController.classroomData);
+            await attendanceController.getUsersData();
+            await leaveRequestController.loadLeaveRequestData();
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: deviceHeight * percentGapSmall,
+            ),
+            child: SingleChildScrollView(
+              child: Obx(() {
+                return controller.isAttendanceLoading
+                    ? _loadWidget()
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _topView(context: context),
+                          verticalGap(deviceHeight * percentGapSmall),
+                          Obx(() {
+                            return Text(
+                              'Attendances (${controller.filteredAttendances.length})',
+                              style: textTheme.bodySmall!.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: textColorLight,
                               ),
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: CustomTextField(
-                                      controller: searchController,
-                                      style: textTheme.bodySmall!
-                                          .copyWith(color: textColorLight),
-                                      disableBorder: true,
-                                      hintText: 'All Times',
-                                      onChanged: (value) {
-                                        controller.filterAttendances(value);
-                                      },
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final firstDate = controller
-                                              .attendances.isEmpty
-                                          ? DateTime.now()
-                                          : DateTime.fromMillisecondsSinceEpoch(
-                                              controller
-                                                  .attendances.last.dateTime);
-
-                                      final pickedDate = await showDatePicker(
-                                        selectableDayPredicate: (dateTime) =>
-                                            true,
-                                        context: context,
-                                        initialDate: selectedDate,
-                                        firstDate: firstDate,
-                                        lastDate: DateTime.now(),
-                                      );
-                                      selectedDate =
-                                          pickedDate ?? DateTime.now();
-                                      final dateText = pickedDate != null
-                                          ? DateFormat('dd MMMM y')
-                                              .format(pickedDate)
-                                          : '';
-                                      searchController.text = dateText;
-                                      controller.filterAttendances(dateText);
-                                    },
-                                    child: Container(
-                                      color: Colors.transparent,
-                                      height: 28,
-                                      width: 40,
-                                      child: const Icon(
-                                        Icons.date_range,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Obx(() {
-                              return controller.currentUserRole == 'Teacher' ||
-                                      (controller.currentUserRole == 'CR' &&
-                                          controller.classroomData
-                                                  .openAttendance !=
-                                              'off')
-                                  ? GestureDetector(
-                                      onTap: _generateReport,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: kSmall,
-                                            vertical: kVerySmall),
-                                        decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(50),
-                                            color:
-                                                colorScheme.secondaryContainer),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.file_download_outlined,
-                                              size: 16,
-                                              color: colorScheme.secondary,
-                                            ),
-                                            Text(
-                                              "Report",
-                                              style: textTheme.bodySmall!
-                                                  .copyWith(
-                                                      color:
-                                                          colorScheme.secondary,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                  : const SizedBox();
-                            }),
-                          ],
-                        ),
-                        verticalGap(deviceHeight * percentGapSmall),
-                        Flexible(
-                          child: Obx(() {
-                            return ListView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              padding: controller.classroomData.isArchived
-                                  ? const EdgeInsets.only(bottom: 80)
-                                  : EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: controller.filteredAttendances.length,
-                              itemBuilder: (context, index) {
-                                return _buildAttendanceListView(context,
-                                    attendance:
-                                        controller.filteredAttendances[index]);
-                              },
                             );
                           }),
-                        ),
-                      ],
-                    );
-            }),
+                          verticalGap(deviceHeight * percentGapVerySmall),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                width: deviceWidth * 0.4,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  border:
+                                      Border.all(color: colorScheme.outline),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Flexible(
+                                      child: CustomTextField(
+                                        controller: searchController,
+                                        style: textTheme.bodySmall!
+                                            .copyWith(color: textColorLight),
+                                        disableBorder: true,
+                                        hintText: 'All Times',
+                                        onChanged: (value) {
+                                          controller.filterAttendances(value);
+                                        },
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        final firstDate =
+                                            controller.attendances.isEmpty
+                                                ? DateTime.now()
+                                                : DateTime
+                                                    .fromMillisecondsSinceEpoch(
+                                                        controller.attendances
+                                                            .last.dateTime);
+
+                                        final pickedDate = await showDatePicker(
+                                          selectableDayPredicate: (dateTime) =>
+                                              true,
+                                          context: context,
+                                          initialDate: selectedDate,
+                                          firstDate: firstDate,
+                                          lastDate: DateTime.now(),
+                                        );
+                                        selectedDate =
+                                            pickedDate ?? DateTime.now();
+                                        final dateText = pickedDate != null
+                                            ? DateFormat('dd MMMM y')
+                                                .format(pickedDate)
+                                            : '';
+                                        searchController.text = dateText;
+                                        controller.filterAttendances(dateText);
+                                      },
+                                      child: Container(
+                                        color: Colors.transparent,
+                                        height: 28,
+                                        width: 40,
+                                        child: const Icon(
+                                          Icons.date_range,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Obx(() {
+                                return controller.currentUserRole ==
+                                            'Teacher' ||
+                                        (controller.currentUserRole == 'CR' &&
+                                            controller.classroomData
+                                                    .openAttendance !=
+                                                'off')
+                                    ? GestureDetector(
+                                        onTap: _generateReport,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: kSmall,
+                                              vertical: kVerySmall),
+                                          decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                              color: colorScheme
+                                                  .secondaryContainer),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.file_download_outlined,
+                                                size: 16,
+                                                color: colorScheme.secondary,
+                                              ),
+                                              Text(
+                                                "Report",
+                                                style: textTheme.bodySmall!
+                                                    .copyWith(
+                                                        color: colorScheme
+                                                            .secondary,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    : const SizedBox();
+                              }),
+                            ],
+                          ),
+                          verticalGap(deviceHeight * percentGapSmall),
+                          Flexible(
+                            child: Obx(() {
+                              return ListView.builder(
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: controller.classroomData.isArchived
+                                    ? const EdgeInsets.only(bottom: 80)
+                                    : EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount:
+                                    controller.filteredAttendances.length,
+                                itemBuilder: (context, index) {
+                                  return _buildAttendanceListView(context,
+                                      attendance: controller
+                                          .filteredAttendances[index]);
+                                },
+                              );
+                            }),
+                          ),
+                        ],
+                      );
+              }),
+            ),
           ),
         ),
+        floatingActionButton: Obx(() {
+          return controller.classroomData.isArchived ||
+                  controller.isAttendanceLoading
+              ? const SizedBox()
+              : _bottomFloatingButton(context);
+        }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
-      floatingActionButton: Obx(() {
-        return controller.classroomData.isArchived ||
-                controller.isAttendanceLoading
-            ? const SizedBox()
-            : _bottomFloatingButton(context);
-      }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -314,13 +323,11 @@ class ClassroomPage extends GetView<AttendanceController> {
                 isToday &&
                 openAttendance != 'off' &&
                 openAttendance != 'always')) {
-
           final tappedOption = await showMenu(
             context: context,
             position: RelativeRect.fromSize(
-              Rect.fromLTWH(tapPosition.dx, tapPosition.dy, 100, 100),
-              const Size(100, 100)
-            ),
+                Rect.fromLTWH(tapPosition.dx, tapPosition.dy, 100, 100),
+                const Size(100, 100)),
             items: [
               const PopupMenuItem(
                 value: 'edit',
@@ -471,8 +478,8 @@ class ClassroomPage extends GetView<AttendanceController> {
               children: [
                 verticalGap(deviceHeight * percentGapSmall),
                 CircularPercentIndicator(
-                  radius: deviceHeight * 0.08,
-                  lineWidth: 12,
+                  radius: deviceHeight * 0.076,
+                  lineWidth: deviceHeight * 0.014,
                   percent: isTeacher ? 1 : percent,
                   circularStrokeCap: CircularStrokeCap.round,
                   progressColor: color,
@@ -484,12 +491,17 @@ class ClassroomPage extends GetView<AttendanceController> {
                     children: [
                       Text(
                         percentText,
-                        style: textTheme.titleLarge!
-                            .copyWith(color: textColorDefault),
+                        style: textTheme.titleLarge!.copyWith(
+                          color: textColorDefault,
+                          fontSize: deviceWidth * 0.055,
+                        ),
                       ),
                       Text(
                         status,
-                        style: textTheme.labelSmall!.copyWith(color: color),
+                        style: textTheme.labelSmall!.copyWith(
+                          color: color,
+                          fontSize: deviceWidth * 0.03,
+                        ),
                       ),
                     ],
                   ),
@@ -501,7 +513,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                     children: [
                       CircularPercentIndicator(
                         radius: deviceHeight * 0.023,
-                        lineWidth: 7,
+                        lineWidth: deviceHeight * 0.007,
                         percent:
                             totalClasses > 0 ? missedClasses / totalClasses : 0,
                         circularStrokeCap: CircularStrokeCap.round,
@@ -512,6 +524,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                           missedClasses.toString(),
                           style: textTheme.bodyMedium!.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: deviceWidth * 0.035,
                             color: missedClasses > 0
                                 ? colorScheme.error
                                 : colorScheme.onBackground,
@@ -543,7 +556,7 @@ class ClassroomPage extends GetView<AttendanceController> {
               ],
             );
           }),
-          horizontalGap(deviceWidth * 0.05),
+          horizontalGap(deviceWidth * 0.03),
           Expanded(
             child: Obx(() {
               //finding class schedule

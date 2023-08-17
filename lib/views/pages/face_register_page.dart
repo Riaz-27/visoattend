@@ -218,6 +218,7 @@ class FaceRegisterPage extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
+        if(Get.isDialogOpen ?? false) return false;
         Get.find<AuthController>().isLoading = false;
         return true;
       },

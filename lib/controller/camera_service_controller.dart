@@ -4,7 +4,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'package:synchronized/synchronized.dart';
 
 import '../../models/user_model.dart';
 import 'attendance_controller.dart';
@@ -30,6 +29,9 @@ class CameraServiceController extends GetxController {
 
   late List<CameraDescription> _cameras;
   late CameraDescription _cameraDescription;
+
+  double cameraZoom = 1;
+  double lastZoom = 0;
 
   final _isInitialized = false.obs;
 
@@ -160,5 +162,22 @@ class CameraServiceController extends GetxController {
       default:
         return InputImageRotation.rotation0deg;
     }
+  }
+
+  Future<void> changeZoomLevel(double zoom) async {
+    final maxZoomLevel = await cameraController.getMaxZoomLevel();
+    if (zoom < lastZoom) {
+      lastZoom = zoom;
+      cameraZoom -= 0.023;
+    } else {
+      lastZoom = zoom;
+      cameraZoom += 0.02;
+    }
+    if(cameraZoom < 1){
+      cameraZoom = 1;
+    } else if(cameraZoom > maxZoomLevel){
+      cameraZoom = maxZoomLevel;
+    }
+    cameraController.setZoomLevel(cameraZoom);
   }
 }

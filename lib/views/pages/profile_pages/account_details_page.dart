@@ -65,148 +65,158 @@ class AccountDetailsPage extends StatelessWidget {
 
     final genderOptions = ['Male', 'Female', 'Other'];
 
-    return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              cloudFirestoreController.currentUser.mobile =
-                  mobileController.text;
-              cloudFirestoreController.currentUser.gender =
-                  genderController.text;
-              cloudFirestoreController.currentUser.dob = dobController.text;
-              cloudFirestoreController.currentUser.batch = batchController.text;
-              cloudFirestoreController.currentUser.designation =
-                  designationController.text;
-              cloudFirestoreController.currentUser.department =
-                  departmentController.text;
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          forceMaterialTransparency: true,
+          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () async {
+                loadingDialog('Saving...');
+                cloudFirestoreController.currentUser.mobile =
+                    mobileController.text;
+                cloudFirestoreController.currentUser.gender =
+                    genderController.text;
+                cloudFirestoreController.currentUser.dob = dobController.text;
+                cloudFirestoreController.currentUser.batch =
+                    batchController.text;
+                cloudFirestoreController.currentUser.designation =
+                    designationController.text;
+                cloudFirestoreController.currentUser.department =
+                    departmentController.text;
 
-              await cloudFirestoreController
-                  .updateUserData(cloudFirestoreController.currentUser)
-                  .then(
-                    (_) => Fluttertoast.showToast(
-                      msg: 'Updated details successfully',
-                    ),
-                  );
-            },
-            icon: Icon(Icons.check, color: colorScheme.primary),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.only(
-          right: deviceHeight * percentGapSmall,
-          left: deviceHeight * percentGapSmall,
+                await cloudFirestoreController
+                    .updateUserData(cloudFirestoreController.currentUser)
+                    .then(
+                      (_) => Fluttertoast.showToast(
+                        msg: 'Updated details successfully',
+                      ),
+                    );
+                hideLoadingDialog();
+              },
+              icon: Icon(Icons.check, color: colorScheme.primary),
+            ),
+          ],
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Account Details',
-                style: textTheme.titleMedium!.copyWith(
-                  color: textColorDefault,
+        body: Padding(
+          padding: EdgeInsets.only(
+            right: deviceHeight * percentGapSmall,
+            left: deviceHeight * percentGapSmall,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Account Details',
+                  style: textTheme.titleMedium!.copyWith(
+                    color: textColorDefault,
+                  ),
                 ),
-              ),
-              verticalGap(deviceHeight * percentGapLarge),
-              CustomInput(
-                controller: nameController,
-                title: 'Full Name',
-                enableTextField: false,
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              CustomInput(
-                controller: idController,
-                title: 'Metric ID No',
-                enableTextField: false,
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              CustomInput(
-                controller: emailController,
-                title: 'Email',
-                enableTextField: false,
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              CustomInput(controller: mobileController, title: 'Mobile Number'),
-              verticalGap(deviceHeight * percentGapSmall),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Stack(
-                      alignment: Alignment.bottomLeft,
-                      children: [
-                        CustomInput(
-                          controller: genderController,
-                          title: 'Gender',
-                          readOnly: true,
-                        ),
-                        PopupMenuButton<String>(
-                          itemBuilder: (context) => genderOptions
-                              .map(
-                                (String gender) => PopupMenuItem<String>(
-                                  value: gender,
-                                  child: Text(gender),
-                                ),
-                              )
-                              .toList(),
-                          onSelected: (value) => genderController.text = value,
-                          constraints: BoxConstraints.expand(
-                              width: deviceWidth * 0.4, height: 150),
-                          position: PopupMenuPosition.under,
-                          child: Container(
-                            width: deviceWidth,
-                            height: 45,
-                            decoration: const BoxDecoration(
-                              color: Colors.transparent,
+                verticalGap(deviceHeight * percentGapLarge),
+                CustomInput(
+                  controller: nameController,
+                  title: 'Full Name',
+                  enableTextField: false,
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                CustomInput(
+                  controller: idController,
+                  title: 'Metric ID No',
+                  enableTextField: false,
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                CustomInput(
+                  controller: emailController,
+                  title: 'Email',
+                  enableTextField: false,
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                CustomInput(
+                    controller: mobileController, title: 'Mobile Number'),
+                verticalGap(deviceHeight * percentGapSmall),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Stack(
+                        alignment: Alignment.bottomLeft,
+                        children: [
+                          CustomInput(
+                            controller: genderController,
+                            title: 'Gender',
+                            readOnly: true,
+                          ),
+                          PopupMenuButton<String>(
+                            itemBuilder: (context) => genderOptions
+                                .map(
+                                  (String gender) => PopupMenuItem<String>(
+                                    value: gender,
+                                    child: Text(gender),
+                                  ),
+                                )
+                                .toList(),
+                            onSelected: (value) =>
+                                genderController.text = value,
+                            constraints: BoxConstraints.expand(
+                                width: deviceWidth * 0.4, height: 150),
+                            position: PopupMenuPosition.under,
+                            child: Container(
+                              width: deviceWidth,
+                              height: 45,
+                              decoration: const BoxDecoration(
+                                color: Colors.transparent,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  horizontalGap(deviceWidth * percentGapMedium),
-                  Expanded(
-                    flex: 3,
-                    child: CustomInput(
-                      controller: dobController,
-                      title: 'Date Of Birth',
-                      readOnly: true,
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1970),
-                          lastDate: DateTime.now(),
-                        );
-                        if (picked != null) {
-                          final dob = DateFormat('dd-MM-y').format(picked);
-                          dobController.text = dob;
-                        }
-                      },
+                    horizontalGap(deviceWidth * percentGapMedium),
+                    Expanded(
+                      flex: 3,
+                      child: CustomInput(
+                        controller: dobController,
+                        title: 'Date Of Birth',
+                        readOnly: true,
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(1970),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            final dob = DateFormat('dd-MM-y').format(picked);
+                            dobController.text = dob;
+                          }
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              CustomInput(
-                controller: batchController,
-                title: 'Batch',
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              _autocompleteField(
-                  controller: designationController,
-                  options: designationOptions,
-                  title: 'Designation'),
-              verticalGap(deviceHeight * percentGapSmall),
-              _autocompleteField(
-                  controller: departmentController,
-                  options: departmentOptions,
-                  title: 'Department'),
-              verticalGap(deviceHeight * 0.3),
-            ],
+                  ],
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                CustomInput(
+                  controller: batchController,
+                  title: 'Batch',
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                _autocompleteField(
+                    controller: designationController,
+                    options: designationOptions,
+                    title: 'Designation'),
+                verticalGap(deviceHeight * percentGapSmall),
+                _autocompleteField(
+                    controller: departmentController,
+                    options: departmentOptions,
+                    title: 'Department'),
+                verticalGap(deviceHeight * 0.3),
+              ],
+            ),
           ),
         ),
       ),

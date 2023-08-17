@@ -22,120 +22,126 @@ class AllClassroomPage extends StatelessWidget {
         ? cloudFirestoreController.filteredArchivedClassroom
         : cloudFirestoreController.filteredClassroom;
 
-    return Scaffold(
-      appBar: isArchived
-          ? AppBar(
-              forceMaterialTransparency: true,
-              centerTitle: true,
-              title: Text(
-                'Archived Classrooms',
-                style: textTheme.titleMedium!.copyWith(color: textColorDefault),
-              ),
-            )
-          : null,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await cloudFirestoreController.initialize();
-        },
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: deviceHeight * percentGapVerySmall,
-              right: deviceHeight * percentGapSmall,
-              left: deviceHeight * percentGapSmall,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                verticalGap(deviceHeight * percentGapSmall),
-                CustomTextFormField(
-                  labelText: 'Search Classroom',
-                  controller: searchController,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  onChanged: (value) => isArchived
-                      ? cloudFirestoreController
-                          .filterArchiveClassesSearchResult(value)
-                      : cloudFirestoreController
-                          .filterAllClassesSearchResult(value),
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        appBar: isArchived
+            ? AppBar(
+                forceMaterialTransparency: true,
+                centerTitle: true,
+                title: Text(
+                  'Archived Classrooms',
+                  style:
+                      textTheme.titleMedium!.copyWith(color: textColorDefault),
                 ),
-                verticalGap(deviceHeight * percentGapSmall),
-                Obx(() {
-                  final archivedClasses =
-                      cloudFirestoreController.archivedClassrooms.length;
-                  if (isArchived || archivedClasses == 0) {
-                    return const SizedBox();
-                  }
-                  return InkWell(
-                    onTap: () =>
-                        Get.to(() => const AllClassroomPage(isArchived: true)),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: colorScheme.surfaceVariant.withAlpha(150),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.archive_rounded,
-                              color: colorScheme.secondary,
-                            ),
-                            horizontalGap(deviceWidth * percentGapMedium),
-                            Text(
-                              'Archived Classrooms',
-                              style: textTheme.bodyMedium!.copyWith(
-                                color: textColorDefault,
+              )
+            : null,
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await cloudFirestoreController.initialize();
+          },
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: deviceHeight * percentGapVerySmall,
+                right: deviceHeight * percentGapSmall,
+                left: deviceHeight * percentGapSmall,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  verticalGap(deviceHeight * percentGapSmall),
+                  CustomTextFormField(
+                    labelText: 'Search Classroom',
+                    controller: searchController,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    onChanged: (value) => isArchived
+                        ? cloudFirestoreController
+                            .filterArchiveClassesSearchResult(value)
+                        : cloudFirestoreController
+                            .filterAllClassesSearchResult(value),
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  Obx(() {
+                    final archivedClasses =
+                        cloudFirestoreController.archivedClassrooms.length;
+                    if (isArchived || archivedClasses == 0) {
+                      return const SizedBox();
+                    }
+                    return InkWell(
+                      onTap: () => Get.to(
+                          () => const AllClassroomPage(isArchived: true)),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: colorScheme.surfaceVariant.withAlpha(150),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.archive_rounded,
+                                color: colorScheme.secondary,
                               ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              archivedClasses.toString(),
-                              style: textTheme.titleMedium!.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
+                              horizontalGap(deviceWidth * percentGapMedium),
+                              Text(
+                                'Archived Classrooms',
+                                style: textTheme.bodyMedium!.copyWith(
+                                  color: textColorDefault,
+                                ),
                               ),
-                            ),
-                            horizontalGap(deviceWidth * percentGapSmall),
-                          ],
+                              const Spacer(),
+                              Text(
+                                archivedClasses.toString(),
+                                style: textTheme.titleMedium!.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              horizontalGap(deviceWidth * percentGapSmall),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
-                verticalGap(deviceHeight * percentGapSmall),
-                Expanded(
-                  child: Obx(() {
-                    return ListView.builder(
-                      itemCount: classroomList.length,
-                      itemBuilder: (_, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            if (isArchived) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(days: 365),
-                                  content: Text(
-                                    "This class has been archived. You can't add or edit anything.",
-                                  ),
-                                ),
-                              );
-                            }
-                            Get.to(() => DetailedClassroomPage(
-                                classroomData: classroomList[index]));
-                          },
-                          child:
-                              _buildCustomCard(classroom: classroomList[index]),
-                        );
-                      },
                     );
                   }),
-                ),
-              ],
+                  verticalGap(deviceHeight * percentGapSmall),
+                  Expanded(
+                    child: Obx(() {
+                      return ListView.builder(
+                        itemCount: classroomList.length,
+                        itemBuilder: (_, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              if (isArchived) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(days: 365),
+                                    content: Text(
+                                      "This class has been archived. You can't add or edit anything.",
+                                    ),
+                                  ),
+                                );
+                              }
+                              Get.to(() => DetailedClassroomPage(
+                                  classroomData: classroomList[index]));
+                            },
+                            child: _buildCustomCard(
+                                classroom: classroomList[index]),
+                          );
+                        },
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

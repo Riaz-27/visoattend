@@ -176,150 +176,208 @@ class LoginRegisterPage extends StatelessWidget {
       userValidatorString = null;
     }
 
-    return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
-        child: Form(
-          key: formKey,
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (!isSignUp) ...[
-                    SizedBox(
-                      width: deviceWidth * 0.55,
-                      child: Image.asset('assets/icons/text_icon.png'),
-                    ),
-                    // Text(
-                    //   'VisoAttend',
-                    //   style: Get.textTheme.titleLarge!
-                    //       .copyWith(fontWeight: FontWeight.bold),
-                    // ),
-                    verticalGap(deviceHeight * percentGapSmall),
-                    Text(
-                      'Welcome Back',
-                      style: textTheme.bodySmall!.copyWith(
-                        fontSize: deviceWidth * 0.035,
-                        color: textColorLight,
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
+          child: Form(
+            key: formKey,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!isSignUp) ...[
+                      SizedBox(
+                        width: deviceWidth * 0.55,
+                        child: Image.asset('assets/icons/text_icon.png'),
                       ),
-                    ),
-                    Text(
-                      'Please sign in to continue',
-                      style: textTheme.bodySmall!.copyWith(
-                        fontSize: deviceWidth * 0.035,
-                        color: textColorLight,
+                      // Text(
+                      //   'VisoAttend',
+                      //   style: Get.textTheme.titleLarge!
+                      //       .copyWith(fontWeight: FontWeight.bold),
+                      // ),
+                      verticalGap(deviceHeight * percentGapSmall),
+                      Text(
+                        'Welcome Back',
+                        style: textTheme.bodySmall!.copyWith(
+                          fontSize: deviceWidth * 0.035,
+                          color: textColorLight,
+                        ),
                       ),
-                    ),
-                    verticalGap(deviceHeight * percentGapMedium),
-                  ],
-                  if (isSignUp) ...[
-                    Text(
-                      'Create Account',
-                      style: textTheme.titleLarge!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColorDefault,
+                      Text(
+                        'Please sign in to continue',
+                        style: textTheme.bodySmall!.copyWith(
+                          fontSize: deviceWidth * 0.035,
+                          color: textColorLight,
+                        ),
                       ),
-                    ),
-                    verticalGap(deviceHeight * percentGapLarge),
+                      verticalGap(deviceHeight * percentGapMedium),
+                    ],
+                    if (isSignUp) ...[
+                      Text(
+                        'Create Account',
+                        style: textTheme.titleLarge!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: textColorDefault,
+                        ),
+                      ),
+                      verticalGap(deviceHeight * percentGapLarge),
+                      CustomTextFormField(
+                        labelText: 'Full Name (According to the registration)',
+                        controller: nameController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name.';
+                          }
+                          if (!RegExp(r'^[a-z A-Z.]+$').hasMatch(value)) {
+                            return 'Only letters and space are allowed.';
+                          }
+                          return null;
+                        },
+                      ),
+                      verticalGap(deviceHeight * percentGapMedium),
+                      CustomTextFormField(
+                        labelText: 'Email',
+                        controller: emailController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email address.';
+                          }
+                          if (!validEmail.hasMatch(value)) {
+                            return 'Email is not valid.';
+                          }
+                          return emailValidatorString;
+                        },
+                      ),
+                      verticalGap(deviceHeight * percentGapMedium),
+                    ],
                     CustomTextFormField(
-                      labelText: 'Full Name (According to the registration)',
-                      controller: nameController,
+                      labelText: isSignUp ? 'Student/Teacher ID' : 'ID / Email',
+                      controller: userIdController,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your name.';
+                          if (isSignUp) {
+                            return 'Please enter your student/teacher ID';
+                          }
+                          return 'Please enter your student/teacher ID or email';
                         }
-                        if (!RegExp(r'^[a-z A-Z.]+$').hasMatch(value)) {
-                          return 'Only letters and space are allowed.';
+                        if (value.length < 5) {
+                          return 'ID must have at least 5 characters.';
+                        }
+                        if (isSignUp) {
+                          if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                            return 'ID must be letters or number';
+                          }
+                          return userValidatorString;
                         }
                         return null;
                       },
                     ),
                     verticalGap(deviceHeight * percentGapMedium),
                     CustomTextFormField(
-                      labelText: 'Email',
-                      controller: emailController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email address.';
-                        }
-                        if (!validEmail.hasMatch(value)) {
-                          return 'Email is not valid.';
-                        }
-                        return emailValidatorString;
-                      },
-                    ),
-                    verticalGap(deviceHeight * percentGapMedium),
-                  ],
-                  CustomTextFormField(
-                    labelText: isSignUp ? 'Student/Teacher ID' : 'ID / Email',
-                    controller: userIdController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        if (isSignUp) {
-                          return 'Please enter your student/teacher ID';
-                        }
-                        return 'Please enter your student/teacher ID or email';
-                      }
-                      if (value.length < 5) {
-                        return 'ID must have at least 5 characters.';
-                      }
-                      if (isSignUp) {
-                        if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
-                          return 'ID must be letters or number';
-                        }
-                        return userValidatorString;
-                      }
-                      return null;
-                    },
-                  ),
-                  verticalGap(deviceHeight * percentGapMedium),
-                  CustomTextFormField(
-                    labelText: 'Password',
-                    controller: passwordController,
-                    isPassword: true,
-                    maxLines: 1,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        if (isSignUp) return 'Please enter a password.';
-                        return 'Please enter your password.';
-                      }
-                      if (value.trim().length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  verticalGap(deviceHeight * percentGapMedium),
-                  if (isSignUp) ...[
-                    CustomTextFormField(
-                      labelText: 'Confirm Password',
-                      controller: confirmPasswordController,
+                      labelText: 'Password',
+                      controller: passwordController,
                       isPassword: true,
                       maxLines: 1,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please re-enter the password.';
+                        if (value == null || value.trim().isEmpty) {
+                          if (isSignUp) return 'Please enter a password.';
+                          return 'Please enter your password.';
                         }
-                        if (passwordController.text != value) {
-                          return 'Password do not match';
+                        if (value.trim().length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
                         return null;
                       },
                     ),
-                    verticalGap(deviceHeight * percentGapLarge),
-                  ],
-                  if (!isSignUp) ...[
+                    verticalGap(deviceHeight * percentGapMedium),
+                    if (isSignUp) ...[
+                      CustomTextFormField(
+                        labelText: 'Confirm Password',
+                        controller: confirmPasswordController,
+                        isPassword: true,
+                        maxLines: 1,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please re-enter the password.';
+                          }
+                          if (passwordController.text != value) {
+                            return 'Password do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      verticalGap(deviceHeight * percentGapLarge),
+                    ],
+                    if (!isSignUp) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Get.to(() => const ResetPasswordPage());
+                            },
+                            child: Text(
+                              'Forgotten Password?',
+                              style: textTheme.labelMedium!.copyWith(
+                                color: colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      verticalGap(deviceHeight * percentGapMedium),
+                    ],
+                    CustomButton(
+                      text: isSignUp ? 'Sign Up' : 'Sign In',
+                      onPressed: () async {
+                        loadingDialog('Please wait...');
+                        authController.isLoading = true;
+                        await validateEmail(emailController.text);
+                        await validateUser(userIdController.text);
+                        if (formKey.currentState!.validate()) {
+                          await handleSignInOrSignUp();
+                        } else {
+                          hideLoadingDialog();
+                          authController.isLoading = false;
+                        }
+                      },
+                    ),
+                    verticalGap(deviceHeight * percentGapSmall),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            Get.to(() => const ResetPasswordPage());
+                        Padding(
+                          padding: const EdgeInsets.only(left: 5.0),
+                          child: Text(
+                            isSignUp
+                                ? 'Already have an account?'
+                                : "Don't have an account?",
+                            style: textTheme.labelLarge!.copyWith(
+                              color: textColorDefault,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          onPressed: () {
+                            authController.isLoading = false;
+                            Get.offAll(
+                              () => LoginRegisterPage(
+                                isSignUp: !isSignUp,
+                              ),
+                              transition: Transition.cupertino,
+                            );
                           },
                           child: Text(
-                            'Forgotten Password?',
-                            style: textTheme.labelMedium!.copyWith(
+                            isSignUp ? 'Sign In' : 'Sign up',
+                            style: textTheme.labelLarge!.copyWith(
                               color: colorScheme.secondary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -327,61 +385,8 @@ class LoginRegisterPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    verticalGap(deviceHeight * percentGapMedium),
                   ],
-                  CustomButton(
-                    text: isSignUp ? 'Sign Up' : 'Sign In',
-                    onPressed: () async {
-                      loadingDialog('Please wait...');
-                      authController.isLoading = true;
-                      await validateEmail(emailController.text);
-                      await validateUser(userIdController.text);
-                      if (formKey.currentState!.validate()) {
-                        await handleSignInOrSignUp();
-                      } else {
-                        hideLoadingDialog();
-                        authController.isLoading = false;
-                      }
-                    },
-                  ),
-                  verticalGap(deviceHeight * percentGapSmall),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 5.0),
-                        child: Text(
-                          isSignUp
-                              ? 'Already have an account?'
-                              : "Don't have an account?",
-                          style: textTheme.labelLarge!.copyWith(
-                            color: textColorDefault,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        onPressed: () {
-                          authController.isLoading = false;
-                          Get.offAll(
-                            () => LoginRegisterPage(
-                              isSignUp: !isSignUp,
-                            ),
-                            transition: Transition.cupertino,
-                          );
-                        },
-                        child: Text(
-                          isSignUp ? 'Sign In' : 'Sign up',
-                          style: textTheme.labelLarge!.copyWith(
-                            color: colorScheme.secondary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),

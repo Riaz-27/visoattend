@@ -27,6 +27,7 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
 
     return WillPopScope(
       onWillPop: () async {
+        if(Get.isDialogOpen ?? false) return false;
         controller.selectedCategory = '';
         controller.updateValues(controller.classroomData);
         return true;

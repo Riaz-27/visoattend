@@ -33,159 +33,169 @@ class ApplyLeavePage extends GetView<LeaveRequestController> {
 
     final formKey = GlobalKey<FormState>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Apply for leave',
-          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Apply for leave',
+            style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+          ),
+          forceMaterialTransparency: true,
+          centerTitle: true,
         ),
-        forceMaterialTransparency: true,
-        centerTitle: true,
-      ),
-      body: Form(
-        key: formKey,
-        child: Padding(
-          padding:
-              EdgeInsets.symmetric(horizontal: deviceHeight * percentGapSmall),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        'Classrooms*',
-                        style: textTheme.bodyMedium!
-                            .copyWith(color: textColorLight),
+        body: Form(
+          key: formKey,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: deviceHeight * percentGapSmall),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          'Classrooms*',
+                          style: textTheme.bodyMedium!
+                              .copyWith(color: textColorLight),
+                        ),
                       ),
-                    ),
-                    verticalGap(deviceHeight * percentGapVerySmall),
-                    Obx(() {
-                      return Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.start,
-                        children: controller.selectedClassrooms
-                            .map((classroom) =>
-                                _selectedClassroomView(classroom))
-                            .toList(),
-                      );
-                    }),
-                    verticalGap(deviceHeight * percentGapSmall),
-                    _autocompleteField(),
-                  ],
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                CustomInput(
-                  controller: reasonTextController,
-                  title: 'Reason*',
-                  validator: (value) => reasonTextController.text == ''
-                      ? 'The field cannot be empty'
-                      : null,
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: CustomInput(
-                        controller: fromDateTextController,
-                        title: 'From*',
-                        readOnly: true,
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: toDateString == ''
-                                ? DateTime.now()
-                                : DateTime.parse(toDateString),
-                            firstDate:
-                                DateTime.now().add(const Duration(days: -365)),
-                            lastDate: toDateString == ''
-                                ? DateTime.now().add(const Duration(days: 365))
-                                : DateTime.parse(toDateString),
-                          );
-                          fromDateString =
-                              picked != null ? picked.toString() : '';
-                          fromDateTextController.text = picked != null
-                              ? DateFormat('dd MMMM y').format(picked)
-                              : '';
-                        },
-                        validator: (value) => fromDateTextController.text == ''
-                            ? 'Must select a date'
-                            : null,
+                      verticalGap(deviceHeight * percentGapVerySmall),
+                      Obx(() {
+                        return Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.start,
+                          children: controller.selectedClassrooms
+                              .map((classroom) =>
+                                  _selectedClassroomView(classroom))
+                              .toList(),
+                        );
+                      }),
+                      verticalGap(deviceHeight * percentGapSmall),
+                      _autocompleteField(),
+                    ],
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  CustomInput(
+                    controller: reasonTextController,
+                    title: 'Reason*',
+                    validator: (value) => reasonTextController.text == ''
+                        ? 'The field cannot be empty'
+                        : null,
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: CustomInput(
+                          controller: fromDateTextController,
+                          title: 'From*',
+                          readOnly: true,
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: toDateString == ''
+                                  ? DateTime.now()
+                                  : DateTime.parse(toDateString),
+                              firstDate: DateTime.now()
+                                  .add(const Duration(days: -365)),
+                              lastDate: toDateString == ''
+                                  ? DateTime.now()
+                                      .add(const Duration(days: 365))
+                                  : DateTime.parse(toDateString),
+                            );
+                            fromDateString =
+                                picked != null ? picked.toString() : '';
+                            fromDateTextController.text = picked != null
+                                ? DateFormat('dd MMMM y').format(picked)
+                                : '';
+                          },
+                          validator: (value) =>
+                              fromDateTextController.text == ''
+                                  ? 'Must select a date'
+                                  : null,
+                        ),
                       ),
-                    ),
-                    horizontalGap(deviceHeight * percentGapMedium),
-                    Expanded(
-                      flex: 1,
-                      child: CustomInput(
-                        controller: toDateTextController,
-                        title: 'To*',
-                        readOnly: true,
-                        onTap: () async {
-                          DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: fromDateString == ''
-                                ? DateTime.now()
-                                : DateTime.parse(fromDateString),
-                            firstDate: fromDateString == ''
-                                ? DateTime.now().add(const Duration(days: -365))
-                                : DateTime.parse(fromDateString),
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 365)),
-                          );
-                          picked = picked
-                              ?.add(const Duration(days: 1))
-                              .add(const Duration(milliseconds: -1));
-                          toDateString =
-                              picked != null ? picked.toString() : '';
-                          toDateTextController.text = picked != null
-                              ? DateFormat('dd MMMM y').format(picked)
-                              : '';
-                        },
-                        validator: (value) => toDateTextController.text == ''
-                            ? 'Must select a date'
-                            : null,
+                      horizontalGap(deviceHeight * percentGapMedium),
+                      Expanded(
+                        flex: 1,
+                        child: CustomInput(
+                          controller: toDateTextController,
+                          title: 'To*',
+                          readOnly: true,
+                          onTap: () async {
+                            DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: fromDateString == ''
+                                  ? DateTime.now()
+                                  : DateTime.parse(fromDateString),
+                              firstDate: fromDateString == ''
+                                  ? DateTime.now()
+                                      .add(const Duration(days: -365))
+                                  : DateTime.parse(fromDateString),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
+                            );
+                            picked = picked
+                                ?.add(const Duration(days: 1))
+                                .add(const Duration(milliseconds: -1));
+                            toDateString =
+                                picked != null ? picked.toString() : '';
+                            toDateTextController.text = picked != null
+                                ? DateFormat('dd MMMM y').format(picked)
+                                : '';
+                          },
+                          validator: (value) => toDateTextController.text == ''
+                              ? 'Must select a date'
+                              : null,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                CustomInput(
-                  controller: descriptionTextController,
-                  title: 'Description',
-                  borderRadius: 20,
-                  maxLength: 200,
-                  maxLines: 6,
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                CustomButton(
-                  text: 'Apply',
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      final currentUser =
-                          Get.find<CloudFirestoreController>().currentUser;
-                      final leaveRequest = LeaveRequestModel(
-                        leaveRequestId: '',
-                        dateTime: DateTime.now().toString(),
-                        userAuthUid: currentUser.authUid,
-                        reason: reasonTextController.text.trim(),
-                        fromDate: fromDateString,
-                        toDate: toDateString,
-                        description: descriptionTextController.text.trim(),
-                        applicationStatus: {},
-                      );
-                      await controller.saveLeaveRequestData(leaveRequest);
-                      Get.back();
-                      Fluttertoast.showToast(
-                          msg: 'Leave request sent to selected classes');
-                    }
-                  },
-                )
-              ],
+                    ],
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  CustomInput(
+                    controller: descriptionTextController,
+                    title: 'Description',
+                    borderRadius: 20,
+                    maxLength: 200,
+                    maxLines: 6,
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  CustomButton(
+                    text: 'Apply',
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        loadingDialog('Sending Request...');
+                        final currentUser =
+                            Get.find<CloudFirestoreController>().currentUser;
+                        final leaveRequest = LeaveRequestModel(
+                          leaveRequestId: '',
+                          dateTime: DateTime.now().toString(),
+                          userAuthUid: currentUser.authUid,
+                          reason: reasonTextController.text.trim(),
+                          fromDate: fromDateString,
+                          toDate: toDateString,
+                          description: descriptionTextController.text.trim(),
+                          applicationStatus: {},
+                        );
+                        await controller.saveLeaveRequestData(leaveRequest);
+                        hideLoadingDialog();
+                        Get.back();
+                        Fluttertoast.showToast(
+                            msg: 'Leave request sent to selected classes');
+                      }
+                    },
+                  )
+                ],
+              ),
             ),
           ),
         ),

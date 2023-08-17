@@ -21,61 +21,66 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
 
     final isTeacher = attendanceController.currentUserRole == 'Teacher';
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await controller.loadLeaveRequestData();
-        },
-        child: Padding(
-          padding: EdgeInsets.only(
-            right: deviceHeight * percentGapSmall,
-            left: deviceHeight * percentGapSmall,
-          ),
-          child: Obx(
-            () {
-              return controller.classroomLeaveRequests.isEmpty
-                  ? const Center(
-                      child: Text('No leave request application found'),
-                    )
-                  : ListView.builder(
-                      shrinkWrap: true,
-                      padding: attendanceController.classroomData.isArchived
-                          ? const EdgeInsets.only(bottom: 80)
-                          : EdgeInsets.zero,
-                      itemCount: controller.classroomLeaveRequests.length,
-                      itemBuilder: (context, index) {
-                        final leaveRequest =
-                            controller.classroomLeaveRequests[index];
-                        final user = isTeacher
-                            ? controller
-                                .leaveRequestsUser[leaveRequest.leaveRequestId]!
-                            : cloudFirestoreController.currentUser;
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await controller.loadLeaveRequestData();
+          },
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: deviceHeight * percentGapSmall,
+              left: deviceHeight * percentGapSmall,
+            ),
+            child: Obx(
+              () {
+                return controller.classroomLeaveRequests.isEmpty
+                    ? const Center(
+                        child: Text('No leave request application found'),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        padding: attendanceController.classroomData.isArchived
+                            ? const EdgeInsets.only(bottom: 80)
+                            : EdgeInsets.zero,
+                        itemCount: controller.classroomLeaveRequests.length,
+                        itemBuilder: (context, index) {
+                          final leaveRequest =
+                              controller.classroomLeaveRequests[index];
+                          final user = isTeacher
+                              ? controller.leaveRequestsUser[
+                                  leaveRequest.leaveRequestId]!
+                              : cloudFirestoreController.currentUser;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 15),
-                          child: _buildLeaveRequestList(
-                            context,
-                            leaveRequestIndex: index,
-                            user: user,
-                          ),
-                        );
-                      },
-                    );
-            },
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 15),
+                            child: _buildLeaveRequestList(
+                              context,
+                              leaveRequestIndex: index,
+                              user: user,
+                            ),
+                          );
+                        },
+                      );
+              },
+            ),
           ),
         ),
-      ),
-      floatingActionButton: Obx(
-        () {
-          return attendanceController.currentUserRole != 'Teacher' &&
-                  !attendanceController.classroomData.isArchived
-              ? FloatingActionButton(
-                  onPressed: () =>
-                      Get.to(() => const ApplyLeavePage(isSelectedClass: true)),
-                  child: const Icon(Icons.add),
-                )
-              : const SizedBox();
-        },
+        floatingActionButton: Obx(
+          () {
+            return attendanceController.currentUserRole != 'Teacher' &&
+                    !attendanceController.classroomData.isArchived
+                ? FloatingActionButton(
+                    onPressed: () => Get.to(
+                        () => const ApplyLeavePage(isSelectedClass: true)),
+                    child: const Icon(Icons.add),
+                  )
+                : const SizedBox();
+          },
+        ),
       ),
     );
   }
@@ -390,7 +395,7 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
           content: SizedBox(
             width: deviceWidth,
             child: Text(
-              'Do you really want to delete this request?',
+              'Do you really want to delete this leave request?',
               style: textTheme.bodyMedium!.copyWith(
                 color: textColorDefault,
               ),
@@ -398,17 +403,20 @@ class LeaveRequestPage extends GetView<LeaveRequestController> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('No'),
-            ),
-            TextButton(
               onPressed: () async {
                 await controller.deleteClassroomLeaveRequest(
                   leaveRequestIndex: leaveRequestIndex,
                 );
                 Get.back();
               },
-              child: const Text('Yes'),
+              child: Text(
+                'Yes',
+                style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('No'),
             ),
           ],
         );

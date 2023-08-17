@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:wakelock/wakelock.dart';
 
 import '../../helper/constants.dart';
 import '../../helper/functions.dart';
@@ -25,6 +26,7 @@ class AttendanceRecordPage extends StatelessWidget {
     cameraServiceController.isSignUp = false;
 
     String loadingMsg = 'Please wait...';
+    Wakelock.enable();
 
     //camera view
     stackChildren.add(
@@ -323,6 +325,8 @@ class AttendanceRecordPage extends StatelessWidget {
 
     return WillPopScope(
       onWillPop: () async {
+        if(Get.isDialogOpen ?? false) return false;
+        Wakelock.disable();
         loadingDialog(loadingMsg);
         cameraServiceController.isBusy = true;
         await cameraServiceController.cameraController.stopImageStream();
@@ -331,7 +335,7 @@ class AttendanceRecordPage extends StatelessWidget {
             .weekTimes[DateFormat('EEEE').format(DateTime.now())]['classCount'];
         attendanceController.attendanceCount =
             classCount == null || classCount == '' ? 1 : int.parse(classCount);
-        final durationMs = faceDetectorController.faces.length * 120 + 500;
+        final durationMs = (faceDetectorController.faces.length * 150) + 500;
         await Future.delayed(Duration(milliseconds: durationMs));
         hideLoadingDialog();
         return true;
@@ -340,15 +344,16 @@ class AttendanceRecordPage extends StatelessWidget {
         body: SafeArea(
           child: GestureDetector(
             onScaleUpdate: (updateDetails) async {
-              final cameraController = cameraServiceController.cameraController;
-              final maxZoomLevel = await cameraController.getMaxZoomLevel();
-
-              double dragIntensity = updateDetails.scale;
-              if (dragIntensity < 1) {
-                cameraController.setZoomLevel(1);
-              } else if (dragIntensity > 1 && dragIntensity < maxZoomLevel) {
-                cameraController.setZoomLevel(dragIntensity);
-              }
+              // final cameraController = cameraServiceController.cameraController;
+              // final maxZoomLevel = await cameraController.getMaxZoomLevel();
+              //
+              // double dragIntensity = updateDetails.scale;
+              // if (dragIntensity < 1) {
+              //   cameraController.setZoomLevel(1);
+              // } else if (dragIntensity > 1 && dragIntensity < maxZoomLevel) {
+              //   cameraController.setZoomLevel(dragIntensity);
+              // }
+              cameraServiceController.changeZoomLevel(updateDetails.scale);
             },
             child: Stack(
               children: stackChildren,

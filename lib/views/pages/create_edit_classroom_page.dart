@@ -115,366 +115,379 @@ class CreateEditClassroomPage extends StatelessWidget {
     final expandedTitle =
         Text(isEdit ? 'Change classroom details' : 'Set classroom details');
 
-    return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        title: Text(
-          isEdit ? 'Edit Classroom' : 'Create Classroom',
-          style: textTheme.bodyLarge!.copyWith(color: textColorDefault),
-        ),
-        actions: [
-          classroom.isArchived
-              ? const SizedBox()
-              : GestureDetector(
-                  onTap: () async {
-                    if (classroom.isArchived) return;
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          forceMaterialTransparency: true,
+          title: Text(
+            isEdit ? 'Edit Classroom' : 'Create Classroom',
+            style: textTheme.bodyLarge!.copyWith(color: textColorDefault),
+          ),
+          actions: [
+            classroom.isArchived
+                ? const SizedBox()
+                : GestureDetector(
+                    onTap: () async {
+                      if (classroom.isArchived) return;
 
-                    final courseCode = courseCodeController.text.trim();
-                    final courseTitle = courseTitleController.text.trim();
-                    if (courseTitle.isEmpty || courseCode.isEmpty) {
-                      errorDialog(
-                        title: 'Missing Required Field',
-                        msg: 'Course Title and Course Code must be provided.',
-                      );
-                      return;
-                    }
-                    if (isEdit) {
-                      loadingDialog('Saving...');
-                      classroom.courseCode = courseCodeController.text.trim();
-                      classroom.courseTitle = courseTitleController.text.trim();
-                      classroom.session = sessionController.text.trim();
-                      classroom.section = sectionController.text.trim();
-                      classroom.department = departmentController.text.trim();
-                      classroom.weekTimes =
-                          classroomController.selectedWeekTimes;
-                      await classroomController.updateClassroom(classroom);
-                      hideLoadingDialog();
-                      Get.back();
-                    } else if (!isEdit) {
-                      loadingDialog('Please wait...');
-                      await classroomController.createNewClassroom(
-                        courseCode: courseCode,
-                        courseTitle: courseTitle,
-                        section: sectionController.text.trim(),
-                        session: sessionController.text.trim(),
-                        department: departmentController.text.trim(),
-                      );
-                      hideLoadingDialog();
-                      Get.back();
-                      Get.back();
-                      Get.find<NavigationController>().selectedHomeIndex = 1;
-                    }
-                  },
-                  child: Container(
-                    margin: isEdit && currentUserRole == 'Teacher'
-                        ? EdgeInsets.zero
-                        : EdgeInsets.symmetric(
-                            horizontal: deviceWidth * percentGapLarge),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color: colorScheme.secondaryContainer,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: kSmall,
-                        vertical: kVerySmall,
+                      final courseCode = courseCodeController.text.trim();
+                      final courseTitle = courseTitleController.text.trim();
+                      if (courseTitle.isEmpty || courseCode.isEmpty) {
+                        errorDialog(
+                          title: 'Missing Required Field',
+                          msg: 'Course Title and Course Code must be provided.',
+                        );
+                        return;
+                      }
+                      if (isEdit) {
+                        loadingDialog('Saving...');
+                        classroom.courseCode = courseCodeController.text.trim();
+                        classroom.courseTitle =
+                            courseTitleController.text.trim();
+                        classroom.session = sessionController.text.trim();
+                        classroom.section = sectionController.text.trim();
+                        classroom.department = departmentController.text.trim();
+                        classroom.weekTimes =
+                            classroomController.selectedWeekTimes;
+                        await classroomController.updateClassroom(classroom);
+                        hideLoadingDialog();
+                        Get.back();
+                      } else if (!isEdit) {
+                        loadingDialog('Please wait...');
+                        await classroomController.createNewClassroom(
+                          courseCode: courseCode,
+                          courseTitle: courseTitle,
+                          section: sectionController.text.trim(),
+                          session: sessionController.text.trim(),
+                          department: departmentController.text.trim(),
+                        );
+                        hideLoadingDialog();
+                        Get.back();
+                        Get.back();
+                        Get.find<NavigationController>().selectedHomeIndex = 1;
+                      }
+                    },
+                    child: Container(
+                      margin: isEdit && currentUserRole == 'Teacher'
+                          ? EdgeInsets.zero
+                          : EdgeInsets.symmetric(
+                              horizontal: deviceWidth * percentGapLarge),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        color: colorScheme.secondaryContainer,
                       ),
-                      child: Text(
-                        isEdit ? 'Save' : 'Create',
-                        style: textTheme.bodySmall!.copyWith(
-                          color: colorScheme.onSecondaryContainer,
-                          fontWeight: FontWeight.bold,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: kSmall,
+                          vertical: kVerySmall,
+                        ),
+                        child: Text(
+                          isEdit ? 'Save' : 'Create',
+                          style: textTheme.bodySmall!.copyWith(
+                            color: colorScheme.onSecondaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-          if (isEdit && currentUser.authUid == classroom.teachers[0]['authUid'])
-            PopupMenuButton(
-              position: PopupMenuPosition.under,
-              tooltip: 'Classroom Options',
-              itemBuilder: (BuildContext context) => [
-                if (classroom.isArchived) ...[
-                  const PopupMenuItem(
-                    value: 'restore',
-                    child: Text('Restore'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete'),
-                  ),
-                ],
-                if (!classroom.isArchived)
-                  const PopupMenuItem(
-                    value: 'archive',
-                    child: Text('Archive Classroom'),
-                  ),
-              ],
-              onSelected: (value) {
-                switch (value) {
-                  case 'archive':
-                    _handleClassArchiveRestore(context, archive: true);
-                    break;
-                  case 'restore':
-                    _handleClassArchiveRestore(context, archive: false);
-                    break;
-                  case 'delete':
-                    _handleClassDelete(
-                      context,
-                      courseTitle: courseTitleController.text,
-                    );
-                    break;
-                }
-              },
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding:
-              EdgeInsets.symmetric(horizontal: deviceHeight * percentGapSmall),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Classroom Details',
-                style: textTheme.bodySmall!.copyWith(
-                  color: textColorLight,
-                ),
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: colorScheme.surfaceVariant.withOpacity(0.6),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                child: ListTileTheme(
-                  contentPadding: EdgeInsets.zero,
-                  minVerticalPadding: 0,
-                  dense: true,
-                  child: Theme(
-                    data: Get.theme.copyWith(
-                      dividerColor: Colors.transparent,
-                      splashColor: Colors.transparent,
+            if (isEdit &&
+                currentUser.authUid == classroom.teachers[0]['authUid'])
+              PopupMenuButton(
+                position: PopupMenuPosition.under,
+                tooltip: 'Classroom Options',
+                itemBuilder: (BuildContext context) => [
+                  if (classroom.isArchived) ...[
+                    const PopupMenuItem(
+                      value: 'restore',
+                      child: Text('Restore'),
                     ),
-                    child: Obx(() {
-                      final classroomController =
-                          Get.find<ClassroomController>();
-                      Widget title = classroomController.detailsExpanded
-                          ? expandedTitle
-                          : collapsedTitle;
-                      return ExpansionTile(
-                        initiallyExpanded: !isEdit,
-                        tilePadding: EdgeInsets.zero,
-                        childrenPadding: EdgeInsets.zero,
-                        title: title,
-                        onExpansionChanged: (value) =>
-                            classroomController.detailsExpanded = value,
-                        children: [
-                          TextField(
-                            enabled: isEdit && userRole == 'CR' ? false : true,
-                            readOnly: classroom.isArchived,
-                            controller: courseTitleController,
-                            style: textTheme.bodyMedium!.copyWith(
-                              color: textColorDefault,
-                            ),
-                            decoration: InputDecoration(
-                              labelText:
-                                  'Course Title (e.g. Project / Thesis) *',
-                              labelStyle: textTheme.bodyMedium!.copyWith(
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete'),
+                    ),
+                  ],
+                  if (!classroom.isArchived)
+                    const PopupMenuItem(
+                      value: 'archive',
+                      child: Text('Archive Classroom'),
+                    ),
+                ],
+                onSelected: (value) {
+                  switch (value) {
+                    case 'archive':
+                      _handleClassArchiveRestore(context, archive: true);
+                      break;
+                    case 'restore':
+                      _handleClassArchiveRestore(context, archive: false);
+                      break;
+                    case 'delete':
+                      _handleClassDelete(
+                        context,
+                        courseTitle: courseTitleController.text,
+                      );
+                      break;
+                  }
+                },
+              ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: deviceHeight * percentGapSmall),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Classroom Details',
+                  style: textTheme.bodySmall!.copyWith(
+                    color: textColorLight,
+                  ),
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: colorScheme.surfaceVariant.withOpacity(0.6),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  child: ListTileTheme(
+                    contentPadding: EdgeInsets.zero,
+                    minVerticalPadding: 0,
+                    dense: true,
+                    child: Theme(
+                      data: Get.theme.copyWith(
+                        dividerColor: Colors.transparent,
+                        splashColor: Colors.transparent,
+                      ),
+                      child: Obx(() {
+                        final classroomController =
+                            Get.find<ClassroomController>();
+                        Widget title = classroomController.detailsExpanded
+                            ? expandedTitle
+                            : collapsedTitle;
+                        return ExpansionTile(
+                          initiallyExpanded: !isEdit,
+                          tilePadding: EdgeInsets.zero,
+                          childrenPadding: EdgeInsets.zero,
+                          title: title,
+                          onExpansionChanged: (value) =>
+                              classroomController.detailsExpanded = value,
+                          children: [
+                            TextField(
+                              enabled:
+                                  isEdit && userRole == 'CR' ? false : true,
+                              readOnly: classroom.isArchived,
+                              controller: courseTitleController,
+                              style: textTheme.bodyMedium!.copyWith(
                                 color: textColorDefault,
                               ),
-                              alignLabelWithHint: true,
-                              isDense: true,
-                            ),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          TextField(
-                            enabled: isEdit && userRole == 'CR' ? false : true,
-                            readOnly: classroom.isArchived,
-                            controller: courseCodeController,
-                            style: textTheme.bodyMedium!.copyWith(
-                              color: textColorDefault,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Course Code (e.g. CSE-4800) *',
-                              labelStyle: textTheme.bodyMedium!.copyWith(
-                                color: textColorDefault,
-                              ),
-                              isDense: true,
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          TextField(
-                            readOnly: classroom.isArchived,
-                            controller: sectionController,
-                            style: textTheme.bodyMedium!.copyWith(
-                              color: textColorDefault,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Section (e.g. 8BM)',
-                              labelStyle: textTheme.bodyMedium!.copyWith(
-                                color: textColorDefault,
-                              ),
-                              isDense: true,
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          TextField(
-                            readOnly: classroom.isArchived,
-                            controller: sessionController,
-                            style: textTheme.bodyMedium!.copyWith(
-                              color: textColorDefault,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Session (e.g. Spring-2022, Batch-47)',
-                              labelStyle: textTheme.bodyMedium!.copyWith(
-                                color: textColorDefault,
-                              ),
-                              isDense: true,
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          verticalGap(deviceHeight * percentGapVerySmall),
-                          Autocomplete<String>(
-                            optionsBuilder: (textEditingValue) {
-                              if (textEditingValue.text == '') {
-                                return const Iterable<String>.empty();
-                              }
-                              return departmentOptions.where((opt) => opt
-                                  .toLowerCase()
-                                  .contains(
-                                      textEditingValue.text.toLowerCase()));
-                            },
-                            onSelected: (value) {
-                              departmentController.text = value;
-                            },
-                            fieldViewBuilder: (context, fieldController,
-                                focusNode, onSubmitted) {
-                              fieldController.text = departmentController.text;
-                              return TextField(
-                                readOnly: classroom.isArchived,
-                                controller: fieldController,
-                                style: textTheme.bodyMedium!.copyWith(
+                              decoration: InputDecoration(
+                                labelText:
+                                    'Course Title (e.g. Project / Thesis) *',
+                                labelStyle: textTheme.bodyMedium!.copyWith(
                                   color: textColorDefault,
                                 ),
-                                focusNode: focusNode,
-                                decoration: InputDecoration(
-                                  labelText: 'Department',
-                                  labelStyle: textTheme.bodyMedium!.copyWith(
+                                alignLabelWithHint: true,
+                                isDense: true,
+                              ),
+                            ),
+                            verticalGap(deviceHeight * percentGapVerySmall),
+                            TextField(
+                              enabled:
+                                  isEdit && userRole == 'CR' ? false : true,
+                              readOnly: classroom.isArchived,
+                              controller: courseCodeController,
+                              style: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Course Code (e.g. CSE-4800) *',
+                                labelStyle: textTheme.bodyMedium!.copyWith(
+                                  color: textColorDefault,
+                                ),
+                                isDense: true,
+                                alignLabelWithHint: true,
+                              ),
+                            ),
+                            verticalGap(deviceHeight * percentGapVerySmall),
+                            TextField(
+                              readOnly: classroom.isArchived,
+                              controller: sectionController,
+                              style: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Section (e.g. 8BM)',
+                                labelStyle: textTheme.bodyMedium!.copyWith(
+                                  color: textColorDefault,
+                                ),
+                                isDense: true,
+                                alignLabelWithHint: true,
+                              ),
+                            ),
+                            verticalGap(deviceHeight * percentGapVerySmall),
+                            TextField(
+                              readOnly: classroom.isArchived,
+                              controller: sessionController,
+                              style: textTheme.bodyMedium!.copyWith(
+                                color: textColorDefault,
+                              ),
+                              decoration: InputDecoration(
+                                labelText:
+                                    'Session (e.g. Spring-2022, Batch-47)',
+                                labelStyle: textTheme.bodyMedium!.copyWith(
+                                  color: textColorDefault,
+                                ),
+                                isDense: true,
+                                alignLabelWithHint: true,
+                              ),
+                            ),
+                            verticalGap(deviceHeight * percentGapVerySmall),
+                            Autocomplete<String>(
+                              optionsBuilder: (textEditingValue) {
+                                if (textEditingValue.text == '') {
+                                  return const Iterable<String>.empty();
+                                }
+                                return departmentOptions.where((opt) => opt
+                                    .toLowerCase()
+                                    .contains(
+                                        textEditingValue.text.toLowerCase()));
+                              },
+                              onSelected: (value) {
+                                departmentController.text = value;
+                              },
+                              fieldViewBuilder: (context, fieldController,
+                                  focusNode, onSubmitted) {
+                                fieldController.text =
+                                    departmentController.text;
+                                return TextField(
+                                  readOnly: classroom.isArchived,
+                                  controller: fieldController,
+                                  style: textTheme.bodyMedium!.copyWith(
                                     color: textColorDefault,
                                   ),
-                                  isDense: true,
-                                  alignLabelWithHint: true,
-                                ),
-                              );
-                            },
-                            optionsViewBuilder:
-                                (context, onSelected, optionsData) {
-                              return Align(
-                                alignment: Alignment.topLeft,
-                                child: Material(
-                                  child: Container(
-                                    margin: EdgeInsets.only(
-                                        top:
-                                            deviceHeight * percentGapVerySmall),
-                                    width: deviceWidth * 0.85,
-                                    decoration: BoxDecoration(
-                                        color: colorScheme.surfaceVariant
-                                            .withOpacity(0.7),
-                                        borderRadius: BorderRadius.circular(15),
-                                        border: Border.all(
-                                            color: colorScheme.onBackground)),
-                                    child: ListView.builder(
-                                      shrinkWrap: true,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 15, vertical: 10),
-                                      itemCount: optionsData.length,
-                                      itemBuilder:
-                                          (BuildContext context, int index) {
-                                        final option =
-                                            optionsData.elementAt(index);
-                                        return GestureDetector(
-                                          onTap: () => onSelected(option),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              verticalGap(10),
-                                              Text(
-                                                option,
-                                                style: textTheme.bodyMedium!
-                                                    .copyWith(
-                                                  color: textColorDefault,
+                                  focusNode: focusNode,
+                                  decoration: InputDecoration(
+                                    labelText: 'Department',
+                                    labelStyle: textTheme.bodyMedium!.copyWith(
+                                      color: textColorDefault,
+                                    ),
+                                    isDense: true,
+                                    alignLabelWithHint: true,
+                                  ),
+                                );
+                              },
+                              optionsViewBuilder:
+                                  (context, onSelected, optionsData) {
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    child: Container(
+                                      margin: EdgeInsets.only(
+                                          top: deviceHeight *
+                                              percentGapVerySmall),
+                                      width: deviceWidth * 0.85,
+                                      decoration: BoxDecoration(
+                                          color: colorScheme.surfaceVariant
+                                              .withOpacity(0.7),
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          border: Border.all(
+                                              color: colorScheme.onBackground)),
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 15, vertical: 10),
+                                        itemCount: optionsData.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          final option =
+                                              optionsData.elementAt(index);
+                                          return GestureDetector(
+                                            onTap: () => onSelected(option),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                verticalGap(10),
+                                                Text(
+                                                  option,
+                                                  style: textTheme.bodyMedium!
+                                                      .copyWith(
+                                                    color: textColorDefault,
+                                                  ),
                                                 ),
-                                              ),
-                                              verticalGap(10),
-                                              if (index <
-                                                  optionsData.length - 1)
-                                                const Divider(
-                                                    height: 0, thickness: 0.5),
-                                            ],
-                                          ),
-                                        );
-                                      },
+                                                verticalGap(10),
+                                                if (index <
+                                                    optionsData.length - 1)
+                                                  const Divider(
+                                                      height: 0,
+                                                      thickness: 0.5),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                          // TextField(
-                          //   controller: departmentController,
-                          //   style: textTheme.bodyMedium,
-                          //   decoration: InputDecoration(
-                          //     labelText: 'Department',
-                          //     labelStyle: Get.textTheme.bodyMedium,
-                          //     isDense: true,
-                          //     alignLabelWithHint: true,
-                          //   ),
-                          // ),
-                        ],
-                      );
-                    }),
+                                );
+                              },
+                            ),
+                            // TextField(
+                            //   controller: departmentController,
+                            //   style: textTheme.bodyMedium,
+                            //   decoration: InputDecoration(
+                            //     labelText: 'Department',
+                            //     labelStyle: Get.textTheme.bodyMedium,
+                            //     isDense: true,
+                            //     alignLabelWithHint: true,
+                            //   ),
+                            // ),
+                          ],
+                        );
+                      }),
+                    ),
                   ),
                 ),
-              ),
-              verticalGap(deviceHeight * percentGapMedium),
-              Text(
-                'Weekly class schedule',
-                style: textTheme.bodySmall!.copyWith(
-                  color: textColorLight,
+                verticalGap(deviceHeight * percentGapMedium),
+                Text(
+                  'Weekly class schedule',
+                  style: textTheme.bodySmall!.copyWith(
+                    color: textColorLight,
+                  ),
                 ),
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-              Flexible(
-                child: ListView.builder(
-                  padding: classroom.isArchived
-                      ? const EdgeInsets.only(bottom: 80)
-                      : EdgeInsets.zero,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 7,
-                  itemBuilder: (context, index) {
-                    return _buildWeekTimeList(
-                      context,
-                      index,
-                      roomNoController,
-                      classCountController,
-                    );
-                  },
+                verticalGap(deviceHeight * percentGapSmall),
+                Flexible(
+                  child: ListView.builder(
+                    padding: classroom.isArchived
+                        ? const EdgeInsets.only(bottom: 80)
+                        : EdgeInsets.zero,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 7,
+                    itemBuilder: (context, index) {
+                      return _buildWeekTimeList(
+                        context,
+                        index,
+                        roomNoController,
+                        classCountController,
+                      );
+                    },
+                  ),
                 ),
-              ),
-              verticalGap(deviceHeight * percentGapSmall),
-            ],
+                verticalGap(deviceHeight * percentGapSmall),
+              ],
+            ),
           ),
         ),
       ),

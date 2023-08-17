@@ -37,6 +37,7 @@ class DetailedHomePage extends GetView<NavigationController> {
 
     return WillPopScope(
       onWillPop: () async {
+        if(Get.isDialogOpen ?? false) return false;
         if (controller.selectedHomeIndex == 0) {
           final now = DateTime.now();
           if (backPressTime == null ||

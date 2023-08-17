@@ -18,6 +18,7 @@ class AuthPage extends StatelessWidget {
       stream: authController.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          print('connection status : ${snapshot.connectionState}');
           return const DetailedHomePage();
         }
         return const LoginRegisterPage();

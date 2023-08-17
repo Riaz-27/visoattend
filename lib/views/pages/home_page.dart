@@ -21,182 +21,190 @@ class HomePage extends StatelessWidget {
 
     final classroomList = cloudFirestoreController.classesOfToday;
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await cloudFirestoreController.initialize();
-        },
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: EdgeInsets.only(
-                right: deviceHeight * percentGapSmall,
-                left: deviceHeight * percentGapSmall,
-              ),
-              child: Obx(
-                () {
-                  return cloudFirestoreController.isHomeLoading
-                      ? _loadingWidget()
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            verticalGap(deviceHeight * percentGapSmall),
-                            // Running Class UI
-                            Obx(() {
-                              final classTimes =
-                                  cloudFirestoreController.timeLeftToStart;
-                              final isRunning = classTimes.isNotEmpty
-                                  ? classTimes.first < 1
-                                      ? true
-                                      : false
-                                  : false;
-                              return (!cloudFirestoreController.isHoliday &&
-                                      classroomList.isNotEmpty)
-                                  ? Text(
-                                      isRunning
-                                          ? "Running Class"
-                                          : "Next Class",
-                                      style: textTheme.titleSmall!.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: textColorDefault,
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: () async {
+            await cloudFirestoreController.initialize();
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: deviceHeight * percentGapSmall,
+                  left: deviceHeight * percentGapSmall,
+                ),
+                child: Obx(
+                  () {
+                    return cloudFirestoreController.isHomeLoading
+                        ? _loadingWidget()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              verticalGap(deviceHeight * percentGapSmall),
+                              // Running Class UI
+                              Obx(() {
+                                final classTimes =
+                                    cloudFirestoreController.timeLeftToStart;
+                                final isRunning = classTimes.isNotEmpty
+                                    ? classTimes.first < 1
+                                        ? true
+                                        : false
+                                    : false;
+                                return (!cloudFirestoreController.isHoliday &&
+                                        classroomList.isNotEmpty)
+                                    ? Text(
+                                        isRunning
+                                            ? "Running Class"
+                                            : "Next Class",
+                                        style: textTheme.titleSmall!.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: textColorDefault,
+                                        ),
+                                      )
+                                    : const SizedBox();
+                              }),
+                              verticalGap(deviceHeight * percentGapSmall),
+                              GestureDetector(
+                                onTap: () {
+                                  if (classroomList.isNotEmpty) {
+                                    Get.to(
+                                      () => DetailedClassroomPage(
+                                          classroomData: classroomList.first),
+                                    );
+                                  }
+                                },
+                                child: _topView(
+                                    context: context,
+                                    classroomList: classroomList),
+                              ),
+                              verticalGap(deviceHeight * percentGapMedium),
+                              Obx(() {
+                                String nextDateString = '';
+                                if (classroomList.isEmpty &&
+                                    cloudFirestoreController
+                                        .classesOfNextDay.isEmpty) {
+                                  return const SizedBox();
+                                }
+                                if (classroomList.isEmpty) {
+                                  final nextDate =
+                                      cloudFirestoreController.nextClassDate;
+                                  final nextDateTime = DateTime.parse(nextDate);
+                                  final tomorrowDate = DateTime.now()
+                                      .add(const Duration(days: 1));
+                                  if (nextDateTime.day == tomorrowDate.day) {
+                                    nextDateString = 'Tomorrow';
+                                  } else {
+                                    nextDateString = DateFormat('EEE, dd MMMM')
+                                        .format(nextDateTime);
+                                  }
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Next Class',
+                                        style: textTheme.titleSmall!.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: textColorDefault,
+                                        ),
                                       ),
-                                    )
-                                  : const SizedBox();
-                            }),
-                            verticalGap(deviceHeight * percentGapSmall),
-                            GestureDetector(
-                              onTap: () {
-                                if (classroomList.isNotEmpty) {
-                                  Get.to(
-                                    () => DetailedClassroomPage(
-                                        classroomData: classroomList.first),
+                                      const Spacer(),
+                                      Text(
+                                        nextDateString,
+                                        style: textTheme.bodySmall!.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: textColorLight,
+                                        ),
+                                      ),
+                                    ],
                                   );
                                 }
-                              },
-                              child: _topView(
-                                  context: context,
-                                  classroomList: classroomList),
-                            ),
-                            verticalGap(deviceHeight * percentGapMedium),
-                            Obx(() {
-                              String nextDateString = '';
-                              if (classroomList.isEmpty &&
-                                  cloudFirestoreController
-                                      .classesOfNextDay.isEmpty) {
-                                return const SizedBox();
-                              }
-                              if (classroomList.isEmpty) {
-                                final nextDate =
-                                    cloudFirestoreController.nextClassDate;
-                                final nextDateTime = DateTime.parse(nextDate);
-                                final tomorrowDate =
-                                    DateTime.now().add(const Duration(days: 1));
-                                if (nextDateTime.day == tomorrowDate.day) {
-                                  nextDateString = 'Tomorrow';
-                                } else {
-                                  nextDateString = DateFormat('EEE, dd MMMM')
-                                      .format(nextDateTime);
-                                }
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Next Class',
-                                      style: textTheme.titleSmall!.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: textColorDefault,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      nextDateString,
-                                      style: textTheme.bodySmall!.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: textColorLight,
-                                      ),
-                                    ),
-                                  ],
+                                return Text(
+                                  "Later Today",
+                                  style: textTheme.titleSmall!.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: textColorDefault,
+                                  ),
                                 );
-                              }
-                              return Text(
-                                "Later Today",
-                                style: textTheme.titleSmall!.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: textColorDefault,
-                                ),
-                              );
-                            }),
-                            verticalGap(deviceHeight * percentGapSmall),
-                            if (classroomList.isNotEmpty)
-                              Flexible(
-                                child: Obx(
-                                  () {
-                                    if (classroomList.length == 1) {
-                                      return Text(
-                                        'No more classes today!',
-                                        style: textTheme.titleSmall!.copyWith(
-                                          color: textColorMedium,
-                                        ),
+                              }),
+                              verticalGap(deviceHeight * percentGapSmall),
+                              if (classroomList.isNotEmpty)
+                                Flexible(
+                                  child: Obx(
+                                    () {
+                                      if (classroomList.length == 1) {
+                                        return Text(
+                                          'No more classes today!',
+                                          style: textTheme.titleSmall!.copyWith(
+                                            color: textColorMedium,
+                                          ),
+                                        );
+                                      }
+                                      return ListView.builder(
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        shrinkWrap: true,
+                                        itemCount: classroomList.length,
+                                        itemBuilder:
+                                            (BuildContext context, int index) {
+                                          if (index == 0) {
+                                            return const SizedBox();
+                                          }
+                                          return GestureDetector(
+                                            onTap: () => Get.to(
+                                              () => DetailedClassroomPage(
+                                                classroomData:
+                                                    classroomList[index],
+                                              ),
+                                            ),
+                                            child: _buildCustomCard(
+                                              classroom: classroomList[index],
+                                              index: index,
+                                            ),
+                                          );
+                                        },
                                       );
-                                    }
+                                    },
+                                  ),
+                                ),
+                              if (cloudFirestoreController
+                                  .classesOfNextDay.isNotEmpty)
+                                Flexible(
+                                  child: Obx(() {
+                                    final nextClassList =
+                                        cloudFirestoreController
+                                            .classesOfNextDay;
                                     return ListView.builder(
                                       physics:
                                           const NeverScrollableScrollPhysics(),
                                       shrinkWrap: true,
-                                      itemCount: classroomList.length,
+                                      itemCount: nextClassList.length,
                                       itemBuilder:
                                           (BuildContext context, int index) {
-                                        if (index == 0) {
-                                          return const SizedBox();
-                                        }
                                         return GestureDetector(
                                           onTap: () => Get.to(
                                             () => DetailedClassroomPage(
                                               classroomData:
-                                                  classroomList[index],
+                                                  nextClassList[index],
                                             ),
                                           ),
-                                          child: _buildCustomCard(
-                                            classroom: classroomList[index],
-                                            index: index,
-                                          ),
+                                          child: _buildNextClassCard(
+                                              classroom: nextClassList[index]),
                                         );
                                       },
                                     );
-                                  },
+                                  }),
                                 ),
-                              ),
-                            if (cloudFirestoreController
-                                .classesOfNextDay.isNotEmpty)
-                              Flexible(
-                                child: Obx(() {
-                                  final nextClassList =
-                                      cloudFirestoreController.classesOfNextDay;
-                                  return ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    itemCount: nextClassList.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return GestureDetector(
-                                        onTap: () => Get.to(
-                                          () => DetailedClassroomPage(
-                                            classroomData: nextClassList[index],
-                                          ),
-                                        ),
-                                        child: _buildNextClassCard(
-                                            classroom: nextClassList[index]),
-                                      );
-                                    },
-                                  );
-                                }),
-                              ),
-                          ],
-                        );
-                },
+                            ],
+                          );
+                  },
+                ),
               ),
             ),
           ),
@@ -589,7 +597,7 @@ class HomePage extends StatelessWidget {
                       verticalGap(deviceHeight * percentGapSmall),
                       CircularPercentIndicator(
                         radius: deviceHeight * 0.07,
-                        lineWidth: 11,
+                        lineWidth: deviceHeight * 0.012,
                         percent: percent,
                         circularStrokeCap: CircularStrokeCap.round,
                         progressColor: color,
@@ -602,12 +610,15 @@ class HomePage extends StatelessWidget {
                               percentText,
                               style: textTheme.titleLarge!.copyWith(
                                 color: textColorDefault,
+                                fontSize: deviceWidth * 0.05,
                               ),
                             ),
                             Text(
                               status,
-                              style:
-                                  textTheme.labelSmall!.copyWith(color: color),
+                              style: textTheme.labelSmall!.copyWith(
+                                color: color,
+                                fontSize: deviceWidth * 0.027,
+                              ),
                             ),
                           ],
                         ),
@@ -639,11 +650,12 @@ class HomePage extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            cloudFirestoreController.currentUser.classrooms.isEmpty
+                            cloudFirestoreController
+                                    .currentUser.classrooms.isEmpty
                                 ? "Create or Join your first classroom."
                                 : cloudFirestoreController.isHoliday
-                                ? 'Enjoy your Holiday!'
-                                : classroom.courseCode,
+                                    ? 'Enjoy your Holiday!'
+                                    : classroom.courseCode,
                             style: textTheme.labelMedium!.copyWith(
                               color: textColorDefault,
                             ),

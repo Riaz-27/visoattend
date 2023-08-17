@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:visoattend/helper/color_scheme.dart';
 
+import './helper/color_scheme.dart';
 import './firebase_options.dart';
 import './global_bindings.dart';
 import './views/pages/auth_page.dart';
@@ -39,4 +39,5 @@ void main() async {
       home:  const AuthPage(),
     ),
   );
+
 }

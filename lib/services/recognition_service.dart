@@ -1,5 +1,5 @@
 import 'dart:developer' as dev;
-import 'dart:io';
+
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
 class RecognitionService {

@@ -22,123 +22,128 @@ class ProfilePage extends StatelessWidget {
 
     final currentUser = cloudFirestoreController.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(
-        forceMaterialTransparency: true,
-        centerTitle: true,
-        title: Text(
-          'Profile',
-          style: textTheme.titleMedium!.copyWith(color: textColorDefault),
-        ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            right: deviceHeight * percentGapSmall,
-            left: deviceHeight * percentGapSmall,
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          forceMaterialTransparency: true,
+          centerTitle: true,
+          title: Text(
+            'Profile',
+            style: textTheme.titleMedium!.copyWith(color: textColorDefault),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                verticalGap(deviceHeight * percentGapLarge),
-                //Center photo
-                Center(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: 102,
-                        height: 102,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: colorScheme.surfaceTint, width: 3),
-                        ),
-                      ),
-                      Obx(() {
-                        final picUrl = profilePicController.profilePicUrl;
-                        return Container(
-                          width: 90,
-                          height: 90,
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: deviceHeight * percentGapSmall,
+              left: deviceHeight * percentGapSmall,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  verticalGap(deviceHeight * percentGapLarge),
+                  //Center photo
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 102,
+                          height: 102,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: colorScheme.outline.withOpacity(0.4),
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              image: NetworkImage(picUrl),
-                            ),
+                            border: Border.all(
+                                color: colorScheme.surfaceTint, width: 3),
                           ),
-                        );
-                      }),
-                      _handleImageChangeButton(),
-                    ],
+                        ),
+                        Obx(() {
+                          final picUrl = profilePicController.profilePicUrl;
+                          return Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colorScheme.outline.withOpacity(0.4),
+                              image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(picUrl),
+                              ),
+                            ),
+                          );
+                        }),
+                        _handleImageChangeButton(),
+                      ],
+                    ),
                   ),
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                Text(
-                  currentUser.name,
-                  textAlign: TextAlign.center,
-                  style: textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                    color: textColorDefault,
+                  verticalGap(deviceHeight * percentGapSmall),
+                  Text(
+                    currentUser.name,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleMedium!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                      color: textColorDefault,
+                    ),
                   ),
-                ),
-                Text(
-                  currentUser.userId,
-                  textAlign: TextAlign.center,
-                  style: textTheme.titleSmall!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                    color: textColorLight,
+                  Text(
+                    currentUser.userId,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                      color: textColorLight,
+                    ),
                   ),
-                ),
-                verticalGap(deviceHeight * percentGapMedium),
-                Divider(
-                  height: 0,
-                  color: colorScheme.outline.withOpacity(0.4),
-                  thickness: 1,
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                _optionsWidget(
-                  onTap: () {
-                    Get.to(
-                      () => FaceRegisterPage(
-                        user: currentUser,
-                        retrainModel: true,
-                      ),
-                    );
-                  },
-                  Icons.face_retouching_natural_outlined,
-                  'Retrain Face Model',
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                _optionsWidget(
-                  onTap: () => Get.to(() => const AccountDetailsPage()),
-                  Icons.account_circle_rounded,
-                  'Account Details',
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                _optionsWidget(
-                  onTap: () => Get.to(() => const ChangePasswordPage()),
-                  Icons.lock_outline_rounded,
-                  'Change Password',
-                ),
-                verticalGap(deviceHeight * percentGapMedium),
-                Divider(
-                  height: 0,
-                  color: colorScheme.outline.withOpacity(0.4),
-                  thickness: 1,
-                ),
-                verticalGap(deviceHeight * percentGapSmall),
-                _optionsWidget(
-                  onTap: () => showConfirmDialog(context),
-                  Icons.logout_rounded,
-                  'Logout',
-                  color: colorScheme.error,
-                ),
-              ],
+                  verticalGap(deviceHeight * percentGapMedium),
+                  Divider(
+                    height: 0,
+                    color: colorScheme.outline.withOpacity(0.4),
+                    thickness: 1,
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  _optionsWidget(
+                    onTap: () {
+                      Get.to(
+                        () => FaceRegisterPage(
+                          user: currentUser,
+                          retrainModel: true,
+                        ),
+                      );
+                    },
+                    Icons.face_retouching_natural_outlined,
+                    'Retrain Face Model',
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  _optionsWidget(
+                    onTap: () => Get.to(() => const AccountDetailsPage()),
+                    Icons.account_circle_rounded,
+                    'Account Details',
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  _optionsWidget(
+                    onTap: () => Get.to(() => const ChangePasswordPage()),
+                    Icons.lock_outline_rounded,
+                    'Change Password',
+                  ),
+                  verticalGap(deviceHeight * percentGapMedium),
+                  Divider(
+                    height: 0,
+                    color: colorScheme.outline.withOpacity(0.4),
+                    thickness: 1,
+                  ),
+                  verticalGap(deviceHeight * percentGapSmall),
+                  _optionsWidget(
+                    onTap: () => showConfirmDialog(context),
+                    Icons.logout_rounded,
+                    'Logout',
+                    color: colorScheme.error,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -224,7 +229,8 @@ class ProfilePage extends StatelessWidget {
               horizontalGap(deviceWidth * percentGapMedium),
               Text(
                 text,
-                style: textTheme.titleSmall!.copyWith(color: color?? textColorDefault),
+                style: textTheme.titleSmall!
+                    .copyWith(color: color ?? textColorDefault),
               ),
               const Spacer(),
               const Icon(

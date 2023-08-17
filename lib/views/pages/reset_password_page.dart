@@ -30,46 +30,51 @@ class ResetPasswordPage extends StatelessWidget {
       emailValidatorString = null;
     }
 
-    return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
-        child: Form(
-          key: formKey,
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Enter the email associated with your account and we’ll send an email with instructions toreset your password",
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodyMedium!.copyWith(
-                      color: textColorLight,
+    return WillPopScope(
+      onWillPop: () async {
+        return !(Get.isDialogOpen ?? false);
+      },
+      child: Scaffold(
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: deviceHeight * 0.025),
+          child: Form(
+            key: formKey,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Enter the email associated with your account and we’ll send an email with instructions to reset your password",
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodyMedium!.copyWith(
+                        color: textColorLight,
+                      ),
                     ),
-                  ),
-                  verticalGap(deviceHeight * percentGapMedium),
-                  CustomTextFormField(
-                    labelText: 'Enter your email address',
-                    controller: emailController,
-                    validator: (value) {
-                      if (value!.isEmpty || !validEmail.hasMatch(value)) {
-                        return 'Email is not valid';
-                      }
-                      return emailValidatorString;
-                    },
-                  ),
-                  verticalGap(deviceHeight * percentGapMedium),
-                  CustomButton(
-                    text: 'Reset Password',
-                    onPressed: () async {
-                      await validateEmail();
-                      if (formKey.currentState!.validate()) {
-                        Get.find<AuthController>()
-                            .resetPassword(emailController.text.trim());
-                      }
-                    },
-                  ),
-                ],
+                    verticalGap(deviceHeight * percentGapMedium),
+                    CustomTextFormField(
+                      labelText: 'Enter your email address',
+                      controller: emailController,
+                      validator: (value) {
+                        if (value!.isEmpty || !validEmail.hasMatch(value)) {
+                          return 'Email is not valid';
+                        }
+                        return emailValidatorString;
+                      },
+                    ),
+                    verticalGap(deviceHeight * percentGapMedium),
+                    CustomButton(
+                      text: 'Reset Password',
+                      onPressed: () async {
+                        await validateEmail();
+                        if (formKey.currentState!.validate()) {
+                          Get.find<AuthController>()
+                              .resetPassword(emailController.text.trim());
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

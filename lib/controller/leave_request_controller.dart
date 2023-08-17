@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:visoattend/models/leave_request_model.dart';
-import 'package:visoattend/models/user_model.dart';
 
+import '../models/leave_request_model.dart';
+import '../models/user_model.dart';
 import '../models/classroom_model.dart';
 import 'cloud_firestore_controller.dart';
 import 'attendance_controller.dart';

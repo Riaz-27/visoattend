@@ -7,9 +7,8 @@ import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:visoattend/controller/attendance_controller.dart';
-import 'package:visoattend/models/user_model.dart';
 
+import '../controller/attendance_controller.dart';
 import '../models/attendance_model.dart';
 import '../models/classroom_model.dart';
 

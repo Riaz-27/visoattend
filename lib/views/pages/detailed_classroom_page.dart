@@ -35,6 +35,7 @@ class DetailedClassroomPage extends GetView<NavigationController> {
 
     return WillPopScope(
       onWillPop: () async {
+        if(Get.isDialogOpen ?? false) return false;
         if (controller.selectedIndex == 0) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           return true;
