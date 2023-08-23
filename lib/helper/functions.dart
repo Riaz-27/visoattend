@@ -107,19 +107,21 @@ void handleEditAttendance(BuildContext context, AttendanceModel attendance) {
                           onTap: () async {
                             final picked = await showDatePicker(
                               context: context,
-                              initialDate: attendanceController.selectedDateTime,
+                              initialDate:
+                                  attendanceController.selectedDateTime,
                               firstDate: DateTime.now()
                                   .add(const Duration(days: -365)),
-                              lastDate: DateTime.now()
-                                  .add(const Duration(days: 365)),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
                             );
                             if (picked != null) {
                               attendanceController.selectedDateTime =
-                                  attendanceController.selectedDateTime.copyWith(
-                                    day: picked.day,
-                                    month: picked.month,
-                                    year: picked.year,
-                                  );
+                                  attendanceController.selectedDateTime
+                                      .copyWith(
+                                day: picked.day,
+                                month: picked.month,
+                                year: picked.year,
+                              );
                             }
                           },
                           text: DateFormat('dd MMMM, y')
@@ -147,10 +149,11 @@ void handleEditAttendance(BuildContext context, AttendanceModel attendance) {
                             );
                             if (picked != null) {
                               attendanceController.selectedDateTime =
-                                  attendanceController.selectedDateTime.copyWith(
-                                    hour: picked.hour,
-                                    minute: picked.minute,
-                                  );
+                                  attendanceController.selectedDateTime
+                                      .copyWith(
+                                hour: picked.hour,
+                                minute: picked.minute,
+                              );
                             }
                           },
                           text: DateFormat('hh:mm a')
@@ -205,7 +208,8 @@ Widget _customInkWellButton({Function()? onTap, required String text}) {
   );
 }
 
-void handleDeleteAttendance(BuildContext context, AttendanceModel attendance, {bool selected = false}) {
+void handleDeleteAttendance(BuildContext context, AttendanceModel attendance,
+    {bool selected = false}) {
   final attendanceController = Get.find<AttendanceController>();
   showDialog(
     context: context,
@@ -227,16 +231,19 @@ void handleDeleteAttendance(BuildContext context, AttendanceModel attendance, {b
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('No'),
-          ),
-          TextButton(
             onPressed: () async {
               await attendanceController.deleteAttendance(attendance);
               Get.back();
-              if(selected) Get.back();
+              if (selected) Get.back();
             },
-            child: const Text('Yes'),
+            child: Text(
+              'Yes',
+              style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('No'),
           ),
         ],
       );

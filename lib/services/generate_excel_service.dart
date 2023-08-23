@@ -16,7 +16,7 @@ class GenerateExcelService {
     final totalStudents = attendanceController.cRsData.toList() +
         attendanceController.studentsData.toList();
 
-    totalStudents.sort((a, b) => a.userId.compareTo(b.userId));
+    totalStudents.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
 
     final Workbook workbook = Workbook();
     workbook.worksheets.create(1);

@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -603,7 +605,7 @@ class ClassroomPage extends GetView<AttendanceController> {
               if (scheduleText != null) {
                 if (scheduleText.contains('Next')) {
                   scheduleText +=
-                      ' - ${DateFormat('E, d MMMM').format(nextDate)}';
+                      ': ${DateFormat('E, d MMMM').format(nextDate)}';
                 }
                 startTime = DateFormat.jm().format(DateTime.parse(startTime));
                 endTime = DateFormat.jm().format(DateTime.parse(endTime));
@@ -834,7 +836,7 @@ class ClassroomPage extends GetView<AttendanceController> {
                             controller.classroomData.openAttendance;
                         String buttonText = 'Open Attendance';
                         final timeLeft = timerController.timeLeft;
-                        print('time LEFT: $timeLeft');
+                        dev.log('time LEFT: $timeLeft');
                         if (openAttendance == 'always') {
                           buttonText = 'Close Attendance';
                         } else if (openAttendance != 'off') {

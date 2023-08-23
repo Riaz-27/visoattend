@@ -244,21 +244,23 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
               ),
             ),
             horizontalGap(deviceWidth * percentGapLarge),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  student.name,
-                  style:
-                      textTheme.bodyMedium!.copyWith(color: textColorDefault),
-                ),
-                Text(
-                  student.userId,
-                  style: textTheme.bodySmall!.copyWith(color: textColorLight),
-                ),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    student.name,
+                    style:
+                        textTheme.bodyMedium!.copyWith(color: textColorDefault),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    student.userId,
+                    style: textTheme.bodySmall!.copyWith(color: textColorLight),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
               decoration: BoxDecoration(
@@ -273,9 +275,9 @@ class SelectedAttendancePage extends GetView<AttendanceController> {
   }
 
   void _handleUpdateAttendanceStatus(UserModel student) {
-    final studentStatus = controller
-            .selectedAttendance.studentsData[student.authUid] as String? ??
-        'Absent';
+    // final studentStatus = controller
+    //         .selectedAttendance.studentsData[student.authUid] as String? ??
+    //     'Absent';
     // Color color = colorScheme.primary;
     // if (studentStatus.contains('Leave')) {
     //   color = Colors.amber;

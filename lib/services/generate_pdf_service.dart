@@ -182,7 +182,7 @@ class GeneratePdfService {
 
     final totalStudents = attendanceController.cRsData.toList() +
         attendanceController.studentsData.toList();
-    totalStudents.sort((a, b) => a.userId.compareTo(b.userId));
+    totalStudents.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
 
     final lengthForLoop = totalStudents.length > 45 ? totalStudents.length : 45;
 
@@ -282,7 +282,7 @@ class GeneratePdfService {
 
     final totalStudents = attendanceController.cRsData.toList() +
         attendanceController.studentsData.toList();
-    totalStudents.sort((a, b) => a.userId.compareTo(b.userId));
+    totalStudents.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
 
     List<int> studentsAbsents = List.filled(totalStudents.length, 0);
     List<int> studentsPresents = List.filled(totalStudents.length, 0);

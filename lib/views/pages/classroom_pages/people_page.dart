@@ -634,41 +634,46 @@ class PeoplePage extends GetView<AttendanceController> {
   }
 
   void _handleRemoveStudent(UserModel student) {
-    Get.dialog(AlertDialog(
-      title: Text(
-        'Remove Student',
-        style: textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.bold,
-          color: textColorDefault,
-        ),
-      ),
-      content: SizedBox(
-        width: deviceWidth,
-        child: Text(
-          'Do you really want to remove ${student.name} from this classroom?',
-          style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () async {
-            final classroomController = Get.find<ClassroomController>();
-            await classroomController.removeStudentFromClassroom(
-              controller.classroomData,
-              student,
-            );
-            _reloadData();
-          },
-          child: Text(
-            'Yes',
-            style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
+    Get.dialog(
+      AlertDialog(
+        title: Text(
+          'Remove Student',
+          style: textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: textColorDefault,
           ),
         ),
-        TextButton(
-          onPressed: () => Get.back(),
-          child: const Text('No'),
+        content: SizedBox(
+          width: deviceWidth,
+          child: Text(
+            'Do you really want to remove ${student.name} from this classroom?',
+            style: textTheme.bodyMedium!.copyWith(color: textColorDefault),
+          ),
         ),
-      ],
-    ));
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              final classroomController = Get.find<ClassroomController>();
+              loadingDialog('Removing Student...');
+              await classroomController.removeStudentFromClassroom(
+                controller.classroomData,
+                student,
+              );
+              await _reloadData();
+              hideLoadingDialog();
+            },
+            child: Text(
+              'Yes',
+              style: textTheme.bodyMedium!.copyWith(color: colorScheme.error),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('No'),
+          ),
+        ],
+      ),
+    );
   }
 }

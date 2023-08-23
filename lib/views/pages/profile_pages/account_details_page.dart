@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../controller/auth_controller.dart';
 import '../../../controller/cloud_firestore_controller.dart';
 import '../../../helper/constants.dart';
 import '../../../helper/functions.dart';
@@ -76,27 +77,16 @@ class AccountDetailsPage extends StatelessWidget {
           actions: [
             IconButton(
               onPressed: () async {
-                loadingDialog('Saving...');
-                cloudFirestoreController.currentUser.mobile =
-                    mobileController.text;
-                cloudFirestoreController.currentUser.gender =
-                    genderController.text;
-                cloudFirestoreController.currentUser.dob = dobController.text;
-                cloudFirestoreController.currentUser.batch =
-                    batchController.text;
-                cloudFirestoreController.currentUser.designation =
-                    designationController.text;
-                cloudFirestoreController.currentUser.department =
-                    departmentController.text;
-
-                await cloudFirestoreController
-                    .updateUserData(cloudFirestoreController.currentUser)
-                    .then(
-                      (_) => Fluttertoast.showToast(
-                        msg: 'Updated details successfully',
-                      ),
-                    );
-                hideLoadingDialog();
+                _handleSaveDetails(
+                  context,
+                  emailController: emailController,
+                  mobileController: mobileController,
+                  genderController: genderController,
+                  dobController: dobController,
+                  batchController: batchController,
+                  designationController: designationController,
+                  departmentController: departmentController,
+                );
               },
               icon: Icon(Icons.check, color: colorScheme.primary),
             ),
@@ -133,7 +123,7 @@ class AccountDetailsPage extends StatelessWidget {
                 CustomInput(
                   controller: emailController,
                   title: 'Email',
-                  enableTextField: false,
+                  // enableTextField: false,
                 ),
                 verticalGap(deviceHeight * percentGapSmall),
                 CustomInput(
@@ -206,14 +196,16 @@ class AccountDetailsPage extends StatelessWidget {
                 ),
                 verticalGap(deviceHeight * percentGapSmall),
                 _autocompleteField(
-                    controller: designationController,
-                    options: designationOptions,
-                    title: 'Designation'),
+                  controller: designationController,
+                  options: designationOptions,
+                  title: 'Designation',
+                ),
                 verticalGap(deviceHeight * percentGapSmall),
                 _autocompleteField(
-                    controller: departmentController,
-                    options: departmentOptions,
-                    title: 'Department'),
+                  controller: departmentController,
+                  options: departmentOptions,
+                  title: 'Department',
+                ),
                 verticalGap(deviceHeight * 0.3),
               ],
             ),
@@ -289,6 +281,110 @@ class AccountDetailsPage extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _handleSaveDetails(
+    BuildContext context, {
+    required TextEditingController emailController,
+    required TextEditingController mobileController,
+    required TextEditingController genderController,
+    required TextEditingController dobController,
+    required TextEditingController batchController,
+    required TextEditingController designationController,
+    required TextEditingController departmentController,
+  }) {
+    final passwordController = TextEditingController();
+    final authController = Get.find<AuthController>();
+    final cloudFirestoreController = Get.find<CloudFirestoreController>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Verify Password',
+            style: textTheme.titleMedium!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColorDefault,
+            ),
+          ),
+          content: SizedBox(
+            width: deviceWidth,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  "Please enter your password to verify that it's you.",
+                  style:
+                      textTheme.bodyMedium!.copyWith(color: textColorDefault),
+                ),
+                verticalGap(deviceHeight * percentGapSmall),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Password',
+                    isDense: true,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                String? wrongPass = await authController
+                    .matchOldPassword(passwordController.text);
+                if (wrongPass == null) {
+                  loadingDialog('Saving...');
+                  if (cloudFirestoreController.currentUser.email !=
+                      emailController.text) {
+                    await Get.find<AuthController>()
+                        .changeEmail(emailController.text);
+                  }
+                  cloudFirestoreController.currentUser.email =
+                      emailController.text;
+                  cloudFirestoreController.currentUser.mobile =
+                      mobileController.text;
+                  cloudFirestoreController.currentUser.gender =
+                      genderController.text;
+                  cloudFirestoreController.currentUser.dob = dobController.text;
+                  cloudFirestoreController.currentUser.batch =
+                      batchController.text;
+                  cloudFirestoreController.currentUser.designation =
+                      designationController.text;
+                  cloudFirestoreController.currentUser.department =
+                      departmentController.text;
+
+                  await cloudFirestoreController
+                      .updateUserData(cloudFirestoreController.currentUser)
+                      .then(
+                        (_) => Fluttertoast.showToast(
+                          msg: 'Updated details successfully',
+                        ),
+                      );
+                  hideLoadingDialog();
+                  Get.back();
+                } else {
+                  passwordController.clear();
+                  errorDialog(
+                    title: 'Failed to verify',
+                    msg: 'You entered wrong password',
+                  );
+                }
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
         );
       },
     );

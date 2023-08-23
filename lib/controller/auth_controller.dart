@@ -84,6 +84,16 @@ class AuthController extends GetxController {
     return null;
   }
 
+  Future<bool> changeEmail(String newEmail) async {
+    try {
+      await currentUser!.updateEmail(newEmail);
+    } catch (e) {
+      print(e.toString());
+      return false;
+    }
+    return true;
+  }
+
   Future<bool> changePassword(String newPassword) async {
     try {
       await currentUser!.updatePassword(newPassword);

@@ -39,5 +39,4 @@ void main() async {
       home:  const AuthPage(),
     ),
   );
-
 }

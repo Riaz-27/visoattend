@@ -186,8 +186,8 @@ class AttendanceController extends GetxController {
 
     // sorting by id
     // _teachersData.sort((a, b) => a.userId.compareTo(b.userId));
-    _cRsData.sort((a, b) => a.userId.compareTo(b.userId));
-    _studentsData.sort((a, b) => a.userId.compareTo(b.userId));
+    _cRsData.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
+    _studentsData.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
   }
 
   Future<void> setMatchedStudents() async {
@@ -366,7 +366,7 @@ class AttendanceController extends GetxController {
 
     List<UserModel> tempStudents = studentsData.toList() + cRsData.toList();
 
-    tempStudents.sort((a, b) => a.userId.compareTo(b.userId));
+    tempStudents.sort((a, b) => a.userId.toLowerCase().compareTo(b.userId.toLowerCase()));
 
     _allStudents(tempStudents);
     _filteredStudents(tempStudents);
