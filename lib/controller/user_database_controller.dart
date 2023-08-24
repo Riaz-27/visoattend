@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:visoattend/services/encryption_service.dart';
 
 import '../../controller/cloud_firestore_controller.dart';
 import '../../helper/functions.dart';
@@ -70,6 +71,14 @@ class UserDatabaseController extends GetxController {
         if (userCredential != null) {
           user.authUid = userCredential.user!.uid;
           await cloudFirestoreController.addUserDataToFirestore(user);
+          final encryptedPass = EncryptionService().encryptWithAES(
+            user.authUid,
+            authController.tempPassword,
+          );
+          await cloudFirestoreController.updateUserSingleData(
+            user: user,
+            data: {'password': encryptedPass},
+          );
           authController.tempPassword = '';
           cloudFirestoreController.initialize();
         }

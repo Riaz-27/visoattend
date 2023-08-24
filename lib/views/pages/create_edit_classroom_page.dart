@@ -374,6 +374,8 @@ class CreateEditClassroomPage extends StatelessWidget {
                                     color: textColorDefault,
                                   ),
                                   focusNode: focusNode,
+                                  onChanged: (value) =>
+                                      departmentController.text = value,
                                   decoration: InputDecoration(
                                     labelText: 'Department',
                                     labelStyle: textTheme.bodyMedium!.copyWith(

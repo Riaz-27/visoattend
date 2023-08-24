@@ -72,11 +72,15 @@ class DetailedHomePage extends GetView<NavigationController> {
                               Obx(() {
                                 final userName =
                                     cloudFirestoreController.currentUser.name;
-                                return Text(
-                                  'Hi, $userName',
-                                  style: textTheme.titleMedium!.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: textColorDefault,
+                                return SizedBox(
+                                  width: deviceWidth*0.7,
+                                  child: Text(
+                                    'Hi, $userName',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textTheme.titleMedium!.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: textColorDefault,
+                                    ),
                                   ),
                                 );
                               }),

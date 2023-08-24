@@ -177,6 +177,19 @@ class CloudFirestoreController extends GetxController {
     }
   }
 
+  Future<void> updateUserSingleData(
+      {required UserModel user, required Map<String, dynamic> data}) async {
+    try {
+      await _firestoreInstance
+          .collection(userCollection)
+          .doc(user.authUid)
+          .update(data);
+      _currentUser.value = user;
+    } catch (e) {
+      dev.log(e.toString());
+    }
+  }
+
   Future<void> updateUserClassroom(Map<String, String> classroomInfo) async {
     try {
       if (_currentUser.value.authUid == '') {
