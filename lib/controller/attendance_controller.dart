@@ -169,6 +169,12 @@ class AttendanceController extends GetxController {
     _teachersData.value =
         await cloudFirestoreController.getUsersOfClassroom(allTeachersUid);
 
+    List<UserModel> tempSort = [];
+    for(final uid in allTeachersUid){
+      tempSort.add(_teachersData.firstWhere((t) => t.authUid == uid));
+    }
+    _teachersData.value = tempSort;
+
     for (var cr in classroomData.cRs) {
       allCRsUid.add(cr['authUid']);
     }
